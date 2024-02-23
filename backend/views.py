@@ -3,9 +3,10 @@ from flask import redirect, render_template, Blueprint, request, send_from_direc
 views = Blueprint('views', __name__)
 
 
-@views.route("/", methods=["GET"])
-def home():
-    return "Hello World"
+@views.route('/', defaults={'path': ''})
+@views.route('/<path:path>')
+def catch_all(path):
+    return render_template("index.html")
 
 
 @views.route("/chat", methods=["GET"])
