@@ -7,7 +7,7 @@ function App() {
   const [data, setData] = useState(null)
 
   useEffect(() => {
-    fetch('/api/chat')
+    fetch('/chat')
       .then(response => response.json())
       .then(data => {
         setData(data) 
