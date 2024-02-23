@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiPrefix } from '../common/config'
 
 import './App.css'
 
@@ -7,7 +8,7 @@ function App() {
   const [data, setData] = useState(null)
 
   useEffect(() => {
-    fetch('/api/chat')
+    fetch(`${apiPrefix}/chat`)
       .then(response => response.json())
       .then(data => {
         setData(data) 
@@ -28,7 +29,6 @@ function App() {
               return (
                 <div key={index}>
                   <h2>{value}</h2>
-
                   <hr />
                 </div>
               );
