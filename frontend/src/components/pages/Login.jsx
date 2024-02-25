@@ -1,40 +1,48 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import {config} from '../common/config.js'
 
-export default function Login () {
-  const [data, setData] = useState(null)
+import { Post, Get, UserConnected, AuthContext } from '../utils/Fetching';
 
-  // useEffect(() => {
-  //   fetch(`${config.apiPrefix}/chat`)
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       setData(data) 
-  //       console.log(data)
-  //     })
-  //     .catch(error => console.error('Error fetching data:', error));
-  // }, []);
+export const Login = () => {
+  const {setUserAuth} = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    const UserLoggedIn = Post(`${config.apiPrefix}/login`, {email, password});
+    UserLoggedIn.then(response => {
+      if (!response.ok || response.status === 403) {
+        alert('Email or password is wrong');
+      }
+
+      return response.json()
+    })
+    .then(data => {
+      UserConnected().then(UserIsConnected => {
+        if (UserIsConnected) {
+          setUserAuth(UserIsConnected);
+          return navigate('/');
+        }
+      });
+    });
+  }    
 
   return (
     <div>
       <h1>Login</h1>
-      <form>
-        <input type='text' placeholder='Username' />
-        <input type='password' placeholder='Password' />
+
+      <form onSubmit={onSubmit}>
+        <input type='text' id='email' placeholder='Email' />
+        <input type='password' id='password' placeholder='Password' />
+
         <button type='submit'>Login</button>
       </form>
 
-      {data && (
-        <div>
-          {Object.values(data).map((value, index) => {
-            return (
-              <div key={index}>
-                <h2>{value}</h2>
-                <hr />
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   )
 }

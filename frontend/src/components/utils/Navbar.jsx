@@ -1,16 +1,20 @@
 import './Navbar.css';
 
-import { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { AuthContext } from './Fetching';
 
 export default function Navbar () {
+    const {userAuthData} = useContext(AuthContext);    
     const [menuOpen, setMenu] = useState(false);
 
     const Links = [
         { name: "Login", path: "/login" },
-        { name: "Signup", path: "/signup" },
-    ]
+        { name: "Sign Up", path: "/signup" },
 
+        { name: "Log Out", path: "/logout", auth: true },
+    ]
+    
     return (
         <nav>
             <Link to="/" className="title">Home</Link>
@@ -24,9 +28,11 @@ export default function Navbar () {
             <ul className = {menuOpen ? "open" : ""}>
                 {Links.map((link, index) => {
                     return (
-                        <li key={link.path}>
-                            <NavLink to={link.path}>{link.name}</NavLink>
-                        </li>
+                        (link.auth && userAuthData && userAuthData.isConnected) || !link.auth ?
+                            <li key={link.path}>
+                                <NavLink to={link.path}>{link.name}</NavLink>
+                            </li> 
+                        : ''
                     );
                 })}
             </ul>

@@ -37,8 +37,10 @@ nav ul li a {
 	border-radius: 0.5rem;
 }
 
-nav ul li a:not(.active):hover {
-	background-color: #172554;
+@media (hover: hover) and (pointer: fine) {
+	nav ul li a:not(.active):hover {
+		background-color: #172554;
+	}
 }
 
 nav .menu {

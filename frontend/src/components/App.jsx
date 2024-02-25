@@ -2,58 +2,35 @@ import './App.css'
 
 import { useState, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { Post, Get, UserConnected, AuthContext } from './utils/Fetching';
 
 import Navbar from './utils/Navbar'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
+import { Home, Login, Signup, Logout } from './pages'
 
-export default function App() {
-  // const [count, setCount] = useState(0)
-  // const [data, setData] = useState(null)
+export default function App () {
+  const [userAuthData, setUserAuth] = useState(null);
 
-  // useEffect(() => {
-  //   fetch(`${apiPrefix}/chat`)
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       setData(data) 
-  //       console.log(data)
-  //     })
-  //     .catch(error => console.error('Error fetching data:', error));
-  // }, []);
-
-  // return (  
-  //   <div>
-  //     <p1>
-  //       Hello, World! This is a React app. The count is {count}.
-  //       <button onClick={() => setCount(count + 1)}>Increment</button>
-
-  //       {data && (
-  //         <div>
-  //           {Object.values(data).map((value, index) => {
-  //             return (
-  //               <div key={index}>
-  //                 <h2>{value}</h2>
-  //                 <hr />
-  //               </div>
-  //             );
-  //           })}
-  //         </div>
-  //       )}
-  //     </p1>
-  //   </div>
-  // )
+  useEffect(() => {
+    UserConnected().then(UserIsConnected => {
+      if (UserIsConnected) {
+        setUserAuth(UserIsConnected);
+      }
+    });
+  }, [])
 
   return (
-    <div className='App'>
-      <Navbar />
+    <AuthContext.Provider value={{ userAuthData, setUserAuth }}>
+      <div className='App'>
+        <Navbar />
 
-      <Routes>
-        <Route path='/' element={<Home />} />
+        <Routes>
+          <Route forceRefresh={true} path='/' element={<Home  />} />
 
-        <Route path='/login' element={<Login />} />
-        <Route path='/signup' element={<Signup />} />
-      </Routes>
-    </div>
+          <Route forceRefresh={true} path='/login' element={<Login />} />
+          <Route forceRefresh={true} path='/signup' element={<Signup />} />
+          <Route forceRefresh={true} path='/logout' element={<Logout />} />
+        </Routes>
+      </div>
+    </AuthContext.Provider>
   ) 
 }
