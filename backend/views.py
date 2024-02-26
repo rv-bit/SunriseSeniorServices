@@ -19,6 +19,9 @@ def home():
 @views.route("/chat", methods=["GET", "POST"])
 @login_required
 def chat():
-    chats = {i: f"Chat {i}" for i in range(100)}
+    if request.method == 'GET':
+        chats = {i: f"Chat {i}" for i in range(100)}
 
-    return chats
+        return jsonify({"chats": chats}), 200
+
+    return {}, 200

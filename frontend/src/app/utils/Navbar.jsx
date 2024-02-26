@@ -9,10 +9,11 @@ export default function Navbar () {
     const [menuOpen, setMenu] = useState(false);
 
     const Links = [
-        { name: "Login", path: "/login" },
-        { name: "Sign Up", path: "/signup" },
+        { name: "Login", path: "/login", auth: false},
+        { name: "Sign Up", path: "/signup", auth: false},
 
         { name: "Log Out", path: "/logout", auth: true },
+        { name: "Chat", path: "/chat", auth: true },
     ]
     
     return (
@@ -27,13 +28,13 @@ export default function Navbar () {
 
             <ul className = {menuOpen ? "open" : ""}>
                 {Links.map((link, index) => {
-                    return (
-                        (link.auth && userAuthData && userAuthData.isConnected) || !link.auth ?
-                            <li key={link.path}>
-                                <NavLink to={link.path}>{link.name}</NavLink>
-                            </li> 
-                        : ''
-                    );
+                    const showLink = (link.auth && userAuthData && userAuthData.isConnected) || (!link.auth && (!userAuthData || !userAuthData.isConnected));
+
+                    return showLink ? (
+                        <li key={link.path}>
+                            <NavLink to={link.path}>{link.name}</NavLink>
+                        </li>
+                    ) : null;
                 })}
             </ul>
         </nav>

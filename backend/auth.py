@@ -1,7 +1,7 @@
 from datetime import timedelta
 import uuid
 
-from flask import current_app, Blueprint, request
+from flask import current_app, Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash, check_password_hash
 from email.utils import parseaddr
 from flask_login import login_user, logout_user, login_required, current_user
@@ -21,15 +21,15 @@ def login():
         userFound = users.find_one({"email": email})
 
         if not userFound:
-            return {}, 403
+            return jsonify({"Error": "This user was not found, please try again later."}), 400
 
         if not check_password_hash(userFound['password'], password):
-            return {}, 403
+            return jsonify({"Error": "Password was incorrect, please try again"}), 400
         else:
             user = User(userFound['username'],
                         userFound['email'], userFound['_id'])
             login_user(user, duration=timedelta(days=1))
-            return {}, 200
+            return jsonify({"user": current_user.dict()}), 200
 
     return {}, 403
 
@@ -42,35 +42,29 @@ def signup():
         password2 = request.json.get('password2')
         username = request.json.get('username')
 
-        errorMessage = ""
-
         if password != password2 or not password:
-            print("Passwords don't match")
-            pass
+            return jsonify({"Error": "Passwords dont match"}), 400
         elif current_app.config['DB'].Find('users', {"email": email}):
-            print("User already exists")
-            pass
+            return jsonify({"Error": "User Already Exists"}), 400
         elif parseaddr(email) == ('', '') or '@' not in email or '.' not in email:
-            print("Invalid email")
-            pass
+            return jsonify({"Error": "Invalid email"}), 400
         elif not username:
-            print("Invalid username")
-            pass
+            return jsonify({"Error": "Invalid username"}), 400
         else:
             _id = uuid.uuid4().hex
             created_user = current_app.config['DB'].Insert(
                 'users', {"_id": _id, "email": email, "password": generate_password_hash(password, method='pbkdf2', salt_length=16), "username": username})
 
             if not created_user:
-                return {"Error": "Error creating user please try again later"}, 403
+                return jsonify({"Error": "Error creating user please try again later"}), 403
 
             print("Created user:", created_user)
             user = User(username,
                         email, _id)
             login_user(user, remember=True)
-            return {}, 200
+            return jsonify({"user": current_user.dict()}), 200
 
-    return {}, 403
+    return {}, 200
 
 
 @auth.route('/logout')

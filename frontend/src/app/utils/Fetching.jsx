@@ -27,8 +27,7 @@ const Get = async (url) => {
 const UserConnected = async () => {
   const response = await Get(`${config.apiPrefix}/`);
 
-  if (!response.ok || response.status === 403) {
-    alert('You are not logged in');
+  if (!response.ok) {
     return [];
   }
 

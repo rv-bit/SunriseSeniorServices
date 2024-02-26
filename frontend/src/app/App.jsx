@@ -5,7 +5,7 @@ import { Routes, Route } from 'react-router-dom'
 import { Post, Get, UserConnected, AuthContext } from './utils/Fetching';
 
 import Navbar from './utils/Navbar'
-import { Home, Login, Signup, Logout } from './pages'
+import { Home, Login, Signup, Logout, Chat } from './pages'
 
 export default function App () {
   const [userAuthData, setUserAuth] = useState(null);
@@ -24,11 +24,12 @@ export default function App () {
         <Navbar />
 
         <Routes>
-          <Route forceRefresh={true} path='/' element={<Home  />} />
+          <Route path='/' element={<Home  />} />
 
-          <Route forceRefresh={true} path='/login' element={<Login />} />
-          <Route forceRefresh={true} path='/signup' element={<Signup />} />
-          <Route forceRefresh={true} path='/logout' element={<Logout />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/signup' element={<Signup />} />
+          <Route path='/logout' element={<Logout />} />
+          <Route path='/chat' element={<Chat />} />
         </Routes>
       </div>
     </AuthContext.Provider>
