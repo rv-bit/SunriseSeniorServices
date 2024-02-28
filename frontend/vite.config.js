@@ -4,10 +4,17 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: './',
   envDir: '../',
 
-  base: './',
+  // For the build, we want to put the assets in the static directory
+  build: {
+    assetsDir: "static",
+  },
+
   plugins: [react()],
+
+  // This is the proxy configuration for the development server
   // server: {
   //   port: 3000,
   //   cors: true,
@@ -20,12 +27,10 @@ export default defineConfig({
   //     },
   //   },
   // },
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-  },
-  build: {
-    assetsDir: "static",
   },
 })
