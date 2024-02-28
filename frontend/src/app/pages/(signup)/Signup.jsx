@@ -41,7 +41,7 @@ export const Signup = () => {
     const password2 = e.target.password2.value;
 
     // cspell:ignore signup
-    const UserCreated = Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {username, email, password, password2});
+    const UserCreated = Post(`${import.meta.env.VITE_API_PREFIX || ''}/signup`, {username, email, password, password2});
     UserCreated.then(response => {
       if (response.ok) {
         return response.json();
@@ -69,7 +69,7 @@ export const Signup = () => {
     },
     onSuccess: response => {
       const code = response.code;
-      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX}/google/signup`, {code});
+      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX || ''}/google/signup`, {code});
 
       UserCreateUserBasedOnGoogle.then(response => {
         if (response.ok) {

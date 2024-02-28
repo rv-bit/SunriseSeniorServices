@@ -4,7 +4,8 @@ from flask_login import LoginManager
 
 
 def initializeApp():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='../frontend/dist/static',
+                template_folder='../frontend/dist')
 
     app.config["SECRET_KEY"] = os.urandom(24)
 

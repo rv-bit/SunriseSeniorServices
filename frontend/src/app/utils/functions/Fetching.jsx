@@ -24,7 +24,7 @@ const Get = async (url, headers) => {
 }
 
 const UserConnected = async () => {
-  const response = await Get(`${import.meta.env.VITE_API_PREFIX}/`);
+  const response = await Get(`${import.meta.env.VITE_API_PREFIX || ''}/`);
 
   if (!response.ok) {
     return [];

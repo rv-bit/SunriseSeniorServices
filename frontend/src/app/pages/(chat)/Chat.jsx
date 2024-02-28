@@ -7,7 +7,7 @@ export const Chat = () => {
     const [chatsData, setChatsData] = useState([]);
 
     useEffect(() => {
-        const chats = Get(`${import.meta.env.VITE_API_PREFIX}/chat`);
+        const chats = Get(`${import.meta.env.VITE_API_PREFIX || ''}/chat`);
         chats.then(response => {
             if (response.ok) {
                 return response.json()
