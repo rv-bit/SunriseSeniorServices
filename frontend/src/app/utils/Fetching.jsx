@@ -1,31 +1,30 @@
 import React from 'react';
-import { config } from '../common/config';
 
 const Post = async (url, data) => {
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    });
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
 
-    return response;
+  return response;
 }
 
-const Get = async (url) => {
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    });
+const Get = async (url, headers) => {
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: headers ? headers : {
+      'Content-Type': 'application/json'
+    }
+  });
 
-    return response;
+  return response;
 }
 
 const UserConnected = async () => {
-  const response = await Get(`${config.apiPrefix}/`);
+  const response = await Get(`${import.meta.env.VITE_API_PREFIX}/`);
 
   if (!response.ok) {
     return [];

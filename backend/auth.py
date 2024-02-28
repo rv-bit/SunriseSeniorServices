@@ -1,12 +1,15 @@
-from datetime import timedelta
+import os
 import uuid
+import requests
 
 from flask import current_app, Blueprint, jsonify, request
-from werkzeug.security import generate_password_hash, check_password_hash
-from email.utils import parseaddr
 from flask_login import login_user, logout_user, login_required, current_user
 
 from backend.user import User
+
+from werkzeug.security import generate_password_hash, check_password_hash
+from email.utils import parseaddr
+from datetime import timedelta
 
 auth = Blueprint('auth', __name__)
 
@@ -63,6 +66,49 @@ def signup():
                         email, _id)
             login_user(user, remember=True)
             return jsonify({"user": current_user.dict()}), 200
+
+    return {}, 200
+
+
+@auth.route('/google/checkAccount', methods=['GET', 'POST'])
+def googleCheckAccount():
+    if request.method == 'POST':
+        auth_code = request.json.get('code')
+
+        if not auth_code:
+            return jsonify({"Error": "No auth code provided"}), 400
+
+        data = {
+            'code': auth_code,
+            'client_id': os.environ.get("VITE_GOOGLE_CLIENT_ID"),
+            'client_secret': os.environ.get("VITE_GOOGLE_CLIENT_SECRET"),
+            'redirect_uri': 'postmessage',
+            'grant_type': 'authorization_code'
+        }
+
+        response = requests.post(
+            'https://oauth2.googleapis.com/token', data=data).json()
+        headers = {
+            'Authorization': f'Bearer {response["access_token"]}'
+        }
+        user_info = requests.get(
+            'https://www.googleapis.com/oauth2/v3/userinfo', headers=headers).json()
+
+        if not user_info:
+            return jsonify({"Error": "Error getting user info"}), 400
+
+        user = current_app.config['DB'].Find(
+            'users', {"email": user_info['email']})
+
+        if user:
+            user = User(user['username'], user['email'], user['_id'])
+            login_user(user, duration=timedelta(days=1))
+            print("User:", user.dict())
+            return jsonify({"accountExistsAlready": True, "user": current_user.dict()}), 200
+
+        print("User:", user_info)
+
+        return jsonify(user_info), 200
 
     return {}, 200
 

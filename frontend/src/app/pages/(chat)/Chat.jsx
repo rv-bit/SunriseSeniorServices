@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Get } from '../utils/Fetching'
-import { config } from '../common/config'
+
+import { Get } from '../../utils/Fetching'
+import { useDocumentTitle } from '../../utils/UseDocumentTitle.jsx'
 
 export const Chat = () => {
+    useDocumentTitle('Login')
+
     const [chatsData, setChatsData] = useState([]);
 
     useEffect(() => {
-        const chats = Get(`${config.apiPrefix}/chat`);
+        const chats = Get(`${import.meta.env.VITE_API_PREFIX}/chat`);
         chats.then(response => {
             if (response.ok) {
                 return response.json()

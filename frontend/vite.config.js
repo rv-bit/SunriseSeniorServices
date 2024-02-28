@@ -4,6 +4,8 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  envDir: '../../../../.env',
+
   base: './',
   plugins: [react()],
   server: {
