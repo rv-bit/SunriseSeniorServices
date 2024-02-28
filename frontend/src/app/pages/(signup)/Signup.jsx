@@ -2,9 +2,9 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
-import { useDocumentTitle } from '../../utils/UseDocumentTitle.jsx';
-import { Post, Get, AuthContext } from '../../utils/Fetching.jsx';
+import { Post, Get, AuthContext, useDocumentTitle} from '../../utils'
 
+import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
 import { Button } from "@/components/ui/button"
 import {
@@ -26,6 +26,8 @@ import {
 
 export const Signup = () => {
   useDocumentTitle('Sign Up');
+  
+  const [userIsLoading, setUserLoad] = useState(false);
 
   const {setUserAuth} = useContext(AuthContext);
   const navigate = useNavigate();
@@ -59,6 +61,12 @@ export const Signup = () => {
   }
 
   const onGoogleLoginOrCreate = useGoogleLogin({
+    onError: response => {
+      setUserLoad(false);
+    },
+    onNonOAuthError: response => {
+      setUserLoad(false);
+    },
     onSuccess: response => {
       const code = response.code;
       const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX}/google/signup`, {code});
@@ -123,7 +131,12 @@ export const Signup = () => {
                     <Input id="password2" type="password" defaultValue='' />
                   </div>
                   <div className="space-y-1">
-                    <Button className="w-full" onClick={onSubmit}>Sign Up</Button>
+                    { 
+                      (userIsLoading) ? 
+                        <Button disabled className="w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button> 
+                      :
+                        <Button className="w-full" onClick={onSubmit}>Sign Up</Button>
+                    }
                   </div>
                 </CardContent>
               </form>
@@ -133,7 +146,15 @@ export const Signup = () => {
               </CardContent>
 
               <CardFooter>
-                <Button className="w-full" onClick={() => {onGoogleLoginOrCreate()}}> <AiOutlineGoogle className='mr-2'/>Join with Google</Button>
+                { 
+                  (userIsLoading) ? 
+                    <Button disabled className="w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button> 
+                  :
+                    <Button className="w-full" onClick={() => {
+                      setUserLoad(true);
+                      onGoogleLoginOrCreate()
+                    }}><AiOutlineGoogle className='mr-2'/>Join with Google</Button>
+                }
               </CardFooter>
             </Card>
           </TabsContent>

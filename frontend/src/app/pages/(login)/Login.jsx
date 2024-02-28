@@ -2,8 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
-import { useDocumentTitle } from '../../utils/UseDocumentTitle.jsx';
-import { Post, Get, AuthContext } from '../../utils/Fetching.jsx';
+import { Post, Get, AuthContext, useDocumentTitle} from '../../utils'
 
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
@@ -62,11 +61,16 @@ export const Login = () => {
   }
 
   const onGoogleLoginOrCreate = useGoogleLogin({
-    onSuccess: response => {
+    onError: response => {
+      setUserLoad(false);
+    },
+    onNonOAuthError: response => {
+      setUserLoad(false);
+    },
+    onSuccess: response => {    
       const code = response.code;
       const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX}/google/checkAccount`, {code});
-      setUserLoad(true);
-
+    
       UserCreateUserBasedOnGoogle.then(response => {
         if (response.ok) {
           return response.json();
@@ -126,7 +130,7 @@ export const Login = () => {
                   { 
                     (userIsLoading) ? 
                       <Button disabled className="w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button> 
-                      :
+                    :
                       <Button type="submit" className="w-full">Login with Email</Button>
                   }
                 </CardFooter>
@@ -140,8 +144,11 @@ export const Login = () => {
                 { 
                   (userIsLoading) ? 
                     <Button disabled className="w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button> 
-                    :
-                    <Button className="w-full" onClick={() => {onGoogleLoginOrCreate()}}><AiOutlineGoogle className='mr-2'/>Login with Google</Button>
+                  :
+                    <Button className="w-full" onClick={() => {
+                      setUserLoad(true);
+                      onGoogleLoginOrCreate()
+                    }}><AiOutlineGoogle className='mr-2'/>Login with Google</Button>
                 }
               </CardFooter>
             </Card>

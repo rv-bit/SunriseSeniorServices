@@ -1,8 +1,7 @@
 import './Home.css';
 
 import { useContext } from "react";
-import { Post, Get, AuthContext } from '../../utils/Fetching';
-import { useDocumentTitle } from '../../utils/UseDocumentTitle.jsx';
+import { Post, Get, AuthContext, useDocumentTitle} from '../../utils'
 
 export const Home = () => {
   useDocumentTitle('Home');

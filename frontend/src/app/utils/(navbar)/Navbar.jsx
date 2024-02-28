@@ -2,9 +2,10 @@ import './Navbar.css';
 
 import { useState, useContext, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { AuthContext } from './Fetching';
 
-export default function Navbar () {
+import { AuthContext } from '../index'
+
+export const Navbar = () => {
     const {userAuthData} = useContext(AuthContext);    
     const [menuOpen, setMenu] = useState(false);
 

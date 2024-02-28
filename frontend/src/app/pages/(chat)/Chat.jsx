@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
-
-import { Get } from '../../utils/Fetching'
-import { useDocumentTitle } from '../../utils/UseDocumentTitle.jsx'
+import { Get, useDocumentTitle} from '../../utils'
 
 export const Chat = () => {
     useDocumentTitle('Login')

@@ -1,7 +1,7 @@
 import { useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Get, Post, UserConnected, AuthContext } from '../utils/Fetching';
+import { Get, Post, UserConnected, AuthContext } from '../../utils';
 
 export const Logout = () => {
     const {setUserAuth} = useContext(AuthContext);

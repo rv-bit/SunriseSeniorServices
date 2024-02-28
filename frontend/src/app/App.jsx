@@ -2,9 +2,8 @@ import './App.css'
 
 import { useState, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { Post, Get, UserConnected, AuthContext } from './utils/Fetching';
 
-import Navbar from './utils/Navbar'
+import { Post, Get, UserConnected, AuthContext, Navbar, Footer } from './utils'
 import { Home, Login, Signup, Logout, Chat } from './pages'
 
 export default function App () {
