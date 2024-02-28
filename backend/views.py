@@ -1,13 +1,15 @@
+import os
+
 from flask import jsonify, Blueprint, render_template, request
 from flask_login import login_required, current_user
 
 views = Blueprint('views', __name__)
 
-
-@views.route('/', defaults={'path': ''})
-@views.route('/<path:path>')
-def catch_all(path):
-    return render_template("index.html")
+if os.environ.get("NODE_ENV") == "production":
+    @views.route('/', defaults={'path': ''})
+    @views.route('/<path:path>')
+    def catch_all(path):
+        return render_template("index.html")
 
 
 @views.route("/", methods=["GET"])
