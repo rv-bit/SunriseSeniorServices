@@ -122,11 +122,11 @@ export const Login = () => {
                 <CardContent className="space-y-2">
                   <div className="space-y-1">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type='email' defaultValue="" />
+                    <Input id="email" name="password" type='email' defaultValue="" />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="password">Password</Label>
-                    <Input id="password" type='password' defaultValue="" />
+                    <Input id="password" name="password" type='password' defaultValue="" />
                   </div>
                 </CardContent>
                 <CardFooter>
