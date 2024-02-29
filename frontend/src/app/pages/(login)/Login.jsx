@@ -48,6 +48,7 @@ export const Login = () => {
       } else {
         return response.json().then(data => {
           alert(data.Error)
+          setUserLoad(false);
 
           throw new Error(`Request failed with status code ${response.status}`);
         });
