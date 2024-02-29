@@ -2,10 +2,11 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
-import { Post, Get, AuthContext, useDocumentTitle} from '../../utils'
+import { Post, Get, AuthContext, useDocumentTitle, Notification } from '../../utils'
 
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
+import { MdClose } from "react-icons/md"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -26,11 +27,23 @@ import {
 
 export const Login = () => {
   useDocumentTitle('Login')
+  const navigate = useNavigate();
 
   const [userIsLoading, setUserLoad] = useState(false);
+  const [alertState, setAlertState] = useState({
+    open: false,
+    message: '',
+  });
 
   const {setUserAuth} = useContext(AuthContext);
-  const navigate = useNavigate();
+
+  const alertHandleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setAlertState({ ...alertState, open: false });
+  }
 
   const onSubmit = (e) => {
     e.preventDefault();
@@ -45,7 +58,8 @@ export const Login = () => {
         return response.json();
       } else {
         return response.json().then(data => {
-          alert(data.Error)
+          setAlertState({ ...alertState, open: true, message: data.Error });
+          setUserLoad(false);
 
           throw new Error(`Request failed with status code ${response.status}`);
         });
@@ -62,9 +76,11 @@ export const Login = () => {
 
   const onGoogleLoginOrCreate = useGoogleLogin({
     onError: response => {
+      setAlertState({ ...alertState, open: true, message: response.message + ', please try again.' });
       setUserLoad(false);
     },
     onNonOAuthError: response => {
+      setAlertState({ ...alertState, open: true, message: response.message + ', please try again.' });
       setUserLoad(false);
     },
     onSuccess: response => {    
@@ -76,7 +92,8 @@ export const Login = () => {
           return response.json();
         } else {
           return response.json().then(data => {
-            alert(data.Error)
+            setAlertState({ ...alertState, open: true, message: data.Error });
+            setUserLoad(false);
 
             throw new Error(`Request failed with status code ${response.status}`);
           });
@@ -154,6 +171,14 @@ export const Login = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {alertState.open && (
+          <Notification
+            open={alertState.open}
+            handleClose={alertHandleClose}
+            message={alertState.message}
+          />
+        )}
       </div>
     </div>
   )
