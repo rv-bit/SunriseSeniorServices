@@ -2,6 +2,7 @@ import './App.css'
 
 import { useState, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import CookieConsent from "react-cookie-consent";
 
 import { Post, Get, UserConnected, AuthContext, Navbar, Footer } from './utils'
 import { Home, Login, Signup, Logout, Chat } from './pages'
@@ -19,6 +20,16 @@ export default function App () {
 
   return (
     <>
+      <CookieConsent
+        location="bottom"
+        hideOnAccept={true}
+        style={{ background: "#2B373B" }}
+        buttonStyle={{ color: "#4e503b", fontSize: "13px" }}
+        expires={1}
+      > 
+        This website uses cookies to enhance the user experience. {" "}
+      </CookieConsent>
+
       <AuthContext.Provider value={{ userAuthData, setUserAuth }}>
         <Navbar />
 
