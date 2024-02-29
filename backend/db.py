@@ -1,9 +1,18 @@
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
 
 class DB:
     def __init__(self, mongo_uri):
-        self.client = MongoClient(mongo_uri)
+        self.client = MongoClient(mongo_uri, server_api=ServerApi('1'))
+
+        try:
+            self.client.admin.command('ping')
+            print("Pinged your deployment. You successfully connected to MongoDB!")
+        except Exception as e:
+            print(f"Server not available: {e}")
+            raise e
+
         self.main_db = self.client.get_database('CareersForHelp')
 
     def Get(self, collection_name):
