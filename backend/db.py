@@ -3,8 +3,7 @@ from pymongo import MongoClient
 
 class DB:
     def __init__(self, mongo_uri):
-        self.client = MongoClient(
-            mongo_uri, tls=True, tlsCertificateKeyFile='../MongoDB Cloud X509 Certificate.pem')
+        self.client = MongoClient(mongo_uri)
 
         try:
             self.client.admin.command('ping')
