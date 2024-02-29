@@ -9,7 +9,7 @@ export const Home = () => {
   const {userAuthData} = useContext(AuthContext);
 
   return (
-    <div>
+    <section className='max-w-screen-xl px-4 md:px-8 mx-auto mt-12'>
       <h1>Home</h1>
 
       <h1>
@@ -17,6 +17,6 @@ export const Home = () => {
           <div key={index}>{value}</div>
         ))}
       </h1>
-    </div>
+    </section>
   )
 }

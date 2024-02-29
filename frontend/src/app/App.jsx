@@ -18,19 +18,20 @@ export default function App () {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ userAuthData, setUserAuth }}>
-      <div className='App'>
+    <>
+      <AuthContext.Provider value={{ userAuthData, setUserAuth }}>
         <Navbar />
 
         <Routes>
           <Route path='/' element={<Home  />} />
-
           <Route path='/login' element={<Login />} />
           <Route path='/signup' element={<Signup />} />
           <Route path='/logout' element={<Logout />} />
           <Route path='/chat' element={<Chat />} />
         </Routes>
-      </div>
-    </AuthContext.Provider>
+        
+        <Footer />
+      </AuthContext.Provider>
+    </>
   ) 
 }
