@@ -37,7 +37,7 @@ export const Login = () => {
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    const UserLoggedIn = Post(`${import.meta.env.VITE_API_PREFIX || ''}/login`, {email, password});
+    const UserLoggedIn = Post(`${import.meta.env.VITE_API_PREFIX}/login`, {email, password});
     setUserLoad(true);
 
     UserLoggedIn.then(response => {
@@ -69,7 +69,7 @@ export const Login = () => {
     },
     onSuccess: response => {    
       const code = response.code;
-      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX || ''}/google/checkAccount`, {code});
+      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX}/google/checkAccount`, {code});
     
       UserCreateUserBasedOnGoogle.then(response => {
         if (response.ok) {

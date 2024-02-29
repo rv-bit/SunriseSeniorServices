@@ -8,7 +8,7 @@ export const Logout = () => {
     const navigate = useNavigate();
 
     useEffect(() => {        
-        const UserLoggedOut = Get(`${import.meta.env.VITE_API_PREFIX || ''}/logout`);
+        const UserLoggedOut = Get(`${import.meta.env.VITE_API_PREFIX}/logout`);
         UserLoggedOut.then(response => {
             if (!response.ok || response.status === 403) {
                 return alert('You are not logged in');

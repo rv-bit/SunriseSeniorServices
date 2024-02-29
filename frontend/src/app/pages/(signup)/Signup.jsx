@@ -35,13 +35,16 @@ export const Signup = () => {
   const onSubmit = (e) => {
     e.preventDefault();
 
-    const username = e.target.username.value;
-    const email = e.target.email.value;
-    const password = e.target.password.value;
-    const password2 = e.target.password2.value;
+    const formData = new FormData(e.target);
+    const username = formData.get('username');
+    const email = formData.get('email');
+    const password = formData.get('password');
+    const password2 = formData.get('password2');
+
+    console.log('Form Data:', username, email, password, password2);
 
     // cspell:ignore signup
-    const UserCreated = Post(`${import.meta.env.VITE_API_PREFIX || ''}/signup`, {username, email, password, password2});
+    const UserCreated = Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {username, email, password, password2});
     UserCreated.then(response => {
       if (response.ok) {
         return response.json();
@@ -69,7 +72,7 @@ export const Signup = () => {
     },
     onSuccess: response => {
       const code = response.code;
-      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX || ''}/google/signup`, {code});
+      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX}/google/signup`, {code});
 
       UserCreateUserBasedOnGoogle.then(response => {
         if (response.ok) {
@@ -116,26 +119,26 @@ export const Signup = () => {
                 <CardContent className="space-y-2">
                   <div className="space-y-1">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue='' />
+                    <Input id="email" name="email" type="email" defaultValue='' />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="username">Username</Label>
-                    <Input id="username" type="text" defaultValue='' />
+                    <Input id="username" name="username" type="text" defaultValue='' />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" defaultValue='' />
+                    <Input id="password" name="password" type="password" defaultValue='' />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="password2">Confirm password</Label>
-                    <Input id="password2" type="password" defaultValue='' />
+                    <Input id="password2" name="password2" type="password" defaultValue='' />
                   </div>
                   <div className="space-y-1">
                     { 
                       (userIsLoading) ? 
                         <Button disabled className="w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button> 
                       :
-                        <Button className="w-full" onClick={onSubmit}>Sign Up</Button>
+                        <Button type="submit" className="w-full">Sign Up</Button>
                     }
                   </div>
                 </CardContent>
