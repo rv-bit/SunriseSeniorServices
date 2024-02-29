@@ -10,19 +10,19 @@ export const Logout = () => {
     useEffect(() => {        
         const UserLoggedOut = Get(`${import.meta.env.VITE_API_PREFIX}/logout`);
         UserLoggedOut.then(response => {
-            if (!response.ok || response.status === 403) {
-                return alert('You are not logged in');
-            }
-
-            if (response.status === 200) {
-                UserConnected().then(UserIsConnected => {
-                    if (UserIsConnected) {
-                        setUserAuth(UserIsConnected);
-                        return navigate('/');
-                    }
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.json().then(data => {
+                    alert(data.Error)
+                    throw new Error(`Request failed with status code ${response.status}`);
                 });
             }
         })
+        .then(data => {
+            setUserAuth(null);
+            return navigate('/');
+        });
     }, []);
 
     return (<></>)
