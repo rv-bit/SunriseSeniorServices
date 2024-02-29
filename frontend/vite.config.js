@@ -17,6 +17,9 @@ const devConfig = {
   },
 };
 
+const prodConfig = {}
+const config = process.env.NODE_ENV === 'development' ? devConfig : prodConfig;
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: './',
@@ -33,5 +36,5 @@ export default defineConfig({
     },
   },
 
-  ...devConfig
+  ...config
 })
