@@ -41,8 +41,6 @@ export const Signup = () => {
     const password = formData.get('password');
     const password2 = formData.get('password2');
 
-    console.log('Form Data:', username, email, password, password2);
-
     // cspell:ignore signup
     const UserCreated = Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {username, email, password, password2});
     UserCreated.then(response => {
