@@ -67,7 +67,6 @@ def signup():
             if not created_user:
                 return jsonify({"Error": "Error creating user please try again later"}), 403
 
-            print("Created user:", created_user)
             user = User(username,
                         email, _id)
             login_user(user, remember=True)
