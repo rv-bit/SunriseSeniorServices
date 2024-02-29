@@ -34,6 +34,7 @@ export const Signup = () => {
 
   const onSubmit = (e) => {
     e.preventDefault();
+    setUserLoad(true);
 
     const formData = new FormData(e.target);
     const username = formData.get('username');
@@ -58,6 +59,8 @@ export const Signup = () => {
     .then(data => {
       data.user['isConnected'] = true;
       setUserAuth(data.user);
+      setUserLoad(false);
+
       return navigate('/');
     });
   }

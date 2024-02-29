@@ -45,6 +45,12 @@ def signup():
         password2 = request.json.get('password2')
         username = request.json.get('username')
 
+        users = current_app.config['DB'].Get('users')
+        userFound = users.find_one({"email": email})
+
+        if userFound:
+            return jsonify({"Error": "There is a user registered already, please try again with a different email."}), 400
+
         if password != password2 or not password:
             return jsonify({"Error": "Passwords dont match"}), 400
         elif current_app.config['DB'].Find('users', {"email": email}):
