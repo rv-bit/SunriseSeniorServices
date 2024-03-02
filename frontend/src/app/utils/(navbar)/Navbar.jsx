@@ -1,7 +1,7 @@
 import './Navbar.css';
 
 import { useState, useContext, useEffect } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { AuthContext } from '../index'
 
@@ -14,6 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
+
+import { Divide as Hamburger } from 'hamburger-react'
 
 export const Navbar = () => {
     const {userAuthData} = useContext(AuthContext);    
@@ -34,16 +36,16 @@ export const Navbar = () => {
     return (
         <section className="max-w-screen-lg px-2 md:px-8 mx-auto sticky top-0 backdrop-blur-xl bg-[#ffffff90] z-50 mb-10 mt-12">
             <nav className="w-full flex items-center justify-between">
-                <div className="flex flex-row items-center">
+                <ul className="flex flex-row items-center">
 
                     <Link to="/">
-                        <div className="text-[25px] text-left mb-[5px] px-5 py-4">
+                        <div className="text-[25px] text-left mb-[5px] px-8 py-4">
                             Sunrise
                             <span className="font-medium text-[#7F56D9]">Services</span>
                         </div>
                     </Link>
 
-                    <ul className = "flex-1 flex flex-row justify-end items-center gap-5 ml-3 max-md:hidden">
+                    <ul className="flex flex-row items-center gap-5 ml-3 max-md:hidden">
                         {LinksConnectedWithLogo.map((link, index) => {
                             return (
                                 <li key={link.path}>
@@ -56,7 +58,7 @@ export const Navbar = () => {
                             )
                         })}
                     </ul>
-                </div>
+                </ul>
 
                 <ul className="flex-1 md:flex justify-end items-center gap-5 hidden">
                     {Links.map((link, index) => {
@@ -75,7 +77,7 @@ export const Navbar = () => {
                 </ul>
 
                 <DropdownMenu>
-                    <DropdownMenuTrigger className="md:hidden max-md:block tracking-tight bg-[#7F56D9] text-white font-medium rounded-lg px-10 py-3 mr-5">Menu</DropdownMenuTrigger>
+                    <DropdownMenuTrigger className="md:hidden max-md:block"><Hamburger hideOutline={true} rounded distance="lg" size={35}/></DropdownMenuTrigger>
                     <DropdownMenuContent className="mr-6">
                         {LinksConnectedWithLogo.map((link, index) => {
                             return (

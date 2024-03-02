@@ -4,3 +4,4 @@ export * from './(signup)/Signup';
 export * from './(chat)/Chat';
 
 export * from './(logout)/Logout';
+export * from './(get-started-account)/FormCreateAccount'

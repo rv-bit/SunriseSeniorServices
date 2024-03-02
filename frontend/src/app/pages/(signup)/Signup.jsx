@@ -2,7 +2,8 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
-import { Post, Get, AuthContext, useDocumentTitle, Notification} from '../../utils'
+import { Post, Get, AuthContext, useDocumentTitle, Notification } from '../../utils'
+import { FormCreateAccount } from '../index';
 
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
@@ -26,8 +27,11 @@ import {
 
 export const Signup = () => {
   useDocumentTitle('Sign Up');
+
   const navigate = useNavigate();
   const {setUserAuth} = useContext(AuthContext);
+
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const [userIsLoading, setUserLoad] = useState(false);
   const [alertState, setAlertState] = useState({
@@ -43,6 +47,10 @@ export const Signup = () => {
     setAlertState({ ...alertState, open: false });
   }
 
+  const onSubmitFinal = (e) => {
+    setIsSubmitted(true);
+  };
+
   const onSubmit = (e) => {
     e.preventDefault();
 
@@ -51,8 +59,6 @@ export const Signup = () => {
     const email = formData.get('email');
     const password = formData.get('password');
     const password2 = formData.get('password2');
-
-    console.log('Form Data:', username, email, password, password2);
 
     // cspell:ignore signup
     const UserCreated = Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {username, email, password, password2});
@@ -128,34 +134,9 @@ export const Signup = () => {
                 </CardDescription>
               </CardHeader>
 
-              <form onSubmit={onSubmit}>
-                <CardContent className="space-y-2">
-                  <div className="space-y-1">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" name="email" type="email" defaultValue='' />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="username">Username</Label>
-                    <Input id="username" name="username" type="text" defaultValue='' />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="password">Password</Label>
-                    <Input id="password" name="password" type="password" defaultValue='' />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="password2">Confirm password</Label>
-                    <Input id="password2" name="password2" type="password" defaultValue='' />
-                  </div>
-                  <div className="space-y-1">
-                    { 
-                      (userIsLoading) ? 
-                        <Button disabled className="w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button> 
-                      :
-                        <Button type="submit" className="w-full">Sign Up</Button>
-                    }
-                  </div>
-                </CardContent>
-              </form>
+              <CardContent className="space-y-2">
+                <Button className="w-full" onClick={() => navigate('/signup/get-started')}>Continue with Email</Button>
+              </CardContent>
 
               <CardContent className="space-y-2 text-center">
                 <Label className="text-center mb-6">or</Label>
@@ -169,9 +150,13 @@ export const Signup = () => {
                     <Button className="w-full" onClick={() => {
                       setUserLoad(true);
                       onGoogleLoginOrCreate()
-                    }}><AiOutlineGoogle className='mr-2'/>Join with Google</Button>
+                    }}><AiOutlineGoogle className='mr-2'/>Continue with Google</Button>
                 }
               </CardFooter>
+
+              <CardContent className="space-y-2 text-center">
+                <Label onClick={(event) => {event.preventDefault(); navigate('/login');}} className="text-center mb-6">Have an account ? <Label className='underline text-cyan-600 hover:text-sky-400 cursor-pointer'>Sign In</Label></Label>
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>

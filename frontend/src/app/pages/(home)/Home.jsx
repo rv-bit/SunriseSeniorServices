@@ -5,18 +5,19 @@ import { Post, Get, AuthContext, useDocumentTitle} from '../../utils'
 
 export const Home = () => {
   useDocumentTitle('Home');
-
   const {userAuthData} = useContext(AuthContext);
 
   return (
-    <section className='max-w-screen-xl px-4 md:px-8 mx-auto mt-12'>
-      <h1>Home</h1>
-
-      <h1>
-        {userAuthData && Object.values(userAuthData).map((value, index) => (
-          <div key={index}>{value}</div>
-        ))}
-      </h1>
+    <section className='flex items-center justify-center min-h-5'>
+      <div className='max-w-screen-sm mx-auto'>
+        <h1 className='text-center'>Home</h1>
+        
+        <h1 className='text-center'>
+          {userAuthData && Object.values(userAuthData).map((value, index) => (
+            <div key={index}>{value}</div>
+          ))}
+        </h1>
+      </div>
     </section>
   )
 }

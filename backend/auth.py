@@ -1,3 +1,4 @@
+import datetime
 import os
 import uuid
 import requests
@@ -10,6 +11,8 @@ from backend.user import User
 from werkzeug.security import generate_password_hash, check_password_hash
 from email.utils import parseaddr
 from datetime import timedelta
+
+from backend.utils.prepare_document import prepare_document
 
 auth = Blueprint('auth', __name__)
 
@@ -53,19 +56,31 @@ def signup():
             return jsonify({"Error": "Invalid email"}), 400
         elif not username:
             return jsonify({"Error": "Invalid username"}), 400
-        else:
-            _id = uuid.uuid4().hex
-            created_user = current_app.config['DB'].Insert(
-                'users', {"_id": _id, "email": email, "password": generate_password_hash(password, method='pbkdf2', salt_length=16), "username": username})
 
+        try:
+            _id = uuid.uuid4().hex
+
+            variables = {
+                "_id": _id,
+                "email": email,
+                "password": generate_password_hash(password, method='pbkdf2', salt_length=16),
+                "username": username,
+            }
+
+            user_data = prepare_document('users', variables)
+
+            print("User data:", user_data)
+
+            created_user = current_app.config['DB'].Insert('users', user_data)
             if not created_user:
                 return jsonify({"Error": "Error creating user please try again later"}), 403
 
-            print("Created user:", created_user)
-            user = User(username,
-                        email, _id)
-            login_user(user, remember=True)
+            userObject = User(username, email, _id)
+            login_user(userObject, remember=True)
             return jsonify({"user": current_user.dict()}), 200
+        except Exception as e:
+            print("Error:", e)
+            return jsonify({"Error": "There has been an error, please try again later"}), 400
 
     return {}, 200
 

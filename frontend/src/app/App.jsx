@@ -1,11 +1,11 @@
 import './App.css'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import CookieConsent from "react-cookie-consent";
 
 import { Post, Get, UserConnected, AuthContext, Navbar, Footer } from './utils'
-import { Home, Login, Signup, Logout, Chat } from './pages'
+import { Home, Login, Signup, FormCreateAccount, Logout, Chat } from './pages'
 
 export default function App () {
   const [userAuthData, setUserAuth] = useState(null);
@@ -17,6 +17,8 @@ export default function App () {
       }
     });
   }, [])
+
+  const value = useMemo(() => ({ userAuthData, setUserAuth }), [userAuthData, setUserAuth]);
 
   return (
     <>
@@ -30,18 +32,22 @@ export default function App () {
         This website uses cookies to enhance the user experience. {" "}
       </CookieConsent>
 
-      <AuthContext.Provider value={{ userAuthData, setUserAuth }}>
-        <Navbar />
+      <AuthContext.Provider value={value}>
+        <div className="flex flex-col min-h-screen">
+          <div className="flex-grow">
+            <Navbar />        
+            <Routes>
+              <Route path='/' element={<Home  />} />
+              <Route path='/login' element={<Login />} />
+              <Route path='/signup' element={<Signup />} />
+              <Route path='/logout' element={<Logout />} />
+              <Route path='/chat' element={<Chat />} />
 
-        <Routes>
-          <Route path='/' element={<Home  />} />
-          <Route path='/login' element={<Login />} />
-          <Route path='/signup' element={<Signup />} />
-          <Route path='/logout' element={<Logout />} />
-          <Route path='/chat' element={<Chat />} />
-        </Routes>
-        
-        <Footer />
+              <Route path='/signup/get-started' element={<FormCreateAccount />} />
+            </Routes>
+          </div>
+          <Footer className="mt-auto"/>
+        </div>
       </AuthContext.Provider>
     </>
   ) 

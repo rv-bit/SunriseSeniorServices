@@ -120,7 +120,7 @@ export const Login = () => {
         <Tabs defaultValue="sign-in" className='w-[400px]'>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="sign-in">Login</TabsTrigger>
-            <TabsTrigger value="sign-up"onClick={(event) => { event.stopPropagation(); navigate('/signup'); }}>Sign Up</TabsTrigger>
+            <TabsTrigger value="sign-up" onClick={(event) => { event.stopPropagation(); navigate('/signup'); }}>Sign Up</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sign-in">
@@ -168,6 +168,10 @@ export const Login = () => {
                     }}><AiOutlineGoogle className='mr-2'/>Login with Google</Button>
                 }
               </CardFooter>
+              
+              <CardContent className="space-y-2 text-center">
+                <Label onClick={(event) => {event.preventDefault(); navigate('/signup');}} className="text-center mb-6">Don't have an account, <Label className='underline text-cyan-600 hover:text-sky-400 cursor-pointer'>Join</Label></Label>
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
