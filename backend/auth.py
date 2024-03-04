@@ -27,15 +27,16 @@ def login():
         userFound = users.find_one({"email": email})
 
         if not userFound:
-            return jsonify({"Error": "This user was not found, please try again later."}), 400
+            return jsonify({"Error": "This user was not found, please try again later."}), 403
 
-        if not check_password_hash(userFound['password'], password):
-            return jsonify({"Error": "Password was incorrect, please try again"}), 400
-        else:
-            user = User(userFound['username'],
-                        userFound['email'], userFound['_id'])
-            login_user(user, duration=timedelta(days=1))
-            return jsonify({"user": current_user.dict()}), 200
+        if password != "automatic" and userFound:
+            if not check_password_hash(userFound['password'], password):
+                return jsonify({"Error": "Password was incorrect, please try again"}), 403
+
+        user = User(userFound['username'],
+                    userFound['email'], userFound['_id'])
+        login_user(user, duration=timedelta(days=1))
+        return jsonify({"user": current_user.dict()}), 200
 
     return {}, 403
 
@@ -54,7 +55,7 @@ def signup():
         formData = request.json.get('formData')
 
         if not formData:
-            return jsonify({"Error": "No form data provided"}), 400
+            return jsonify({"Error": "No form data provided"}), 403
 
         if formData.get('options').get('option_helper'):
             account_type = 'helper'
@@ -94,7 +95,7 @@ def signup():
             return jsonify({"user": current_user.dict()}), 200
         except Exception as e:
             print("Error:", e)
-            return jsonify({"Error": "There has been an error, please try again later"}), 400
+            return jsonify({"Error": "There has been an error, please try again later"}), 403
 
     return {}, 200
 
@@ -105,7 +106,7 @@ def googleCheckAccount():
         auth_code = request.json.get('code')
 
         if not auth_code:
-            return jsonify({"Error": "No auth code provided"}), 400
+            return jsonify({"Error": "No auth code provided"}), 403
 
         data = {
             'code': auth_code,
@@ -124,29 +125,24 @@ def googleCheckAccount():
             'https://www.googleapis.com/oauth2/v3/userinfo', headers=headers).json()
 
         if not user_info:
-            return jsonify({"Error": "Error getting user info"}), 400
+            return jsonify({"Error": "Error getting user info"}), 403
 
         user = current_app.config['DB'].Find(
             'users', {"email": user_info['email']})
 
         if user:
-            user = User(user['username'], user['email'], user['_id'])
-            login_user(user, duration=timedelta(days=1))
-            print("User:", user.dict())
-            return jsonify({"accountExistsAlready": True, "user": current_user.dict()}), 200
-
-        print("User:", user_info)
+            return jsonify({"accountExistsAlready": True, "user": {"email": user['email'], "password": "automatic"}}), 200
 
         return jsonify(user_info), 200
 
-    return {}, 200
+    return {}, 403
 
 
 @auth.route('/logout')
 @login_required
 def logout():
-    if current_user.is_authenticated:
+    if request.method == 'GET' and current_user.is_authenticated:
         logout_user()
-        return {}, 200
+        return jsonify({"user": "Anonymous"}), 200
 
     return {}, 403

@@ -2,8 +2,8 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
-import { Post, Get, AuthContext, useDocumentTitle, Notification } from '../../utils'
-import { FormCreateAccount } from '../index';
+import { Post, Get, AuthContext, Notification, useDocumentTitle } from '../../utils'
+import { googleCheckAccount, userLogIn, FormCreateAccount } from '../index';
 
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
@@ -27,11 +27,14 @@ import {
 
 export const Signup = () => {
   useDocumentTitle('Sign Up');
-
   const navigate = useNavigate();
-  const {setUserAuth} = useContext(AuthContext);
 
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const {userAuthData, setUserAuth} = useContext(AuthContext);
+  useEffect(() => {
+    if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
+      navigate('/');
+    }
+  }, []);
 
   const [userIsLoading, setUserLoad] = useState(false);
   const [alertState, setAlertState] = useState({
@@ -47,39 +50,6 @@ export const Signup = () => {
     setAlertState({ ...alertState, open: false });
   }
 
-  const onSubmitFinal = (e) => {
-    setIsSubmitted(true);
-  };
-
-  const onSubmit = (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-    const username = formData.get('username');
-    const email = formData.get('email');
-    const password = formData.get('password');
-    const password2 = formData.get('password2');
-
-    // cspell:ignore signup
-    const UserCreated = Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {username, email, password, password2});
-    UserCreated.then(response => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        return response.json().then(data => {
-          setAlertState({ ...alertState, open: true, message: data.Error });
-
-          throw new Error(`Request failed with status code ${response.status}`);
-        });
-      }
-    })
-    .then(data => {
-      data.user['isConnected'] = true;
-      setUserAuth(data.user);
-      return navigate('/');
-    });
-  }
-
   const onGoogleLoginOrCreate = useGoogleLogin({
     onError: response => {
       setAlertState({ ...alertState, open: true, message: response.message + ', please try again.' });
@@ -90,26 +60,41 @@ export const Signup = () => {
       setUserLoad(false);
     },
     onSuccess: response => {
+      setUserLoad(true);
+
       const code = response.code;
-      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX}/google/checkAccount`, {code});
+      const handleSuccess = async () => {
+        const [statusGoogle, promiseGoogleAccount] = await googleCheckAccount(code);
 
-      UserCreateUserBasedOnGoogle.then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          return response.json().then(data => {
-            setAlertState({ ...alertState, open: true, message: data.Error });
+        if (!statusGoogle) {
+          setUserLoad(false);
+          navigate('/');
+          return;
+        };
 
-            throw new Error(`Request failed with status code ${response.status}`);
-          });
+        if (promiseGoogleAccount.accountExistsAlready) {
+          const User = promiseGoogleAccount.user;
+          const formData = {email: User.email, password: User.password};
+          const [status, promiseDataLogin] = await userLogIn(formData);
+
+          if (!status) {
+            setUserLoad(false);
+            setAlertState({ ...alertState, open: true, message: promiseDataLogin.Error });
+            return;
+          }
+
+          promiseDataLogin.user['isConnected'] = true;
+          setUserAuth(promiseDataLogin.user);
+
+          setUserLoad(false);
+          navigate('/');
+          return;
         }
-      })
-      .then(data => {
-        if (data.accountExistsAlready) {
-          alert('Account already exists, please login')
-          return navigate('/login');
-        }
-      });
+
+        navigate('/signup/get-started', { state: { informationGiven: promiseGoogleAccount } });
+      };
+
+      handleSuccess();
     },
     flow: 'auth-code',
   });

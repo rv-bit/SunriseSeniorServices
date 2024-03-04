@@ -28,22 +28,25 @@ export default function App () {
         style={{ background: "#2B373B" }}
         buttonStyle={{ color: "#4e503b", fontSize: "13px" }}
         expires={1}
-      > 
-        This website uses cookies to enhance the user experience. {" "}
+      >This website uses cookies to enhance the user experience. {" "}
       </CookieConsent>
 
       <AuthContext.Provider value={value}>
         <div className="flex flex-col min-h-screen">
           <div className="flex-grow">
-            <Navbar />        
+            <Navbar />
             <Routes>
-              <Route path='/' element={<Home  />} />
-              <Route path='/login' element={<Login />} />
-              <Route path='/signup' element={<Signup />} />
-              <Route path='/logout' element={<Logout />} />
-              <Route path='/chat' element={<Chat />} />
+                <Route path='/' element={<Home />} />
+                <Route path='/login' element={<Login />} />
+                <Route path='/signup' element={<Signup />} />
+                <Route path='/logout' element={<Logout />} />
+                <Route path='/chat' element={<Chat />} />
 
-              <Route path='/signup/get-started' element={<FormCreateAccount />} />
+                <Route path='/signup/get-started' element={<FormCreateAccount />} />
+
+                {/* Create pages for not found then add a button for redirect */}
+                <Route path='/404' element={<Home />} />
+                <Route path='*' element={<Home />} />
             </Routes>
           </div>
           <Footer className="mt-auto"/>

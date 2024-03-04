@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
-import { Post, Notification } from '../../utils'
+import { Post, Notification, AuthContext } from '../../utils'
 
 import { Loader2 } from "lucide-react"
 import {
@@ -152,7 +152,13 @@ const formSteps = [
             password2: z.string().min(6, {
                 message: "Password must be at least 6 characters.",
             })
-        })
+        }),
+
+        refineData: {
+            func: (data) => data.password === data.password2,
+            message: "Passwords must match.",
+            path: ["password2"],
+        },
     }
 ]
 
@@ -163,51 +169,49 @@ const defaultValues = formSteps.reduce((values, step) => {
     return values;
 }, {});
 
-async function checkAccount(email, alertState, setAlertState) {
-    if (email) {
-        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {"checkAccount": true, "email": email});
-        if (response.ok) {
-            const data = await response.json();
+async function checkAccountUsingEmail(email, alertState, setAlertState) {
+    if (!email) return;
 
-            if (data.accountExistsAlready) {
-                setAlertState({ ...alertState, open: true, message: 'An account with this email already exists.' });
-                return false;
-            }
+    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {"checkAccount": true, "email": email});
 
-            return true;
-        } else {
-            const data = await response.json();
-            setAlertState({ ...alertState, open: true, message: data.Error });
-
-            throw new Error(`Request failed with status code ${response.status}`);
-        }
+    if (!response.ok) {
+        const data = await response.json();
+        setAlertState({ ...alertState, open: true, message: data.Error });
+        return false;
     }
+
+    const data = await response.json();
+    if (data.accountExistsAlready) {
+        setAlertState({ ...alertState, open: true, message: 'An account with this email already exists.' });
+        return false;
+    }
+
+    return true;
 }
 
 async function createUser(formData, alertState, setAlertState) {
+    if (!formData) return;
+
     const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {formData});
-    if (response.ok) {
-        const data = await response.json();
-
-        if (!data.accountExistsAlready) {
-            setAlertState({ ...alertState, open: true, message: 'Successfully created account.' });
-            return true;
-        }
-
+    if (!response.ok) {
+        setAlertState({ ...alertState, open: true, message: 'An account with this email already exists.' });
         return false;
-    } else {
-        return response.json().then(data => {
-            setAlertState({ ...alertState, open: true, message: data.Error });
-
-            throw new Error(`Request failed with status code ${response.status}`);
-        });
     }
+
+    const data = await response.json();
+    if (!data.accountExistsAlready) {
+        setAlertState({ ...alertState, open: true, message: 'Successfully created account.' });
+        return true;
+    }
+
+    return false;
 }
 
-const transitionSetting = { ease: [0.29, 0.83, 0.57, 0.99], duration: 0.4 };
-
-export const FormCreateAccount = () => {
+export const FormCreateAccount = ( ) => {
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const {userAuthData, setUserAuth} = useContext(AuthContext);
 
     const [currentStep, setCurrentStep] = useState(0);
     const [currentSubStep, setCurrentSubStep] = useState(1);
@@ -220,17 +224,43 @@ export const FormCreateAccount = () => {
     
     const form = useForm({defaultValues});
 
+    useEffect(() => {
+        if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
+            console.log('userAuthData', userAuthData);
+            navigate('/');
+        }
+
+        const informationGiven = location.state?.informationGiven;
+        if (informationGiven) {
+            const formDataTemp = {
+                email: informationGiven.email,
+                first_name: informationGiven.given_name,
+                last_name: informationGiven.family_name,
+            }
+
+            Object.entries(formDataTemp).forEach(([key, value]) => {
+                form.setValue(key, value);
+
+                setFormData(prevData => {
+                    const updatedData = { ...prevData, [key]: value };
+                    return updatedData;
+                });
+            });
+
+            setCurrentStep(1);
+        }
+    }, []);
+
     const [userIsLoading, setUserLoad] = useState(false);
     const [alertState, setAlertState] = useState({
         open: false,
         message: '',
     });
 
-    const [isAnimating, setIsAnimating] = useState(false);
 
     const alertHandleClose = (event, reason) => {
         if (reason === 'clickaway') {
-        return;
+            return;
         }
 
         setAlertState({ ...alertState, open: false });
@@ -246,7 +276,7 @@ export const FormCreateAccount = () => {
                     setTimeout(() => {
                         setUserLoad(false);
                         navigate('/login');
-                    }, 3000);
+                    }, 2000);
                 }
             } else if (currentStep > 0 || currentSubStep > 1) {
                 const nextFieldNames = formSteps[currentStep]?.fields
@@ -291,10 +321,17 @@ export const FormCreateAccount = () => {
         const formDataWithOption = { ...dataWithoutOptionKeys, options: formDataOptions };
 
         const currentFields = formSteps[currentStep].fields.filter(field => field.step ? field.step === currentSubStep : true);
-        const currentValidationSchema = z.object(currentFields.reduce((schema, field) => {
-            schema[field.name] = formSteps[currentStep].validationSchema.shape[field.name];
+        let currentValidationSchema = z.object(currentFields.reduce((schema, field) => {
+            schema[field.name] = formSteps[currentStep]?.validationSchema.shape[field.name];
             return schema;
         }, {}));
+
+        if (formSteps[currentStep]?.refineData) {
+            currentValidationSchema = currentValidationSchema.refine(formSteps[currentStep].refineData.func, {
+                message: formSteps[currentStep].refineData.message,
+                path: formSteps[currentStep].refineData.path,
+            });
+        }
         
         const result = currentValidationSchema.safeParse(data);
 
@@ -330,16 +367,17 @@ export const FormCreateAccount = () => {
         if (data.email && currentStep === 0 && currentSubStep === 1) {
             setUserLoad(true);
 
-            const accountDoesNotExist = await checkAccount(data.email, alertState, setAlertState);
-            if (accountDoesNotExist) {
-                setUserLoad(false);
-                moveToNextStep(data);
-            } else {
+            const accountDoesNotExist = await checkAccountUsingEmail(data.email, alertState, setAlertState);
+            if (!accountDoesNotExist) {
                 setTimeout(() => {
                     setUserLoad(false);
                     navigate('/login'); 
-                }, 3000);
+                }, 2000);
+                return;
             }
+
+            setUserLoad(false);
+            moveToNextStep(data);
         } else {
             moveToNextStep(data);
         }
@@ -419,19 +457,22 @@ export const FormCreateAccount = () => {
                         <div className='space-x-2'>
                             {
                                 (currentStep !== 0 || currentSubStep > 1) && (
-                                    <Button disabled={isAnimating} type="button" onClick={() => {
-                                        if (currentSubStep > 1) {
-                                            setCurrentSubStep(currentSubStep - 1);
-                                            setHasUserNavigatedBack(true);
-                                        } else if (currentStep > 0) {
-                                            setCurrentStep(currentStep - 1);
+                                    userIsLoading ?
+                                        <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
+                                    :
+                                        <Button type="button" onClick={() => {
+                                            if (currentSubStep > 1) {
+                                                setCurrentSubStep(currentSubStep - 1);
+                                                setHasUserNavigatedBack(true);
+                                            } else if (currentStep > 0) {
+                                                setCurrentStep(currentStep - 1);
 
-                                            const maxSubStep = Math.max(...formSteps[currentStep - 1].fields.map(field => field.step || 1));
-                                            setCurrentSubStep(maxSubStep);
+                                                const maxSubStep = Math.max(...formSteps[currentStep - 1].fields.map(field => field.step || 1));
+                                                setCurrentSubStep(maxSubStep);
 
-                                            setHasUserNavigatedBack(true);
-                                        }
-                                    }}>Back</Button>
+                                                setHasUserNavigatedBack(true);
+                                            }
+                                        }}>Back</Button>
                                 )
                             }
 
@@ -439,7 +480,7 @@ export const FormCreateAccount = () => {
                                 userIsLoading ?
                                     <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
                                 :
-                                    <Button disabled={isAnimating} type="submit"> { (currentStep !== formSteps.length - 1) ? "Next" : "Submit" } </Button>
+                                    <Button type="submit"> { (currentStep !== formSteps.length - 1) ? "Next" : "Submit" } </Button>
                             )}
                         </div>
                     </form>

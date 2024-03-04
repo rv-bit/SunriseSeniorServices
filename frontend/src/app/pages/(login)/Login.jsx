@@ -4,6 +4,8 @@ import { useGoogleLogin } from '@react-oauth/google';
 
 import { Post, Get, AuthContext, useDocumentTitle, Notification } from '../../utils'
 
+import { googleCheckAccount, userLogIn, FormCreateAccount } from '../index';
+
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
 import { MdClose } from "react-icons/md"
@@ -25,30 +27,17 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 
-// async function googleCheckAccount(code, alertState, setAlertState) {
-//   if (email) {
-//     const response = await Post(`${import.meta.env.VITE_API_PREFIX}/google/checkAccount`, {code});
-//     if (response.ok) {
-//       const data = await response.json();
-
-//       if (data.accountExistsAlready) {
-//           setAlertState({ ...alertState, open: true, message: 'An account with this email already exists.' });
-//           return false;
-//       }
-
-//       return true;
-//     } else {
-//       const data = await response.json();
-//       setAlertState({ ...alertState, open: true, message: data.Error });
-
-//       throw new Error(`Request failed with status code ${response.status}`);
-//     }
-//   }
-// }
-
 export const Login = () => {
   useDocumentTitle('Login')
   const navigate = useNavigate();
+  
+  const {userAuthData, setUserAuth} = useContext(AuthContext);
+
+  useEffect(() => {
+    if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
+      navigate('/');
+    }
+  }, []);
 
   const [userIsLoading, setUserLoad] = useState(false);
   const [alertState, setAlertState] = useState({
@@ -56,7 +45,6 @@ export const Login = () => {
     message: '',
   });
 
-  const {setUserAuth} = useContext(AuthContext);
 
   const alertHandleClose = (event, reason) => {
     if (reason === 'clickaway') {
@@ -67,32 +55,29 @@ export const Login = () => {
   }
 
   const onSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault();    
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    const UserLoggedIn = Post(`${import.meta.env.VITE_API_PREFIX}/login`, {email, password});
-    setUserLoad(true);
+    const handleSuccess = async () => {
+      setUserLoad(true);
 
-    UserLoggedIn.then(response => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        return response.json().then(data => {
-          setAlertState({ ...alertState, open: true, message: data.Error });
-          setUserLoad(false);
+      const formData = {email: email, password: password};
+      const [status, promiseData] = await userLogIn(formData);
 
-          throw new Error(`Request failed with status code ${response.status}`);
-        });
+      if (!status) {
+        setUserLoad(false);
+        setAlertState({ ...alertState, open: true, message: promiseData.Error });
+        return;
       }
-    })
-    .then(data => {
-      data.user['isConnected'] = true;
-      setUserAuth(data.user);
-      setUserLoad(false);
 
-      return navigate('/');
-    });
+      promiseData.user['isConnected'] = true;
+      setUserAuth(promiseData.user);
+      setUserLoad(false);
+      navigate('/');
+    };
+
+    handleSuccess();
   }
 
   const onGoogleLoginOrCreate = useGoogleLogin({
@@ -104,31 +89,42 @@ export const Login = () => {
       setAlertState({ ...alertState, open: true, message: response.message + ', please try again.' });
       setUserLoad(false);
     },
-    onSuccess: response => {    
+    onSuccess: response => {  
+      setUserLoad(true);
+
       const code = response.code;
-      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX}/google/checkAccount`, {code});
-    
-      UserCreateUserBasedOnGoogle.then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          return response.json().then(data => {
-            setAlertState({ ...alertState, open: true, message: data.Error });
-            setUserLoad(false);
+      const handleSuccess = async () => {
+        const [statusGoogle, promiseGoogleAccount] = await googleCheckAccount(code);
 
-            throw new Error(`Request failed with status code ${response.status}`);
-          });
-        }
-      })
-      .then(data => {
-        if (data.user) {
-          data.user['isConnected'] = true;
-          setUserAuth(data.user);
+        if (!statusGoogle) {
           setUserLoad(false);
+          navigate('/');
+          return;
+        };
 
-          return navigate('/');
+        if (promiseGoogleAccount.accountExistsAlready) {
+          const User = promiseGoogleAccount.user;
+          const formData = {email: User.email, password: User.password};
+          const [status, promiseData] = await userLogIn(formData);
+
+          if (!status) {
+            setUserLoad(false);
+            setAlertState({ ...alertState, open: true, message: promiseData.Error });
+            return;
+          }
+
+          promiseData.user['isConnected'] = true;
+          setUserAuth(promiseData.user);
+
+          setUserLoad(false);
+          navigate('/');
+          return;
         }
-      });
+
+        navigate('/signup/get-started', { state: { informationGiven: promiseGoogleAccount } });
+      };
+
+      handleSuccess();
     },
     flow: 'auth-code',
   });
