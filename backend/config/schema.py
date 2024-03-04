@@ -14,6 +14,7 @@ def USER_TABLE():
 
         # helper, requester
         "account_type": {"default_value": "helper", "type": str},
+        "account_preferences": {"default_value": {}, "type": dict},
 
         "created_at": {"default_value": datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S'), "type": str},
     }

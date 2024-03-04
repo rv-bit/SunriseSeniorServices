@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { Post, Notification } from '../../utils'
+
+import { Loader2 } from "lucide-react"
 import {
   Form,
   FormControl,
@@ -18,6 +21,23 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 const formSteps = [
+    {
+        name: "Account Information",
+        fields: [
+            {
+                name: 'email',
+                label: 'Email',
+                placeholder: 'email@gmail.com',
+                description: 'Your email',
+            },
+        ],
+
+        validationSchema: z.object({
+            email: z.string().email({
+                message: "Must be a valid email address.",
+            }),
+        }),
+    },
     {
         name: "Welcome, tell us about yourself",
         fields: [
@@ -102,23 +122,6 @@ const formSteps = [
         }),
     },
     {
-        name: "Account Information",
-        fields: [
-            {
-                name: 'email',
-                label: 'Email',
-                placeholder: 'email@gmail.com',
-                description: 'Your email',
-            },
-        ],
-
-        validationSchema: z.object({
-            email: z.string().email({
-                message: "Must be a valid email address.",
-            }),
-        }),
-    },
-    {
         name: "Security Information",
         fields: [
             {
@@ -126,6 +129,14 @@ const formSteps = [
                 label: 'Password',
                 placeholder: 'password',
                 description: 'Your password',
+                step: 1,
+            },
+            {
+                name: 'password2',
+                label: 'Password Confirmation',
+                placeholder: '',
+                description: 'Your password Confirmation',
+                step: 1,
             },
         ],
 
@@ -133,16 +144,60 @@ const formSteps = [
             password: z.string().min(6, {
                 message: "Password must be at least 6 characters.",
             }),
-        }),
+            password2: z.string().min(6, {
+                message: "Password must be at least 6 characters.",
+            })
+        })
     },
 ]
 
 const defaultValues = formSteps.reduce((values, step) => {
-  step.fields.forEach(field => {
-    values[field.name] = '';
-  });
-  return values;
+    step.fields.forEach(field => {
+        values[field.name] = '';
+    });
+    return values;
 }, {});
+
+async function checkAccount(email, alertState, setAlertState) {
+    if (email) {
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {"checkAccount": true, "email": email});
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.accountExistsAlready) {
+                setAlertState({ ...alertState, open: true, message: 'An account with this email already exists.' });
+                return false;
+            }
+
+            return true;
+        } else {
+            const data = await response.json();
+            setAlertState({ ...alertState, open: true, message: data.Error });
+
+            throw new Error(`Request failed with status code ${response.status}`);
+        }
+    }
+}
+
+async function createUser(formData, alertState, setAlertState) {
+    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {formData});
+    if (response.ok) {
+        const data = await response.json();
+
+        if (!data.accountExistsAlready) {
+            setAlertState({ ...alertState, open: true, message: 'Successfully created account.' });
+            return true;
+        }
+
+        return false;
+    } else {
+        return response.json().then(data => {
+            setAlertState({ ...alertState, open: true, message: data.Error });
+
+            throw new Error(`Request failed with status code ${response.status}`);
+        });
+    }
+}
 
 export const FormCreateAccount = () => {
     const navigate = useNavigate();
@@ -158,49 +213,66 @@ export const FormCreateAccount = () => {
     
     const form = useForm({defaultValues});
 
-    useEffect(() => {
-        if (currentStep === formSteps.length) {
-            console.log('submit', formData);
-            navigate('/login')
-            return;
-        } else if (currentStep > 0 || currentSubStep > 1) {
-            const nextFieldNames = formSteps[currentStep]?.fields
-                .filter(field => field.step ? field.step === currentSubStep : true)
-                .map(field => field.name);
+    const [userIsLoading, setUserLoad] = useState(false);
+    const [alertState, setAlertState] = useState({
+        open: false,
+        message: '',
+    });
 
-            nextFieldNames.forEach(fieldName => {
-                form.setValue(fieldName, '');
-            });
+    const alertHandleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+        return;
         }
+
+        setAlertState({ ...alertState, open: false });
+    }
+
+    useEffect(() => {
+        const createUserAndNavigate = async () => {
+            if (currentStep === formSteps.length) {
+                setUserLoad(true);
+                const userCreated = await createUser(formData, alertState, setAlertState);
+
+                if (userCreated) {
+                    setTimeout(() => {
+                        setUserLoad(false);
+                        navigate('/login');
+                    }, 3000);
+                }
+            } else if (currentStep > 0 || currentSubStep > 1) {
+                const nextFieldNames = formSteps[currentStep]?.fields
+                    .filter(field => field.step ? field.step === currentSubStep : true)
+                    .map(field => field.name);
+
+                nextFieldNames.forEach(fieldName => {
+                    form.setValue(fieldName, '');
+                });
+            }
+
+        };
+
+        createUserAndNavigate();
     }, [formData]);
 
     const handleSetOptionClick = (optionName, step) => {    
-        console.log('optionName', optionName, step);
-
         setFormDataOptions(prevState => {
-            // Get the keys of the options that belong to the same step
             const sameStepKeys = Object.keys(prevState).filter(key => {
                 const optionStep = formSteps[currentStep]?.fields.find(option => option.name === key)?.step;
                 console.log('optionStep', optionStep, optionStep === step);
                 return optionStep === step;
             });
 
-            // Remove the options that belong to the same step
             const newState = { ...prevState };
             sameStepKeys.forEach(key => {
-                console.log('key', key);
-
                 delete newState[key]
             });
 
-            // Add the new option
             newState[optionName] = true;
-
             return newState;
         });
     };
 
-    const onSubmit = (data) => {
+    const moveToNextStep = (data) => {
         const dataWithoutOptionKeys = Object.keys(data)
             .filter(key => !key.includes('option_'))
             .reduce((result, key) => {
@@ -238,14 +310,32 @@ export const FormCreateAccount = () => {
             });
 
             if (formSteps[currentStep].fields.some(field => field.step === currentSubStep + 1)) {
-                // If there are more sub-steps, go to the next sub-step
                 setCurrentSubStep(currentSubStep + 1);
             } else {
-                // If there are no more sub-steps, go to the next step and reset currentSubStep
                 setCurrentStep(currentStep + 1);
                 setCurrentSubStep(1);
             }
         }
+    }
+
+    const onSubmit = async (data) => {
+        if (data.email && currentStep === 0 && currentSubStep === 1) {
+            setUserLoad(true);
+
+            const accountDoesNotExist = await checkAccount(data.email, alertState, setAlertState);
+            if (accountDoesNotExist) {
+                setUserLoad(false);
+                moveToNextStep(data);
+            } else {
+                setTimeout(() => {
+                    setUserLoad(false);
+                    navigate('/login'); 
+                }, 3000);
+            }
+        } else {
+            moveToNextStep(data);
+        }
+
     }
 
     useEffect(() => {
@@ -323,7 +413,6 @@ export const FormCreateAccount = () => {
                                         } else if (currentStep > 0) {
                                             setCurrentStep(currentStep - 1);
 
-                                            // Find the maximum sub-step of the previous step
                                             const maxSubStep = Math.max(...formSteps[currentStep - 1].fields.map(field => field.step || 1));
                                             setCurrentSubStep(maxSubStep);
 
@@ -334,12 +423,23 @@ export const FormCreateAccount = () => {
                             }
 
                             {!formSteps[currentStep]?.fields.some(field => field.type === "button") && (
-                                <Button type="submit"> { (currentStep !== formSteps.length - 1) ? "Next" : "Submit" } </Button>
+                                userIsLoading ?
+                                    <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
+                                :
+                                    <Button type="submit"> { (currentStep !== formSteps.length - 1) ? "Next" : "Submit" } </Button>
                             )}
                         </div>
                     </form>
                 </Form>
             </div>
+
+        {alertState.open && (
+            <Notification
+                open={alertState.open}
+                handleClose={alertHandleClose}
+                message={alertState.message}
+            />
+        )}
         </div>
     )
 };

@@ -43,28 +43,41 @@ def login():
 @auth.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        email = request.json.get('email')
-        password = request.json.get('password')
-        password2 = request.json.get('password2')
-        username = request.json.get('username')
+        if request.json.get('checkAccount'):
+            email = request.json.get('email')
+            user = current_app.config['DB'].Find('users', {"email": email})
+            if user:
+                return jsonify({"accountExistsAlready": True}), 200
 
-        if password != password2 or not password:
-            return jsonify({"Error": "Passwords dont match"}), 400
-        elif current_app.config['DB'].Find('users', {"email": email}):
-            return jsonify({"Error": "User Already Exists"}), 400
-        elif parseaddr(email) == ('', '') or '@' not in email or '.' not in email:
-            return jsonify({"Error": "Invalid email"}), 400
-        elif not username:
-            return jsonify({"Error": "Invalid username"}), 400
+            return jsonify({"accountExistsAlready": False}), 200
+
+        formData = request.json.get('formData')
+
+        if not formData:
+            return jsonify({"Error": "No form data provided"}), 400
+
+        print("Form data:", formData.get('email'), type(formData))
+
+        if formData.get('options').get('option_helper'):
+            account_type = 'helper'
+
+        if formData.get('options').get('option_requester'):
+            account_type = 'requester'
 
         try:
             _id = uuid.uuid4().hex
 
             variables = {
                 "_id": _id,
-                "email": email,
-                "password": generate_password_hash(password, method='pbkdf2', salt_length=16),
-                "username": username,
+                "email": formData.get('email'),
+                "password": generate_password_hash(formData.get('password'), method='pbkdf2', salt_length=16),
+                "username": formData.get('username'),
+                "first_name": formData.get('first_name'),
+                "last_name": formData.get('last_name'),
+                "account_type": account_type or 'helper',
+                # "account_preferences": formData.get('account_preferences').get('preferences') or {},
+                # "account_preferences": {formData.get('options').get('option_childcare') or formData.get('options').get('option_seniorcare') or formData.get('options').get('option_petcare')} or {},
+                "phone": formData.get('phone') or "",
             }
 
             user_data = prepare_document('users', variables)
@@ -75,7 +88,8 @@ def signup():
             if not created_user:
                 return jsonify({"Error": "Error creating user please try again later"}), 403
 
-            userObject = User(username, email, _id)
+            userObject = User(variables.get('username'),
+                              variables.get('username'), _id)
             login_user(userObject, remember=True)
             return jsonify({"user": current_user.dict()}), 200
         except Exception as e:
