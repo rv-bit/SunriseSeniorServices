@@ -1,0 +1,284 @@
+*{
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+}
+ html{
+   height: 100%;
+ }
+body{
+	font-family: Arial, Helvetica, sans-serif;
+  font-size:15px;
+  line-height:1.5;
+	padding:0;
+	margin:0;
+	background:url('BackgroundPg3.jpg') no-repeat;
+  background-color: #332E2C;
+
+  min-height: 100%;
+
+  display: flex;
+  flex-direction: column;
+}
+
+nav{
+ display: flex;
+ justify-content: space-around;
+ align-items: center;
+ min-height: 8vh;
+ background-color: #332E2C;
+ font-family: 'Poppins', sans-serif;
+
+
+}
+body .highlight, body .current a{
+  color: #D75100;
+}
+
+.logo{
+ color: rgb(226, 226, 226);
+ text-transform: uppercase;
+ letter-spacing: 5px;
+ font-size: 20px;
+ text-align: center;
+}
+
+.logo img{
+  padding-top: 20px;
+}
+.nav-links{
+  display: flex;
+  justify-content: space-around;
+  width: 30%;
+}
+.nav-links li{
+  list-style: none;
+}
+.nav-links a{
+  color: rgb(226, 226, 226);
+  text-decoration: none;
+  letter-spacing: 3px;
+  font-weight: bold;
+  font-size: 14px;
+}
+.burger{
+  display:none;
+  cursor: pointer;
+}
+
+.burger div{
+  width: 25px;
+  height: 3px;
+  background-color: rgb(226, 226, 226);
+  margin: 5px;
+  transition: all 0.3s ease;
+}
+
+
+  @media screen and (max-width:1024px){
+    .nav-links{
+      width:60%;
+    }
+  }
+  @media screen and (max-width:768px){
+    body{
+      overflow-x: hidden;
+    }
+    .nav-links{
+      position: absolute;
+      right: 0px;
+      height: 92vh;
+      top: 8vh;
+      background-color: #332E2C;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 50%;
+      transform: translateX(100%);
+      transition: transform 0.5s ease-in;
+
+    }
+    .nav-links li{
+      opacity: 0;
+    }
+    .burger{
+      display: block;
+
+    }
+  }
+  .nav-active{
+    transform: translateX(0%);
+
+  }
+
+@keyframes navLinkFade{
+ from{
+   opacity: 0;
+   transform: translateX(50px);
+ }
+
+ to{
+   opacity: 1;
+   transform: translateX(0px);
+ }
+
+}
+
+.toggle .line1{
+  transform: rotate(-45deg) translate(-5px,6px);
+
+}
+.toggle .line2{
+  opacity: 0;
+}
+.toggle .line3{
+  transform: rotate(45deg) translate(-5px,-6px);
+
+}
+
+#footer{
+  padding:20px;
+  height: 100px;
+  color:#ffffff;
+  background-color:#46352D;
+  text-align:center;
+  margin-top: auto
+}
+/* Newsletter */
+#newsletter{
+  padding:15px;
+  color:#ffffff;
+  background:#35424a;
+}
+
+#newsletter h1{
+  float:left;
+}
+
+#newsletter form{
+  float:right;
+  margin-top:15px;
+}
+
+#newsletter input[type="email"]{
+  padding:4px;
+  height:25px;
+  width:250px;
+}
+/* Showcase */
+#showcase{
+
+  background:url('BackgroundPg3.jpg') no-repeat;
+  height: 100%;
+  position: sticky;
+
+}
+
+#showcase h1{
+  margin-top:100px;
+  font-size:55px;
+  margin-bottom:10px;
+}
+
+#showcase p{
+  font-size:20px;
+}
+
+.gallery{
+  margin: 10px 50px;
+
+
+
+}
+.gallery img{
+  transition: 1s;
+  padding: 15px;
+  width: 450px;
+
+}
+.gallery img:hover {
+  filter: grayscale(100%);
+  transform: scale(1.1);
+
+}
+
+.btn {
+  background-color: transparent;
+  border: none;
+  color: white;
+  padding: 12px 30px;
+  cursor: pointer;
+  font-size: 20px;
+  text-decoration: none;
+  text-decoration-color: white;
+}
+
+/* Darker background on mouse-over */
+.btn:hover {
+  background-color: white;
+  list-style: none;
+
+}
+.btnI{
+  background-color: transparent;
+  border: none;
+  color: white;
+  padding: 12px 30px;
+  cursor: pointer;
+  font-size: 20px;
+  text-decoration: none;
+  width: 100px;
+  margin: 0 auto;
+}
+.btnI:hover{
+  background-color: transparent;
+}
+
+.dark{
+  padding:15px;
+  background:#354248;
+  color:#ffffff;
+  margin-top:10px;
+  margin-bottom:10px;
+}
+#newsletter button, .Question button{
+  display:block;
+  width:100%;
+}
+
+#newsletter form input[type="email"], .Question input, .Question textarea{
+  width:100%;
+  margin-bottom:5px;
+}
+/* Newsletter */
+#newsletter{
+  padding:15px;
+  color:#ffffff;
+  background:#35424a;
+}
+
+#newsletter h1{
+  float:left;
+}
+
+#newsletter form{
+  float:right;
+  margin-top:15px;
+}
+
+#newsletter input[type="email"]{
+  padding:4px;
+  height:25px;
+  width:250px;
+}
+/* sidebar */
+aside#sidebar{
+  float:right;
+  width:30%;
+  margin-top:10px;
+}
+
+aside#sidebar .Question input, aside#sidebar .Question textarea{
+  width:90%;
+  padding:5px;
+}
