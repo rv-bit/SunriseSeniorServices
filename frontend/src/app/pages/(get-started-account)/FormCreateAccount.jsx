@@ -17,6 +17,8 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
+import { Stepper, Step } from 'react-form-stepper';
+
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -29,6 +31,7 @@ const formSteps = [
                 label: 'Email',
                 placeholder: 'email@gmail.com',
                 description: 'Your email',
+                type: 'email',
             },
         ],
 
@@ -130,6 +133,7 @@ const formSteps = [
                 placeholder: 'password',
                 description: 'Your password',
                 step: 1,
+                type: 'password',
             },
             {
                 name: 'password2',
@@ -137,6 +141,7 @@ const formSteps = [
                 placeholder: '',
                 description: 'Your password Confirmation',
                 step: 1,
+                type: 'password',
             },
         ],
 
@@ -148,7 +153,7 @@ const formSteps = [
                 message: "Password must be at least 6 characters.",
             })
         })
-    },
+    }
 ]
 
 const defaultValues = formSteps.reduce((values, step) => {
@@ -199,6 +204,8 @@ async function createUser(formData, alertState, setAlertState) {
     }
 }
 
+const transitionSetting = { ease: [0.29, 0.83, 0.57, 0.99], duration: 0.4 };
+
 export const FormCreateAccount = () => {
     const navigate = useNavigate();
 
@@ -218,6 +225,8 @@ export const FormCreateAccount = () => {
         open: false,
         message: '',
     });
+
+    const [isAnimating, setIsAnimating] = useState(false);
 
     const alertHandleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -258,7 +267,6 @@ export const FormCreateAccount = () => {
         setFormDataOptions(prevState => {
             const sameStepKeys = Object.keys(prevState).filter(key => {
                 const optionStep = formSteps[currentStep]?.fields.find(option => option.name === key)?.step;
-                console.log('optionStep', optionStep, optionStep === step);
                 return optionStep === step;
             });
 
@@ -335,7 +343,6 @@ export const FormCreateAccount = () => {
         } else {
             moveToNextStep(data);
         }
-
     }
 
     useEffect(() => {
@@ -358,21 +365,27 @@ export const FormCreateAccount = () => {
 
     return (
         <div className="max-w-screen-sm mx-auto">
-            <h1 className="text-center">Creating Account</h1>
             
-            <div className="flex justify-center items-center mt-64 mb-64">
+            <div className="flex justify-center items-center mt-64 mb-24">
+                <Stepper activeStep={currentStep} steps={formSteps[currentStep]?.name}>
+                    {formSteps.map((step, index) => (
+                        <Step key={index} label={step.name} />
+                    ))}
+                </Stepper>
+            </div>
+            
+            <div className="flex justify-center items-center mb-64">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="w-[400px] space-y-5">
-                        <h2 className='text-center'>{formSteps[currentStep]?.name}</h2>
                         {formSteps[currentStep]?.fields.filter(field => field.step ? field.step === currentSubStep : true).map((stepField, index) => {
                             return (
                                 <FormField
-                                    key={index}
+                                    key={`formField-${index}`}
                                     control={form.control}
                                     name={stepField.name}
                                     render={({ field }) => (
                                         stepField.type === "button" ?
-                                            <FormItem key={index}>
+                                            <FormItem key={`formItem-button-${index}`}>
                                                 <div type="button" className="bg-[#fffff] text-black font-medium rounded-lg px-5 py-4 border-2 border-black border-opacity-50 cursor-pointer transition-all hover:bg-[#dbd8d0] hover:backdrop-blur-[40px] hover:rounded-lg w-full text-left"
                                                     onClick={() => {
                                                         handleSetOptionClick(stepField.name, currentSubStep);
@@ -383,10 +396,10 @@ export const FormCreateAccount = () => {
                                                 </div>
                                             </FormItem>
                                         :
-                                            <FormItem key={index}>
+                                            <FormItem key={`formItem-input-${index}`}>
                                                 <FormLabel>{stepField.label}</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder={stepField.placeholder} {...field} />
+                                                    <Input type={stepField.type || "text"} placeholder={stepField.placeholder} {...field} />
                                                 </FormControl>
                                                 <FormDescription>
                                                     {stepField.description}
@@ -406,7 +419,7 @@ export const FormCreateAccount = () => {
                         <div className='space-x-2'>
                             {
                                 (currentStep !== 0 || currentSubStep > 1) && (
-                                    <Button type="button" onClick={() => {
+                                    <Button disabled={isAnimating} type="button" onClick={() => {
                                         if (currentSubStep > 1) {
                                             setCurrentSubStep(currentSubStep - 1);
                                             setHasUserNavigatedBack(true);
@@ -426,7 +439,7 @@ export const FormCreateAccount = () => {
                                 userIsLoading ?
                                     <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
                                 :
-                                    <Button type="submit"> { (currentStep !== formSteps.length - 1) ? "Next" : "Submit" } </Button>
+                                    <Button disabled={isAnimating} type="submit"> { (currentStep !== formSteps.length - 1) ? "Next" : "Submit" } </Button>
                             )}
                         </div>
                     </form>

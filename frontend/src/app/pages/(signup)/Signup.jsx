@@ -91,7 +91,7 @@ export const Signup = () => {
     },
     onSuccess: response => {
       const code = response.code;
-      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX}/google/signup`, {code});
+      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX}/google/checkAccount`, {code});
 
       UserCreateUserBasedOnGoogle.then(response => {
         if (response.ok) {

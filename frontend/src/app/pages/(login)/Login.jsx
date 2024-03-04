@@ -25,6 +25,27 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 
+// async function googleCheckAccount(code, alertState, setAlertState) {
+//   if (email) {
+//     const response = await Post(`${import.meta.env.VITE_API_PREFIX}/google/checkAccount`, {code});
+//     if (response.ok) {
+//       const data = await response.json();
+
+//       if (data.accountExistsAlready) {
+//           setAlertState({ ...alertState, open: true, message: 'An account with this email already exists.' });
+//           return false;
+//       }
+
+//       return true;
+//     } else {
+//       const data = await response.json();
+//       setAlertState({ ...alertState, open: true, message: data.Error });
+
+//       throw new Error(`Request failed with status code ${response.status}`);
+//     }
+//   }
+// }
+
 export const Login = () => {
   useDocumentTitle('Login')
   const navigate = useNavigate();

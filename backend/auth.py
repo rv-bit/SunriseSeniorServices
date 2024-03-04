@@ -56,8 +56,6 @@ def signup():
         if not formData:
             return jsonify({"Error": "No form data provided"}), 400
 
-        print("Form data:", formData.get('email'), type(formData))
-
         if formData.get('options').get('option_helper'):
             account_type = 'helper'
 
@@ -75,8 +73,10 @@ def signup():
                 "first_name": formData.get('first_name'),
                 "last_name": formData.get('last_name'),
                 "account_type": account_type or 'helper',
+
                 # "account_preferences": formData.get('account_preferences').get('preferences') or {},
                 # "account_preferences": {formData.get('options').get('option_childcare') or formData.get('options').get('option_seniorcare') or formData.get('options').get('option_petcare')} or {},
+
                 "phone": formData.get('phone') or "",
             }
 
@@ -89,7 +89,7 @@ def signup():
                 return jsonify({"Error": "Error creating user please try again later"}), 403
 
             userObject = User(variables.get('username'),
-                              variables.get('username'), _id)
+                              variables.get('email'), _id)
             login_user(userObject, remember=True)
             return jsonify({"user": current_user.dict()}), 200
         except Exception as e:
