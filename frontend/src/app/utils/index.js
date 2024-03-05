@@ -1,6 +1,5 @@
-export * from './(footer)/Footer';
-export * from './(navbar)/Navbar';
+export * from './hooks/Footer';
+export * from './hooks/Navbar';
 
-export * from './functions/Fetching';
-export * from './functions/UseDocumentTitle';
-export * from './functions/Notifications';
+export * from './hooks/UseDocumentTitle';
+export * from './hooks/Notifications';

@@ -3,6 +3,9 @@ import uuid
 
 class User():
     def __init__(self, userData):
+        if 'password' in userData:
+            del userData['password']
+
         self.id = userData['_id']
         self.userData = userData
 

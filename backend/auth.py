@@ -33,6 +33,9 @@ def login():
             if not check_password_hash(userFound['password'], password):
                 return jsonify({"Error": "Password was incorrect, please try again"}), 403
 
+        if 'password' in userFound:
+            del userFound['password']
+
         user = User(userFound)
         login_user(user, duration=timedelta(days=1))
         return jsonify({"user": current_user.get_user_info()}), 200
@@ -82,11 +85,12 @@ def signup():
 
             user_data = prepare_document('users', variables)
 
-            print("User data:", user_data)
-
             created_user = current_app.config['DB'].Insert('users', user_data)
             if not created_user:
                 return jsonify({"Error": "Error creating user please try again later"}), 403
+
+            if 'password' in user_data:
+                del user_data['password']
 
             userObject = User(user_data)
             login_user(userObject, remember=True)

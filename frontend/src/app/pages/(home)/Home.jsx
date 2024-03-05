@@ -1,7 +1,7 @@
-import './Home.css';
-
 import { useContext } from "react";
-import { Post, Get, AuthContext, useDocumentTitle} from '../../utils'
+
+import { useDocumentTitle} from '../../utils' // Custom hooks
+import { Post, Get, AuthContext } from '../../utils/utils' // Common functions
 
 export const Home = () => {
   useDocumentTitle('Home');

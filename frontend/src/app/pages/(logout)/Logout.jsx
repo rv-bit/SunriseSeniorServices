@@ -1,7 +1,7 @@
 import { useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Get, Post, AuthContext } from '../../utils';
+import { Post, Get, AuthContext } from '../../utils/utils' // Common functions
 
 export const Logout = () => {
     const {userAuthData, setUserAuth} = useContext(AuthContext);
@@ -10,6 +10,7 @@ export const Logout = () => {
     useEffect(() => {
         if (userAuthData === null || userAuthData === undefined) {
             navigate('/');
+            return;
         }
 
         const fetchData = async () => {
