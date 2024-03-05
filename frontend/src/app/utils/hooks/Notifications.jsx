@@ -1,5 +1,5 @@
-import Snackbar from '@mui/material/Snackbar';
 import { MdClose } from 'react-icons/md';
+import Snackbar from '@mui/material/Snackbar';
 
 export const Notification = ({ open, handleClose, message }) => {
   return (

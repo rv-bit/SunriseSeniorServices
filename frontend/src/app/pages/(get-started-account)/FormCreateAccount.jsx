@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-import { Post, Notification, AuthContext } from '../../utils'
+import { Notification } from '../../utils' // Custom hooks
+import { Post, Get, AuthContext } from '../../utils/utils' // Common functions 
 
 import { Loader2 } from "lucide-react"
 import {

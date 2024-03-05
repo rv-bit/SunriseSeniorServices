@@ -4,8 +4,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import CookieConsent from "react-cookie-consent";
 
-import { Post, Get, AuthContext, Navbar, Footer } from './utils'
-import { Home, Login, Signup, FormCreateAccount, Logout, Chat } from './pages'
+import { Navbar, Footer } from './utils' // Custom hooks
+import { Post, Get, AuthContext } from './utils/utils' // Common functions
+
+import * as Pages from './pages' // Import all pages
 
 export default function App () {
   const [userAuthData, setUserAuth] = useState(null);
@@ -14,8 +16,6 @@ export default function App () {
     const fetchData = async () => {
       const response = await Get(`${import.meta.env.VITE_API_PREFIX}/`);
       const data = await response.json();
-
-      console.log("data", data.user);
 
       if (data && data.user === 'Anonymous') {
         setUserAuth(null);
@@ -52,17 +52,19 @@ export default function App () {
           <div className="flex-grow">
             <Navbar />
             <Routes>
-                <Route path='/' element={<Home />} />
-                <Route path='/login' element={<Login />} />
-                <Route path='/signup' element={<Signup />} />
-                <Route path='/logout' element={<Logout />} />
-                <Route path='/chat' element={<Chat />} />
+                <Route path='/' element={<Pages.Home />} />
+                <Route path='/login' element={<Pages.Login />} />
+                <Route path='/signup' element={<Pages.Signup />} />
+                <Route path='/logout' element={<Pages.Logout />} />
+                <Route path='/chat' element={<Pages.Chat />} />
 
-                <Route path='/signup/get-started' element={<FormCreateAccount />} />
+                <Route path='/job-listings' element={<Pages.JobListing />} />
+
+                <Route path='/signup/get-started' element={<Pages.FormCreateAccount />} />
 
                 {/* Create pages for not found then add a button for redirect */}
-                <Route path='/404' element={<Home />} />
-                <Route path='*' element={<Home />} />
+                <Route path='/404' element={<Pages.Home />} />
+                <Route path='*' element={<Pages.Home />} />
             </Routes>
           </div>
           <Footer className="mt-auto"/>

@@ -2,8 +2,10 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
-import { Post, Get, AuthContext, Notification, useDocumentTitle } from '../../utils'
-import { googleCheckAccount, userLogIn, FormCreateAccount } from '../index';
+import { Notification, useDocumentTitle } from '../../utils' // Custom hooks
+import { Post, Get, AuthContext, googleCheckAccount, userLogIn } from '../../utils/utils' // Common functions
+
+import { FormCreateAccount } from '../index';
 
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
@@ -101,10 +103,16 @@ export const Signup = () => {
 
   return (
     <div className="flex items-center justify-center min-h-5">
-      <div className="max-w-screen-sm mx-auto">
-        <h1 className="text-center mb-6">Sign Up</h1>
-        
-        <Tabs defaultValue="sign-up" className='w-[400px]'>
+      {alertState.open && (
+        <Notification
+          open={alertState.open}
+          handleClose={alertHandleClose}
+          message={alertState.message}
+        />
+      )}
+
+      <div className="max-w-screen-sm mx-auto mb-10">
+        <Tabs defaultValue="sign-up" className='w-[400px] max-sm:w-[350px]'>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="sign-in" onClick = {() => { navigate('/login') }}>Login</TabsTrigger>
             <TabsTrigger value="sign-up">Sign Up</TabsTrigger>

@@ -2,9 +2,10 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
-import { Post, Get, AuthContext, useDocumentTitle, Notification } from '../../utils'
+import { useDocumentTitle, Notification } from '../../utils' // Custom hooks
+import { Post, Get, AuthContext, googleCheckAccount, userLogIn } from '../../utils/utils' // Common functions
 
-import { googleCheckAccount, userLogIn, FormCreateAccount } from '../index';
+import { FormCreateAccount } from '../index';
 
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
@@ -131,10 +132,16 @@ export const Login = () => {
 
   return (
     <div className="flex items-center justify-center min-h-5">
-      <div className="max-w-screen-sm mx-auto">
-        <h1 className="text-center mb-6">Login</h1>
+      {alertState.open && (
+        <Notification
+          open={alertState.open}
+          handleClose={alertHandleClose}
+          message={alertState.message}
+        />
+      )}
 
-        <Tabs defaultValue="sign-in" className='w-[400px]'>
+      <div className="max-w-screen-sm mx-auto mb-10">
+        <Tabs defaultValue="sign-in" className='w-[400px] max-sm:w-[350px]'>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="sign-in">Login</TabsTrigger>
             <TabsTrigger value="sign-up" onClick={(event) => { event.stopPropagation(); navigate('/signup'); }}>Sign Up</TabsTrigger>
@@ -192,14 +199,6 @@ export const Login = () => {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {alertState.open && (
-          <Notification
-            open={alertState.open}
-            handleClose={alertHandleClose}
-            message={alertState.message}
-          />
-        )}
       </div>
     </div>
   )
