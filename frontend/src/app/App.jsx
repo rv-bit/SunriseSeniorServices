@@ -4,18 +4,34 @@ import { useState, useEffect, useMemo } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import CookieConsent from "react-cookie-consent";
 
-import { Post, Get, UserConnected, AuthContext, Navbar, Footer } from './utils'
+import { Post, Get, AuthContext, Navbar, Footer } from './utils'
 import { Home, Login, Signup, FormCreateAccount, Logout, Chat } from './pages'
 
 export default function App () {
   const [userAuthData, setUserAuth] = useState(null);
 
   useEffect(() => {
-    UserConnected().then(UserIsConnected => {
-      if (UserIsConnected) {
-        setUserAuth(UserIsConnected);
+    const fetchData = async () => {
+      const response = await Get(`${import.meta.env.VITE_API_PREFIX}/`);
+      const data = await response.json();
+
+      console.log("data", data.user);
+
+      if (data && data.user === 'Anonymous') {
+        setUserAuth(null);
       }
-    });
+
+      if (data && data.user !== 'Anonymous') {
+        data.user['isConnected'] = true;
+        setUserAuth(data.user);
+      }
+
+      if (!data) {
+        setUserAuth(null);
+      }
+    }
+
+    fetchData();
   }, [])
 
   const value = useMemo(() => ({ userAuthData, setUserAuth }), [userAuthData, setUserAuth]);

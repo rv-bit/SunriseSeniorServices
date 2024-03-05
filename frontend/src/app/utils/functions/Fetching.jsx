@@ -23,27 +23,6 @@ const Get = async (url, headers) => {
   return response;
 }
 
-const UserConnected = async () => {
-  const response = await Get(`${import.meta.env.VITE_API_PREFIX}/`);
-
-  if (!response.ok) {
-    return [];
-  }
-
-  const data = await response.json();
-
-  if (data.user === 'Anonymous') {
-    return [];
-  }
-
-  if (data.user) {
-    data.user['isConnected'] = true;
-    return data.user;
-  }
-
-  return [];
-}
-
 const AuthContext = React.createContext();
 
-export { Post, Get, UserConnected, AuthContext }
+export { Post, Get, AuthContext }

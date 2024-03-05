@@ -13,8 +13,10 @@ export const Home = () => {
         <h1 className='text-center'>Home</h1>
         
         <h1 className='text-center'>
-          {userAuthData && Object.values(userAuthData).map((value, index) => (
-            <div key={index}>{value}</div>
+          {userAuthData && Object.entries(userAuthData).map(([key, value], index) => (
+            <div key={index}>
+              {key} : {typeof value === 'object' ? JSON.stringify(value) : value}
+            </div>
           ))}
         </h1>
       </div>

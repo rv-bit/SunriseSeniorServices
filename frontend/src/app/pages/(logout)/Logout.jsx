@@ -1,7 +1,7 @@
 import { useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Get, Post, UserConnected, AuthContext } from '../../utils';
+import { Get, Post, AuthContext } from '../../utils';
 
 export const Logout = () => {
     const {userAuthData, setUserAuth} = useContext(AuthContext);
@@ -12,21 +12,21 @@ export const Logout = () => {
             navigate('/');
         }
 
-        const UserLoggedOut = Get(`${import.meta.env.VITE_API_PREFIX}/logout`);
-        UserLoggedOut.then(response => {
-            if (!response.ok || response.status === 403) {
+        const fetchData = async () => {
+            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/logout`);
+            const data = await response.json();
+
+            if (!response.ok) {
                 return alert('You are not logged in');
             }
 
-            if (response.status === 200) {
-                UserConnected().then(UserIsConnected => {
-                    if (UserIsConnected) {
-                        setUserAuth(UserIsConnected);
-                        return navigate('/');
-                    }
-                });
+            if (response.ok) {
+                setUserAuth(null);
+                navigate('/');
             }
-        })
+        }
+
+        fetchData();
     }, []);
 
     return (<></>)

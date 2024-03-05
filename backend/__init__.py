@@ -10,10 +10,13 @@ def initializeApp():
 
     from backend.views import views
     from backend.auth import auth
+    from backend.chats import chat
+
     from backend.db import DB
 
     app.register_blueprint(views, url_prefix="/")
     app.register_blueprint(auth, url_prefix="/")
+    app.register_blueprint(chat, url_prefix="/")
 
     app.config["DB"] = DB(os.environ.get("MONGO_URI"))
 
@@ -27,9 +30,10 @@ def initializeApp():
 
     @login_manager.user_loader
     def load_user(user_id):
+        print("User ID:", user_id)
+
         user = app.config["DB"].Find("users", {"_id": user_id})
         if user:
-            user['id'] = user['_id']
             return User.make_from_dict(user)
         return None
 

@@ -17,6 +17,8 @@ import {
 
 import { Divide as Hamburger } from 'hamburger-react'
 
+import { RiFileList3Fill } from "react-icons/ri";
+
 export const Navbar = () => {
     const {userAuthData} = useContext(AuthContext);    
 
@@ -24,6 +26,7 @@ export const Navbar = () => {
         { name: "Login", path: "/login", auth: false},
         { name: "Join Now", path: "/signup", auth: false, styleProps: "bg-[#7F56D9] text-white font-medium rounded-lg px-5 py-4"},
 
+        { icon: <RiFileList3Fill size={22} color='black' />, name: "Job Listings", path: "/jobs", auth: true, userAccount: "helper" },
         { name: "Inbox", path: "/chat", auth: true },
         { name: "Log Out", path: "/logout", auth: true, styleProps: "bg-[#7F56D9] text-white font-medium rounded-lg px-5 py-4" },
     ]
@@ -32,7 +35,7 @@ export const Navbar = () => {
         { name: "About", path: "/about"},
         { name: "Contact", path: "/contact"},
     ]
-    
+
     return (
         <section className="max-w-screen-lg px-2 md:px-8 mx-auto sticky top-0 backdrop-blur-xl bg-[#ffffff90] z-50 mb-10 mt-12">
             <nav className="w-full flex items-center justify-between">
@@ -63,15 +66,29 @@ export const Navbar = () => {
                 <ul className="flex-1 md:flex justify-end items-center gap-5 hidden">
                     {Links.map((link, index) => {
                         const showLink = (link.auth && userAuthData && userAuthData.isConnected) || (!link.auth && (!userAuthData || !userAuthData.isConnected));
-
+                
                         return showLink ? (
-                            <li key={link.path}>
-                                {link.styleProps ?  
-                                    <Link className={link.styleProps} to={link.path}>{link.name}</Link> 
-                                :
-                                    <Link className="leading-normal tracking-tight transition-all text-[16px] text-[#434958] cursor-pointer font-medium text-opacity-60 hover:text-opacity-90 hover:bg-[#7F56D905] hover:backdrop-blur-[40px] hover:rounded-lg px-3 py-2" to={link.path}>{link.name}</Link>
-                                }
-                            </li>
+                            // (link.userAccount && showLinkUserAccount) || (!link.userAccount && !showLinkUserAccount) ?
+                                <li key={link.path}>
+                                    {link.icon ? 
+                                        <Link to={link.path} className="flex items-center gap-1">
+                                            {link.icon}
+                                        </Link>
+                                    :
+                                        link.styleProps ?
+                                            <Link className={link.styleProps} to={link.path}>{link.name}</Link>
+                                        :
+                                            <Link className="leading-normal tracking-tight transition-all text-[16px] text-[#434958] cursor-pointer font-medium text-opacity-60 hover:text-opacity-90 hover:bg-[#7F56D905] hover:backdrop-blur-[40px] hover:rounded-lg px-3 py-2" to={link.path}>{link.name}</Link>
+                                    }
+                                </li>
+                            // : null
+                            // <li key={link.path}>
+                            //     {link.styleProps ?  
+                            //         <Link className={link.styleProps} to={link.path}>{link.name}</Link> 
+                            //     :
+                            //         <Link className="leading-normal tracking-tight transition-all text-[16px] text-[#434958] cursor-pointer font-medium text-opacity-60 hover:text-opacity-90 hover:bg-[#7F56D905] hover:backdrop-blur-[40px] hover:rounded-lg px-3 py-2" to={link.path}>{link.name}</Link>
+                            //     }
+                            // </li>
                         ) : null;
                     })}
                 </ul>

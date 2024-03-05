@@ -194,17 +194,12 @@ async function createUser(formData, alertState, setAlertState) {
 
     const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {formData});
     if (!response.ok) {
-        setAlertState({ ...alertState, open: true, message: 'An account with this email already exists.' });
+        setAlertState({ ...alertState, open: true, message: data.Error });
         return false;
     }
 
     const data = await response.json();
-    if (!data.accountExistsAlready) {
-        setAlertState({ ...alertState, open: true, message: 'Successfully created account.' });
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 export const FormCreateAccount = ( ) => {
@@ -226,7 +221,6 @@ export const FormCreateAccount = ( ) => {
 
     useEffect(() => {
         if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
-            console.log('userAuthData', userAuthData);
             navigate('/');
         }
 
@@ -403,7 +397,14 @@ export const FormCreateAccount = ( ) => {
 
     return (
         <div className="max-w-screen-sm mx-auto">
-            
+            {alertState.open && (
+                <Notification
+                    open={alertState.open}
+                    handleClose={alertHandleClose}
+                    message={alertState.message}
+                />
+            )}
+
             <div className="flex justify-center items-center mt-64 mb-24">
                 <Stepper activeStep={currentStep} steps={formSteps[currentStep]?.name}>
                     {formSteps.map((step, index) => (
@@ -486,14 +487,6 @@ export const FormCreateAccount = ( ) => {
                     </form>
                 </Form>
             </div>
-
-        {alertState.open && (
-            <Notification
-                open={alertState.open}
-                handleClose={alertHandleClose}
-                message={alertState.message}
-            />
-        )}
         </div>
     )
 };

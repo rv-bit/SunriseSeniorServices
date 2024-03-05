@@ -123,11 +123,7 @@ export const Signup = () => {
                 <Button className="w-full" onClick={() => navigate('/signup/get-started')}>Continue with Email</Button>
               </CardContent>
 
-              <CardContent className="space-y-2 text-center">
-                <Label className="text-center mb-6">or</Label>
-              </CardContent>
-
-              <CardFooter>
+              <CardContent>
                 { 
                   (userIsLoading) ? 
                     <Button disabled className="w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button> 
@@ -137,7 +133,7 @@ export const Signup = () => {
                       onGoogleLoginOrCreate()
                     }}><AiOutlineGoogle className='mr-2'/>Continue with Google</Button>
                 }
-              </CardFooter>
+              </CardContent>
 
               <CardContent className="space-y-2 text-center">
                 <Label onClick={(event) => {event.preventDefault(); navigate('/login');}} className="text-center mb-6">Have an account ? <Label className='underline text-cyan-600 hover:text-sky-400 cursor-pointer'>Sign In</Label></Label>
