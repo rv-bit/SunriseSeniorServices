@@ -1,8 +1,9 @@
-import { useContext, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Suspense, useEffect, useState } from 'react'
 
-import { Get, AuthContext } from '../../utils/utils' // Common functions 
+import { Get } from '../../utils/utils' // Common functions 
 import { useDocumentTitle} from '../../utils' // Custom hooks
+
+import Loading from '@/app/utils/hooks/Loading'
 
 export const Chat = () => {
     useDocumentTitle('Login')
