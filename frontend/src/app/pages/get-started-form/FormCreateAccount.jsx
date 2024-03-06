@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 import AuthContext from '../../context/AuthContext'
 
-import { Notification } from '@/app/hooks' // Custom hooks
+import { Notification } from '@/app/components/custom/Notifications' // Custom components
 import { Post, Get } from '@/app/lib/utils' // Common functions 
 
 import { Loader2 } from "lucide-react"
@@ -19,6 +19,9 @@ import {
 import { Card } from "@/app/components/ui/card"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
+
+import { DatePicker } from "antd"
+import dayjs from "dayjs"
 
 import { Stepper, Step } from 'react-form-stepper';
 
@@ -57,10 +60,9 @@ async function checkAccountUsingEmail(email, alertState, setAlertState) {
 async function createUser(formData, alertState, setAlertState) {
     if (!formData) return;
 
-    console.log(formData);
-
     const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {formData});
     if (!response.ok) {
+        const data = await response.json();
         setAlertState({ ...alertState, open: true, message: data.Error });
         return false;
     }
@@ -129,7 +131,7 @@ const FormCreateAccount = () => {
 
     useEffect(() => {
         const createUserAndNavigate = async () => {
-            if (currentStep === formSteps.length) {
+            if (currentStep === formSteps.length && !errors) {
                 setUserLoad(true);
                 const userCreated = await createUser(formData, alertState, setAlertState);
 
@@ -138,6 +140,9 @@ const FormCreateAccount = () => {
                         setUserLoad(false);
                         navigate('/login');
                     }, 2000);
+                } else {
+                    setUserLoad(false);
+                    navigate('/');
                 }
             } else if (currentStep > 0 || currentSubStep > 1) {
                 const nextFieldNames = formSteps[currentStep]?.fields
@@ -147,6 +152,8 @@ const FormCreateAccount = () => {
                 nextFieldNames.forEach(fieldName => {
                     form.setValue(fieldName, '');
                 });
+
+                setErrors(null);
             }
         };
 
@@ -187,12 +194,29 @@ const FormCreateAccount = () => {
         }, {}));
 
         if (formSteps[currentStep]?.refineData) {
-            currentValidationSchema = currentValidationSchema.refine(formSteps[currentStep].refineData.func, {
-                message: formSteps[currentStep].refineData.message,
-                path: formSteps[currentStep].refineData.path,
+            currentFields.forEach(field => {
+                const refineObj = formSteps[currentStep].refineData.find(refine => refine.key === field.name);
+                if (refineObj) {
+                    const result = refineObj.func(data);
+                    let isValid;
+                    let message;
+
+                    if (typeof result === 'object' && result !== null) {
+                        isValid = result.valid;
+                        message = result.message;
+                    } else {
+                        isValid = result;
+                        message = refineObj.message;
+                    }
+
+                    currentValidationSchema = currentValidationSchema.refine(() => isValid, {
+                        message: message,
+                        path: refineObj.path,
+                    });
+                }
             });
         }
-        
+
         const result = currentValidationSchema.safeParse(data);
 
         if (!result.success) {
@@ -296,7 +320,31 @@ const FormCreateAccount = () => {
                                     control={form.control}
                                     name={stepField.name}
                                     render={({ field }) => (
-                                        stepField.type === "button" ?
+                                        stepField.type === "date" ?
+                                            <FormItem key={`formItem-date-${index}`}>
+                                                <div className="flex flex-col justify-between gap-2">
+                                                    <FormLabel>{stepField.label}</FormLabel>
+                                                    <FormControl>
+                                                        <DatePicker value={formData[stepField.name] ? dayjs(formData[stepField.name]) : "" || ""} onChange={
+                                                            (date, dateString) => {                                                            
+                                                                formData[stepField.name] = dateString;
+                                                                form.setValue(stepField.name, dateString);
+                                                            }
+                                                        } />
+                                                    </FormControl>
+                                                    <FormDescription>
+                                                        {stepField.description}
+                                                    </FormDescription>
+
+                                                    {errors && errors[stepField.name] && errors[stepField.name].map((error, errorIndex) => (
+                                                        <FormMessage key={errorIndex}>
+                                                            {error}
+                                                        </FormMessage>
+                                                    ))}
+                                                </div>
+                                            </FormItem>
+                                        :
+                                            stepField.type === "button" ?
                                             <FormItem key={`formItem-button-${index}`}>
                                                 <div type="button" className="bg-[#fffff] text-black font-medium rounded-lg px-5 py-4 border-2 border-black border-opacity-50 cursor-pointer transition-all hover:bg-[#dbd8d0] hover:backdrop-blur-[40px] hover:rounded-lg w-full text-left"
                                                     onClick={() => {

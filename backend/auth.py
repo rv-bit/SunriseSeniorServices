@@ -73,6 +73,7 @@ def signup():
                 "account_preferences": formData.get('options').get('preferences') or "",
 
                 "phone": formData.get('phone') or "",
+                "dob": formData.get('dob') or "",
             }
 
             user_data = prepare_document('users', variables)

@@ -5,11 +5,12 @@ import uuid
 def USER_TABLE():
     return {
         "_id": {"default_value": uuid.uuid4().hex, "type": str, "required": True},
-        "password": {"default_value": "password", "type": str, "required": True},
-        "email": {"default_value": "email", "type": str, "required": True},
-        "first_name": {"default_value": "first_name", "type": str, "required": True},
-        "last_name": {"default_value": "last_name", "type": str, "required": True},
-        "phone": {"default_value": "phone", "type": str, "max_length": 10, "required": True},
+        "password": {"default_value": "", "type": str, "required": True},
+        "email": {"default_value": "", "type": str, "required": True},
+        "first_name": {"default_value": "", "type": str, "required": True},
+        "last_name": {"default_value": "", "type": str, "required": True},
+        "phone": {"default_value": "", "type": str, "max_length": 10, "required": True},
+        "dob": {"default_value": "", "type": str, "required": True},
 
         # helper, requester
         "account_type": {"default_value": "helper", "type": list},

@@ -5,8 +5,8 @@ import CookieConsent from "react-cookie-consent";
 import AuthContext from './context/AuthContext'
 import { Get } from './lib/utils' // Common functions
 
-const Navbar = lazy(() => import('./hooks/Navbar.jsx'))
-const Footer = lazy(() => import('./hooks/Footer.jsx'))
+const Navbar = lazy(() => import('./components/custom/Navbar.jsx'))
+const Footer = lazy(() => import('./components/custom/Footer.jsx'))
 
 const Home = lazy(() => import('./pages/home/Home.jsx'))
 const Login = lazy(() => import('./pages/login/Login.jsx'))

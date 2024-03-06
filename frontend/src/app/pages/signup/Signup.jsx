@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
 import AuthContext from '../../context/AuthContext'
+import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
 
-import { Notification, useDocumentTitle } from '../../hooks' // Custom hooks
+import { Notification } from '@/app/components/custom/Notifications' // Custom components
 import { Post, Get, googleCheckAccount, userLogIn } from '../../lib/utils' // Common functions
 
 import FormCreateAccount from '../get-started-form/FormCreateAccount';
