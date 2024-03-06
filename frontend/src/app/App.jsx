@@ -46,12 +46,30 @@ export default function App () {
   return (
     <>
       <CookieConsent
-        location="bottom"
+        location="middle"
         hideOnAccept={true}
-        style={{ background: "#2B373B" }}
-        buttonStyle={{ color: "#4e503b", fontSize: "13px" }}
-        expires={1}
-      >This website uses cookies to enhance the user experience. {" "}
+        style={{
+          "maxWidth":"500px",
+          "borderRadius":"5px",
+          "padding":"20px 30px",
+          "backgroundColor":"white",
+          "position":"fixed",
+          "top":"50%",
+          "left":"50%",
+          "right":"auto",
+          "bottom":"auto",
+          "transform":"translate3d(-50%, -50%, 9999990px)",
+          "width":"95%",
+          "boxShadow":"0 3px 10px rgba(0,0,0,0.1)",
+          "color": "black",
+          "textAlign": "center",
+          "alignItems": "center",
+          "justifyContent": "center",
+        }}
+        overlay={true}
+        buttonStyle={{ fontSize: "13px", backgroundColor: "#e2e2e2", borderRadius: "5px", padding: "10px 20px", margin: "0 10px"}}
+        expires={30}
+      >This website uses cookies to enhance the user experience.
       </CookieConsent>
 
       <AuthContext.Provider value={value}>

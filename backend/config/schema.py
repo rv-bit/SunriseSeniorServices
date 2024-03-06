@@ -12,8 +12,8 @@ def USER_TABLE():
         "phone": {"default_value": "phone", "type": str, "max_length": 10, "required": True},
 
         # helper, requester
-        "account_type": {"default_value": "helper", "type": str},
-        "account_preferences": {"default_value": {}, "type": dict},
+        "account_type": {"default_value": "helper", "type": list},
+        "account_preferences": {"default_value": [], "type": list},
 
         "created_at": {"default_value": datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S'), "type": str},
     }
