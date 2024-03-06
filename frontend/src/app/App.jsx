@@ -1,13 +1,20 @@
-import './App.css'
-
-import { useState, useEffect, useMemo } from 'react'
+import { Suspense, lazy, useState, useEffect, useMemo } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import CookieConsent from "react-cookie-consent";
 
-import { Navbar, Footer } from './utils' // Custom hooks
-import { Post, Get, AuthContext } from './utils/utils' // Common functions
+import AuthContext from './context/AuthContext'
+import { Get } from './lib/utils' // Common functions
 
-import * as Pages from './pages' // Import all pages
+const Navbar = lazy(() => import('./hooks/Navbar.jsx'))
+const Footer = lazy(() => import('./hooks/Footer.jsx'))
+
+const Home = lazy(() => import('./pages/home/Home.jsx'))
+const Login = lazy(() => import('./pages/login/Login.jsx'))
+const Signup = lazy(() => import('./pages/signup/Signup.jsx'))
+const Logout = lazy(() => import('./pages/logout/Logout.jsx'))
+const Chat = lazy(() => import('./pages/chat/Chat.jsx'))
+const JobListing = lazy(() => import('./pages/job-listing/JobListing.jsx'))
+const FormCreateAccount = lazy(() => import('./pages/get-started-account/FormCreateAccount.jsx'))
 
 export default function App () {
   const [userAuthData, setUserAuth] = useState(null);
@@ -49,25 +56,36 @@ export default function App () {
 
       <AuthContext.Provider value={value}>
         <div className="flex flex-col min-h-screen">
-          <div className="flex-grow">
-            <Navbar />
-            <Routes>
-                <Route path='/' element={<Pages.Home />} />
-                <Route path='/login' element={<Pages.Login />} />
-                <Route path='/signup' element={<Pages.Signup />} />
-                <Route path='/logout' element={<Pages.Logout />} />
-                <Route path='/chat' element={<Pages.Chat />} />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-screen">
+              <div className="relative">
+                <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+                <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                </div>
+              </div>
+            </div>
+          }>
+            <div className="flex-grow">
+              <Navbar />
 
-                <Route path='/job-listings' element={<Pages.JobListing />} />
+              <Routes>
+                <Route path='/' element={<Home />} />
+                <Route path='/login' element={<Login />} />
+                <Route path='/signup' element={<Signup />} />
+                <Route path='/logout' element={<Logout />} />
+                <Route path='/chat' element={<Chat />} />
 
-                <Route path='/signup/get-started' element={<Pages.FormCreateAccount />} />
+                <Route path='/job-listings' element={<JobListing />} />
+
+                <Route path='/signup/get-started' element={<FormCreateAccount />} />
 
                 {/* Create pages for not found then add a button for redirect */}
-                <Route path='/404' element={<Pages.Home />} />
-                <Route path='*' element={<Pages.Home />} />
-            </Routes>
-          </div>
-          <Footer className="mt-auto"/>
+                <Route path='/404' element={<Home />} />
+                <Route path='*' element={<Home />} />
+              </Routes>
+            </div>
+            <Footer className="mt-auto"/>
+          </Suspense>
         </div>
       </AuthContext.Provider>
     </>
