@@ -5,7 +5,6 @@ import uuid
 def USER_TABLE():
     return {
         "_id": {"default_value": uuid.uuid4().hex, "type": str, "required": True},
-        "username": {"default_value": "username", "type": str, "required": True},
         "password": {"default_value": "password", "type": str, "required": True},
         "email": {"default_value": "email", "type": str, "required": True},
         "first_name": {"default_value": "first_name", "type": str, "required": True},

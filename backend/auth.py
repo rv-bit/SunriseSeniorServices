@@ -59,12 +59,6 @@ def signup():
         if not formData:
             return jsonify({"Error": "No form data provided"}), 403
 
-        if formData.get('options').get('option_helper'):
-            account_type = 'helper'
-
-        if formData.get('options').get('option_requester'):
-            account_type = 'requester'
-
         try:
             _id = uuid.uuid4().hex
 
@@ -72,13 +66,11 @@ def signup():
                 "_id": _id,
                 "email": formData.get('email'),
                 "password": generate_password_hash(formData.get('password'), method='pbkdf2', salt_length=16),
-                "username": formData.get('username'),
                 "first_name": formData.get('first_name'),
                 "last_name": formData.get('last_name'),
-                "account_type": account_type or 'helper',
 
-                # "account_preferences": formData.get('account_preferences').get('preferences') or {},
-                # "account_preferences": {formData.get('options').get('option_childcare') or formData.get('options').get('option_seniorcare') or formData.get('options').get('option_petcare')} or {},
+                "account_type": formData.get('options').get('account_type') or "",
+                "account_preferences": formData.get('options').get('preferences') or "",
 
                 "phone": formData.get('phone') or "",
             }

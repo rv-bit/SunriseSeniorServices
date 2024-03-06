@@ -7,7 +7,7 @@ import AuthContext from '../../context/AuthContext'
 import { Notification, useDocumentTitle } from '../../hooks' // Custom hooks
 import { Post, Get, googleCheckAccount, userLogIn } from '../../lib/utils' // Common functions
 
-import FormCreateAccount from '../get-started-account/FormCreateAccount';
+import FormCreateAccount from '../get-started-form/FormCreateAccount';
 
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";

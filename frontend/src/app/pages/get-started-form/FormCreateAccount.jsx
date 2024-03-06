@@ -1,10 +1,10 @@
-import { useContext, useState, useEffect } from 'react'
+import { Suspense, useContext, useState, useEffect, lazy } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 import AuthContext from '../../context/AuthContext'
 
-import { Notification } from '../../hooks' // Custom hooks
-import { Post, Get } from '../../lib/utils' // Common functions 
+import { Notification } from '@/app/hooks' // Custom hooks
+import { Post, Get } from '@/app/lib/utils' // Common functions 
 
 import { Loader2 } from "lucide-react"
 import {
@@ -25,145 +25,7 @@ import { Stepper, Step } from 'react-form-stepper';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-const formSteps = [
-    {
-        name: "Account Information",
-        fields: [
-            {
-                name: 'email',
-                label: 'Email',
-                placeholder: 'email@gmail.com',
-                description: 'Your email',
-                type: 'email',
-            },
-        ],
-
-        validationSchema: z.object({
-            email: z.string().email({
-                message: "Must be a valid email address.",
-            }),
-        }),
-    },
-    {
-        name: "Welcome, tell us about yourself",
-        fields: [
-            {
-                name: 'option_helper',
-                label: 'Find Job',
-                step: 1,
-                type: 'button',
-            },
-            {
-                name: 'option_requester',
-                label: 'Find Care',
-                step: 1,
-                type: 'button',
-            },
-
-            {
-                name: 'option_childcare',
-                label: 'Childcare',
-                step: 2,
-                type: 'button',
-            },
-            {
-                name: 'option_seniorcare',
-                label: 'Senior Care',
-                step: 2,
-                type: 'button',
-            },
-            {
-                name: 'option_petcare',
-                label: 'Pet Care',
-                step: 2,
-                type: 'button',
-            },
-        ],
-
-        validationSchema: z.object({
-            option_helper: z.string(),
-            option_requester: z.string(),
-
-            option_childcare: z.string(),
-            option_seniorcare: z.string(),
-            option_petcare: z.string(),
-        }),
-    },
-    {
-        name: "Personal Information",
-        fields: [
-            {
-                name: 'username',
-                label: 'Username',
-                placeholder: 'shadcn',
-                description: 'Your username is public',
-                step: 1,
-            },
-            {
-                name: 'first_name',
-                label: 'First Name',
-                placeholder: 'shadcn',
-                description: 'Name',
-                step: 2,
-            },
-            {
-                name: 'last_name',
-                label: 'Last Name',
-                placeholder: 'shadcn',
-                description: 'Last Name',
-                step: 2,
-            }
-        ],
-
-        validationSchema: z.object({
-            username: z.string().min(2, {
-                message: "Username must be at least 2 characters.",
-            }),
-            first_name: z.string().min(2, {
-                message: "First name must be at least 2 characters.",
-            }),
-            last_name: z.string().min(2, {
-                message: "Last name must be at least 2 characters.",
-            }),
-        }),
-    },
-    {
-        name: "Security Information",
-        fields: [
-            {
-                name: 'password',
-                label: 'Password',
-                placeholder: 'password',
-                description: 'Your password',
-                step: 1,
-                type: 'password',
-            },
-            {
-                name: 'password2',
-                label: 'Password Confirmation',
-                placeholder: '',
-                description: 'Your password Confirmation',
-                step: 1,
-                type: 'password',
-            },
-        ],
-
-        validationSchema: z.object({
-            password: z.string().min(6, {
-                message: "Password must be at least 6 characters.",
-            }),
-            password2: z.string().min(6, {
-                message: "Password must be at least 6 characters.",
-            })
-        }),
-
-        refineData: {
-            func: (data) => data.password === data.password2,
-            message: "Passwords must match.",
-            path: ["password2"],
-        },
-    }
-]
+import formSteps from '../../data/Formdata';
 
 const defaultValues = formSteps.reduce((values, step) => {
     step.fields.forEach(field => {
@@ -194,6 +56,8 @@ async function checkAccountUsingEmail(email, alertState, setAlertState) {
 
 async function createUser(formData, alertState, setAlertState) {
     if (!formData) return;
+
+    console.log(formData);
 
     const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {formData});
     if (!response.ok) {
@@ -255,7 +119,6 @@ const FormCreateAccount = () => {
         message: '',
     });
 
-
     const alertHandleClose = (event, reason) => {
         if (reason === 'clickaway') {
             return;
@@ -285,25 +148,24 @@ const FormCreateAccount = () => {
                     form.setValue(fieldName, '');
                 });
             }
-
         };
 
         createUserAndNavigate();
     }, [formData]);
 
-    const handleSetOptionClick = (optionName, step) => {    
+    const handleSetOptionClick = (optionName, step) => {
         setFormDataOptions(prevState => {
-            const sameStepKeys = Object.keys(prevState).filter(key => {
-                const optionStep = formSteps[currentStep]?.fields.find(option => option.name === key)?.step;
-                return optionStep === step;
-            });
+            const currentStep = formSteps.find(stepObj => stepObj.fields.some(field => field.step === step));
+
+            const stepName = currentStep?.stepsNames?.[step];
+            if (!stepName) return prevState;
 
             const newState = { ...prevState };
-            sameStepKeys.forEach(key => {
-                delete newState[key]
-            });
+            if (!newState[stepName]) newState[stepName] = [];
 
-            newState[optionName] = true;
+            newState[stepName] = newState[stepName].filter(option => option !== optionName);
+            newState[stepName].push(optionName);
+
             return newState;
         });
     };
@@ -399,6 +261,15 @@ const FormCreateAccount = () => {
         }
     }
 
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     return (
         <div className="max-w-screen-sm mx-auto">
             {alertState.open && (
@@ -409,17 +280,15 @@ const FormCreateAccount = () => {
                 />
             )}
 
-            <div className="flex justify-center items-center mt-64 mb-24">
-                <Stepper activeStep={currentStep} steps={formSteps[currentStep]?.name}>
-                    {formSteps.map((step, index) => (
-                        <Step key={index} label={step.name} />
-                    ))}
-                </Stepper>
-            </div>
+            <Stepper className="flex flex-wrap justify-center items-center mt-5 mb-20" hideConnectors={windowWidth <= 640 ? 'inactive' : false} activeStep={currentStep} steps={formSteps[currentStep]?.name}>
+                {formSteps.map((step, index) => (
+                    <Step key={index} label={step.name} />
+                ))}
+            </Stepper>
             
             <div className="flex justify-center items-center mb-64">
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="w-[400px] space-y-5">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="w-[400px] max-sm:w-[370px] space-y-5">
                         {formSteps[currentStep]?.fields.filter(field => field.step ? field.step === currentSubStep : true).map((stepField, index) => {
                             return (
                                 <FormField
@@ -461,32 +330,40 @@ const FormCreateAccount = () => {
                         
                         <div className='space-x-2'>
                             {
-                                (currentStep !== 0 || currentSubStep > 1) && (
-                                    userIsLoading ?
-                                        <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
-                                    :
-                                        <Button type="button" onClick={() => {
-                                            if (currentSubStep > 1) {
-                                                setCurrentSubStep(currentSubStep - 1);
-                                                setHasUserNavigatedBack(true);
-                                            } else if (currentStep > 0) {
-                                                setCurrentStep(currentStep - 1);
+                                currentStep !== formSteps.length ? 
+                                    (currentStep !== 0 || currentSubStep > 1) && (
+                                        userIsLoading ?
+                                            <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
+                                        :
+                                            <Button type="button" onClick={() => {
+                                                if (currentSubStep > 1) {
+                                                    setCurrentSubStep(currentSubStep - 1);
+                                                    setHasUserNavigatedBack(true);
+                                                } else if (currentStep > 0) {
+                                                    setCurrentStep(currentStep - 1);
 
-                                                const maxSubStep = Math.max(...formSteps[currentStep - 1].fields.map(field => field.step || 1));
-                                                setCurrentSubStep(maxSubStep);
+                                                    const maxSubStep = Math.max(...formSteps[currentStep - 1].fields.map(field => field.step || 1));
+                                                    setCurrentSubStep(maxSubStep);
 
-                                                setHasUserNavigatedBack(true);
-                                            }
-                                        }}>Back</Button>
-                                )
+                                                    setHasUserNavigatedBack(true);
+                                                }
+                                            }}>Back</Button>
+                                    )
+                                :
+                                    null
                             }
 
-                            {!formSteps[currentStep]?.fields.some(field => field.type === "button") && (
-                                userIsLoading ?
+                            {
+                                currentStep === formSteps.length ? 
                                     <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
                                 :
-                                    <Button type="submit"> { (currentStep !== formSteps.length - 1) ? "Next" : "Submit" } </Button>
-                            )}
+                                    !formSteps[currentStep]?.fields.some(field => field.type === "button") && (
+                                        userIsLoading ?
+                                            <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
+                                        :
+                                            <Button type="submit"> { (currentStep !== formSteps.length - 1) ? "Next" : "Submit" } </Button>
+                                    )   
+                            }
                         </div>
                     </form>
                 </Form>

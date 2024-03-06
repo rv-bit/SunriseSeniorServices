@@ -14,7 +14,7 @@ const Signup = lazy(() => import('./pages/signup/Signup.jsx'))
 const Logout = lazy(() => import('./pages/logout/Logout.jsx'))
 const Chat = lazy(() => import('./pages/chat/Chat.jsx'))
 const JobListing = lazy(() => import('./pages/job-listing/JobListing.jsx'))
-const FormCreateAccount = lazy(() => import('./pages/get-started-account/FormCreateAccount.jsx'))
+const FormCreateAccount = lazy(() => import('./pages/get-started-form/FormCreateAccount.jsx'))
 
 export default function App () {
   const [userAuthData, setUserAuth] = useState(null);
