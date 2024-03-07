@@ -3,32 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 import AuthContext from '@/app/context/AuthContext'
 
-import { Notification } from '@/app/components/custom/Notifications' // Custom components
 import { Post, Get } from '@/app/lib/utils' // Common functions 
 
-import { Loader2 } from "lucide-react"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/app/components/ui/form"
-import { Card } from "@/app/components/ui/card"
-import { Input } from "@/app/components/ui/input"
-import { Button } from "@/app/components/ui/button"
-
-import { DatePicker } from "antd"
-import dayjs from "dayjs"
-
-import { Stepper, Step } from 'react-form-stepper';
+import formSteps from '@/app/data/FormSignUp';
 
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import formSteps from '@/app/data/FormSignUp';
+const MultiForm = lazy(() => import('@/app/components/custom/MultiForm'));
 
 const defaultValues = formSteps.reduce((values, step) => {
     step.fields.forEach(field => {
@@ -59,6 +41,8 @@ async function checkAccountUsingEmail(email, alertState, setAlertState) {
 
 async function createUser(formData, alertState, setAlertState) {
     if (!formData) return;
+
+    console.log('formData', formData);
 
     const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {formData});
     if (!response.ok) {
@@ -133,13 +117,8 @@ const FormCreateAccount = () => {
 
     useEffect(() => {
         const createUserAndNavigate = async () => {
-            if (errors) return;
-
             if (currentStep === formSteps.length) {
                 setUserLoad(true);
-
-                console.log('formData', formData);
-
                 const userCreated = await createUser(formData, alertState, setAlertState);
 
                 setTimeout(() => {
@@ -268,6 +247,8 @@ const FormCreateAccount = () => {
             data.email = formData.email;
         }
 
+        console.log('data', data);
+
         const email = data.email || formData.email;
         if (email && currentStep === 0 && currentSubStep === 1) {
             setUserLoad(true);
@@ -306,138 +287,35 @@ const FormCreateAccount = () => {
         }
     }
 
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
-    useEffect(() => {
-        const handleResize = () => setWindowWidth(window.innerWidth);
-        window.addEventListener('resize', handleResize);
-
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
     return (
-        <div className="max-w-screen-sm mx-auto">
-            {alertState.open && (
-                <Notification
-                    open={alertState.open}
-                    handleClose={alertHandleClose}
-                    message={alertState.message}
-                />
-            )}
-
-            <Stepper className="flex flex-wrap justify-center items-center mt-5 mb-20" hideConnectors={windowWidth <= 640 ? 'inactive' : false} activeStep={currentStep} steps={formSteps[currentStep]?.name}>
-                {formSteps.map((step, index) => (
-                    <Step key={index} label={step.name} />
-                ))}
-            </Stepper>
-            
-            <div className="flex justify-center items-center mb-64">
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="w-[400px] max-sm:w-[370px] space-y-5">
-                        {formSteps[currentStep]?.fields.filter(field => field.step ? field.step === currentSubStep : true).map((stepField, index) => {
-                            return (
-                                <FormField
-                                    key={`formField-${index}`}
-                                    control={form.control}
-                                    name={stepField.name}
-                                    render={({ field }) => (
-                                        stepField.type === "date" ?
-                                            <FormItem key={`formItem-date-${index}`}>
-                                                <div className="flex flex-col justify-between gap-2">
-                                                    <FormLabel>{stepField.label}</FormLabel>
-                                                    <FormControl>
-                                                        <DatePicker value={formData[stepField.name] ? dayjs(formData[stepField.name]) : "" || ""} onChange={
-                                                            (date, dateString) => {                                                            
-                                                                formData[stepField.name] = dateString;
-                                                                form.setValue(stepField.name, dateString);
-                                                            }
-                                                        } />
-                                                    </FormControl>
-                                                    <FormDescription>
-                                                        {stepField.description}
-                                                    </FormDescription>
-
-                                                    {errors && errors[stepField.name] && errors[stepField.name].map((error, errorIndex) => (
-                                                        <FormMessage key={errorIndex}>
-                                                            {error}
-                                                        </FormMessage>
-                                                    ))}
-                                                </div>
-                                            </FormItem>
-                                        :
-                                            stepField.type === "button" ?
-                                            <FormItem key={`formItem-button-${index}`}>
-                                                <div type="button" className="bg-[#fffff] text-black font-medium rounded-lg px-5 py-4 border-2 border-black border-opacity-50 cursor-pointer transition-all hover:bg-[#dbd8d0] hover:backdrop-blur-[40px] hover:rounded-lg w-full text-left"
-                                                    onClick={() => {
-                                                        handleSetOptionClick(stepField.name, currentSubStep);
-                                                        form.handleSubmit(onSubmit)();
-                                                    }}>
-
-                                                    {stepField.label}
-                                                </div>
-                                            </FormItem>
-                                        :
-                                            <FormItem key={`formItem-input-${index}`}>
-                                                <FormLabel>{stepField.label}</FormLabel>
-                                                <FormControl>
-                                                    <Input type={stepField.type || "text"} placeholder={stepField.placeholder} {...field} />
-                                                </FormControl>
-                                                <FormDescription>
-                                                    {stepField.description}
-                                                </FormDescription>
-
-                                                {errors && errors[stepField.name] && errors[stepField.name].map((error, errorIndex) => (
-                                                    <FormMessage key={errorIndex}>
-                                                        {error}
-                                                    </FormMessage>
-                                                ))}
-                                            </FormItem>
-                                    )}
-                                />
-                            )
-                        })}
-                        
-                        <div className='space-x-2'>
-                            {
-                                currentStep !== formSteps.length ? 
-                                    (currentStep !== 0 || currentSubStep > 1) && (
-                                        userIsLoading ?
-                                            <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
-                                        :
-                                            <Button type="button" onClick={() => {
-                                                if (currentSubStep > 1) {
-                                                    setCurrentSubStep(currentSubStep - 1);
-                                                    setHasUserNavigatedBack(true);
-                                                } else if (currentStep > 0) {
-                                                    setCurrentStep(currentStep - 1);
-
-                                                    const maxSubStep = Math.max(...formSteps[currentStep - 1].fields.map(field => field.step || 1));
-                                                    setCurrentSubStep(maxSubStep);
-
-                                                    setHasUserNavigatedBack(true);
-                                                }
-                                            }}>Back</Button>
-                                    )
-                                :
-                                    null
-                            }
-
-                            {
-                                currentStep === formSteps.length ? 
-                                    <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
-                                :
-                                    !formSteps[currentStep]?.fields.some(field => field.type === "button") && (
-                                        userIsLoading ?
-                                            <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
-                                        :
-                                            <Button type="submit"> { (currentStep !== formSteps.length - 1) ? "Next" : "Submit" } </Button>
-                                    )   
-                            }
-                        </div>
-                    </form>
-                </Form>
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-screen">
+                <div className="relative">
+                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    </div>
+                </div>
             </div>
-        </div>
+        }>
+            <MultiForm
+                onSubmit={onSubmit}
+                handleSetOptionClick={handleSetOptionClick}
+                alertHandleClose={alertHandleClose}
+                setCurrentStep={setCurrentStep}
+                setCurrentSubStep={setCurrentSubStep}
+
+                alertState={alertState}
+                userIsLoading={userIsLoading}
+
+                currentStep={currentStep}
+                currentSubStep={currentSubStep}
+
+                formSteps={formSteps}
+                form={form}
+                formData={formData}
+                errors={errors}
+            />
+        </Suspense>
     )
 };
 

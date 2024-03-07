@@ -15,7 +15,6 @@ if os.environ.get("NODE_ENV") == "production":
 @views.route("/", methods=["GET"])
 def home():
     if request.method == "GET":
-        print(current_user.is_authenticated)
         if current_user.is_authenticated:
             return jsonify({"user": current_user.get_user_info()}), 200
 

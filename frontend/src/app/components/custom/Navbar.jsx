@@ -4,31 +4,31 @@ import { Link } from "react-router-dom";
 import AuthContext from '../../context/AuthContext'
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuGroup,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+    DropdownMenuGroup,
 } from "@/app/components/ui/dropdown-menu"
 
 import { Divide as Hamburger } from 'hamburger-react'
 import { BsSearch, BsChat } from "react-icons/bs";
 
 const Links = [
-  { name: "Login", path: "/login", auth: false},
-  { name: "Join Now", path: "/signup", auth: false, styleProps: "bg-[#7F56D9] text-white font-medium rounded-lg px-5 py-4"},
+    { name: "Login", path: "/login", auth: false},
+    { name: "Join Now", path: "/signup", auth: false, styleProps: "bg-[#7F56D9] text-white font-medium rounded-lg px-5 py-4"},
 
-  { icon: <BsSearch size={22} color="black" />, name: "Search", path: "/job-listings", auth: true },
-  { icon: <BsChat size={22} color="black"/>, name: "Inbox", path: "/chat", auth: true },
+    { icon: <BsSearch size={22} color="black" />, name: "Search", path: "/job-listings", auth: true },
+    { icon: <BsChat size={22} color="black"/>, name: "Inbox", path: "/chat", auth: true },
 
-  { name: "Log Out", path: "/logout", auth: true, styleProps: "bg-[#7F56D9] text-white font-medium rounded-lg px-5 py-4" },
+    { name: "Log Out", path: "/logout", auth: true, styleProps: "bg-[#7F56D9] text-white font-medium rounded-lg px-5 py-4" },
 ]
 
 const LinksConnectedWithLogo = [
-  { name: "About", path: "/about"},
-  { name: "Contact", path: "/contact"},
+    { name: "About", path: "/about"},
+    { name: "Contact", path: "/contact"},
 ]
 
 const Navbar = () => {
