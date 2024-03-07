@@ -1,9 +1,9 @@
 import { useContext } from "react";
 
-import AuthContext from '../../context/AuthContext'
+import AuthContext from '@/app/context/AuthContext'
 import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
 
-import { Post, Get } from '../../lib/utils' // Common functions
+import { Post, Get } from '@/app/lib/utils' // Common functions
 
 const Home = () => {
   useDocumentTitle('Home');

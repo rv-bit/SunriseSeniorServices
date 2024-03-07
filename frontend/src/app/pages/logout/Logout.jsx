@@ -1,11 +1,10 @@
 import { useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import AuthContext from '../../context/AuthContext'
+import AuthContext from '@/app/context/AuthContext'
 
-import { Post, Get } from '../../lib/utils' // Common functions
-
-import { Alertbox } from '@/app/components/custom/Alertbox';
+import { Post, Get } from '@/app/lib/utils' // Common functions
+import { Alertbox } from '@/app/components/custom/Alertbox'; // Custom components
 
 const Logout = () => {
     const {userAuthData, setUserAuth} = useContext(AuthContext);

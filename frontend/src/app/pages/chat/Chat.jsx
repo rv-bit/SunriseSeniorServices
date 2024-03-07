@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import AuthContext from '@/app/context/AuthContext'
 import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
 
-import { Get } from '../../lib/utils' // Common functions 
+import { Get } from '@/app/lib/utils' // Common functions 
 
 const Chat = () => {
     useDocumentTitle('Login')

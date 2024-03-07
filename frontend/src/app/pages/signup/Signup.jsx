@@ -2,11 +2,11 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
-import AuthContext from '../../context/AuthContext'
+import AuthContext from '@/app/context/AuthContext'
 import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
 
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
-import { Post, Get, googleCheckAccount, userLogIn } from '../../lib/utils' // Common functions
+import { Post, Get, googleCheckAccount, userLogIn } from '@/app/lib/utils' // Common functions
 
 import FormCreateAccount from '../get-started-form/FormCreateAccount';
 

@@ -1,7 +1,7 @@
 import { Suspense, useContext, useState, useEffect, lazy } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-import AuthContext from '../../context/AuthContext'
+import AuthContext from '@/app/context/AuthContext'
 
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
 import { Post, Get } from '@/app/lib/utils' // Common functions 
@@ -28,7 +28,7 @@ import { Stepper, Step } from 'react-form-stepper';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import formSteps from '../../data/Formdata';
+import formSteps from '@/app/data/FormSignUp';
 
 const defaultValues = formSteps.reduce((values, step) => {
     step.fields.forEach(field => {
@@ -85,7 +85,7 @@ const FormCreateAccount = () => {
 
     const [hasUserNavigatedBack, setHasUserNavigatedBack] = useState(false);
     const [errors, setErrors] = useState(null);
-    
+
     const form = useForm({defaultValues});
 
     useEffect(() => {
@@ -113,6 +113,8 @@ const FormCreateAccount = () => {
 
             setCurrentStep(1);
         }
+
+        return () => {};
     }, []);
 
     const [userIsLoading, setUserLoad] = useState(false);
@@ -131,19 +133,25 @@ const FormCreateAccount = () => {
 
     useEffect(() => {
         const createUserAndNavigate = async () => {
-            if (currentStep === formSteps.length && !errors) {
+            if (errors) return;
+
+            if (currentStep === formSteps.length) {
                 setUserLoad(true);
+
+                console.log('formData', formData);
+
                 const userCreated = await createUser(formData, alertState, setAlertState);
 
-                if (userCreated) {
-                    setTimeout(() => {
+                setTimeout(() => {
+                    if (userCreated) {
                         setUserLoad(false);
                         navigate('/login');
-                    }, 2000);
-                } else {
-                    setUserLoad(false);
-                    navigate('/');
-                }
+                    } else {
+                        setUserLoad(false);
+                        navigate('/');
+                    }
+                }, 2000);
+
             } else if (currentStep > 0 || currentSubStep > 1) {
                 const nextFieldNames = formSteps[currentStep]?.fields
                     .filter(field => field.step ? field.step === currentSubStep : true)
@@ -152,25 +160,33 @@ const FormCreateAccount = () => {
                 nextFieldNames.forEach(fieldName => {
                     form.setValue(fieldName, '');
                 });
-
-                setErrors(null);
             }
         };
 
         createUserAndNavigate();
     }, [formData]);
 
-    const handleSetOptionClick = (optionName, step) => {
+    const handleSetOptionClick = (optionName, subStep) => {    
         setFormDataOptions(prevState => {
-            const currentStep = formSteps.find(stepObj => stepObj.fields.some(field => field.step === step));
+            const currentStepOptions = formSteps
+                .filter(stepObj => stepObj.fields.some(field => field.step === currentStep))
+                .flatMap(stepObj => stepObj.fields)
+                .filter(field => field.step === currentSubStep);
 
-            const stepName = currentStep?.stepsNames?.[step];
+            const sameStepKeys = currentStepOptions.map(option => option.name);
+
+            const currentStepBasedOnSubStep = formSteps.find(stepObj => stepObj.fields.some(field => field.step === subStep));
+            const stepName = currentStepBasedOnSubStep?.stepsNames?.[subStep];
             if (!stepName) return prevState;
 
             const newState = { ...prevState };
             if (!newState[stepName]) newState[stepName] = [];
 
             newState[stepName] = newState[stepName].filter(option => option !== optionName);
+            sameStepKeys.forEach(key => {
+                newState[stepName].splice(key, 1);
+            });
+
             newState[stepName].push(optionName);
 
             return newState;
@@ -185,7 +201,7 @@ const FormCreateAccount = () => {
                 return result;
             }, {});
 
-        const formDataWithOption = { ...dataWithoutOptionKeys, options: formDataOptions };
+        const formDataWithOptions = { ...dataWithoutOptionKeys, options: formDataOptions };
 
         const currentFields = formSteps[currentStep].fields.filter(field => field.step ? field.step === currentSubStep : true);
         let currentValidationSchema = z.object(currentFields.reduce((schema, field) => {
@@ -234,7 +250,7 @@ const FormCreateAccount = () => {
 
         if (allFieldsFilled || hasButton) {
             setFormData(prevData => {
-                const updatedData = { ...prevData, ...formDataWithOption };
+                const updatedData = { ...prevData, ...formDataWithOptions };
                 return updatedData;
             });
 
@@ -248,10 +264,15 @@ const FormCreateAccount = () => {
     }
 
     const onSubmit = async (data) => {
-        if (data.email && currentStep === 0 && currentSubStep === 1) {
+        if (formData.email && !data.email) {
+            data.email = formData.email;
+        }
+
+        const email = data.email || formData.email;
+        if (email && currentStep === 0 && currentSubStep === 1) {
             setUserLoad(true);
 
-            const accountDoesNotExist = await checkAccountUsingEmail(data.email, alertState, setAlertState);
+            const accountDoesNotExist = await checkAccountUsingEmail(email, alertState, setAlertState);
             if (!accountDoesNotExist) {
                 setTimeout(() => {
                     setUserLoad(false);

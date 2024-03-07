@@ -46,7 +46,7 @@ def JOB_TABLE():
         "user_id": {"default_value": "", "type": str, "required": True},
         "title": {"default_value": "", "type": str, "required": True},
         "description": {"default_value": "", "type": str, "required": True},
-        "category": {"default_value": "", "type": str},
+        "category": {"default_value": "", "type": str, "required": True},
 
         "created_at": {"default_value": datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S'), "type": str},
     }
