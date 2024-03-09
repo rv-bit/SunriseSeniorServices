@@ -423,9 +423,9 @@ const JobListing = () => {
                                             <span className='text-black'>X</span>
                                         </Button>
 
-                                        <h1 className='w-fit text-2xl font-bold text-slate-900'>{jobListings[currentJobIdFromSearch-1]?.title}</h1>
-                                        <h1 className='w-fit text-md text-slate-900 underline hover:cursor-pointer'>by {jobListings[currentJobIdFromSearch-1]?.person}</h1>
-                                        <p className='w-fit text-slate-600 text-opacity-75'>{jobListings[currentJobIdFromSearch-1]?.location}</p>
+                                        <h1 className='text-2xl font-bold text-slate-900'>{jobListings[currentJobIdFromSearch-1]?.title}</h1>
+                                        <h1 className='text-md text-slate-900 underline hover:cursor-pointer'>by {jobListings[currentJobIdFromSearch-1]?.person}</h1>
+                                        <p className='text-slate-600 text-opacity-75'>{jobListings[currentJobIdFromSearch-1]?.location}</p>
 
                                         <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
                                             {jobListings[currentJobIdFromSearch-1]?.tags.map((tag, indexTag) => {
