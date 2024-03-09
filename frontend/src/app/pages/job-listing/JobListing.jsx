@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
- 
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Separator } from '@/app/components/ui/separator';
@@ -197,10 +198,14 @@ const jobListings = [
 
 
 const JobListing = () => {
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+
     const [searchInput, setSearchInput] = useState({ jobTitle: '', location: '' });
     const [searchResults, setSearchResults] = useState([]);
 
     const [currentJobId, setCurrentJobId] = useState(null);
+    const currentJobIdFromSearch = searchParams && searchParams.get('currentJobId') ? parseInt(searchParams.get('currentJobId')) : null;
 
     const handleCurrentJobId = (e, index) => {
         e.preventDefault();
@@ -209,7 +214,10 @@ const JobListing = () => {
     }
 
     useEffect(() => {
-        console.log('currentJobId', currentJobId);
+        if (!currentJobId) return;
+
+        setSearchParams({ 'currentJobId': currentJobId });
+
         return () => {}
     }, [currentJobId]);
 
@@ -230,7 +238,13 @@ const JobListing = () => {
 
     const handleCloseCurrentJobId = (e, index) => {
         e.preventDefault();
-        if (index !== currentJobId) return;
+        if (index !== currentJobIdFromSearch) return;
+
+        if (searchParams.has('currentJobId')) {
+            searchParams.delete('currentJobId');
+            setSearchParams(searchParams);
+        }
+        // setSearchParams({ 'currentJobId': null });
 
         setCurrentJobId(null);
     }
@@ -286,7 +300,7 @@ const JobListing = () => {
                             {inputFields.map((input, index) => {
                                 return (
                                     <React.Fragment key={index}>
-                                        <div className='w-[280px] h-full mr-1'>
+                                        <div className='w-[300px] h-full mr-1'>
                                             <label className={input.styleProps}>
                                                 {input.icon && (
                                                     input.icon
@@ -310,30 +324,32 @@ const JobListing = () => {
                     </div>
 
                     <div className='hidden max-md:block'>
-                        <div className='flex flex-col items-center gap-2'>
-                            {inputFields.map((input, index) => {
-                                return (
-                                    <React.Fragment key={index}>
-                                        <div className='w-[390px] max-extraSm:w-[320px] h-full mr-1'>
-                                            <label className='flex items-center border border-slate-600 text-slate-600 w-full h-[60px] px-2 rounded-lg focus-within:outline-none focus-within:border focus-within:border-violet-700 focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text'>
-                                                <div className='flex items-center text-slate-600'>
-                                                    {input.icon && (
-                                                        input.icon
-                                                    )}
+                        <div className='flex items-center justify-center gap-2 h-max'>
+                            <div className='flex flex-col items-center gap-2'>
+                                {inputFields.map((input, index) => {
+                                    return (
+                                        <React.Fragment key={index}>
+                                            <div className='h-full mr-1'>
+                                                <label className='flex items-center border border-slate-600 text-slate-600 w-full h-[60px] px-2 rounded-lg focus-within:outline-none focus-within:border focus-within:border-violet-700 focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text'>
+                                                    <div className='flex items-center text-slate-600'>
+                                                        {input.icon && (
+                                                            input.icon
+                                                        )}
 
-                                                    <input name={input.name} onChange={(e) => handleInputChange(e, input.name)} className='outline-none w-[280px] max-extraSm:w-[210px] h-full' type='text' placeholder={input.placeholder} value={searchInput[input.name]} />
-                                                
-                                                    {searchInput[input.name] && (
-                                                        <Button onClick={() => {handleDeleteInput(input.name)}} className='bg-white hover:bg-[#a0a0a06e] ml-2'>
-                                                            <span className='text-black'>X</span>
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </React.Fragment>
-                                )
-                            })}
+                                                        <input name={input.name} onChange={(e) => handleInputChange(e, input.name)} className='outline-none w-[280px] max-extraSm:w-auto h-full' type='text' placeholder={input.placeholder} value={searchInput[input.name]} />
+                                                    
+                                                        {searchInput[input.name] && (
+                                                            <Button onClick={() => {handleDeleteInput(input.name)}} className='bg-white hover:bg-[#a0a0a06e] ml-2'>
+                                                                <span className='text-black'>X</span>
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </React.Fragment>
+                                    )
+                                })}
+                            </div>
                         </div>
 
                         <div className='flex items-center justify-center mt-5 mr-2'>
@@ -356,9 +372,9 @@ const JobListing = () => {
                                 key={newIndex} 
                                 onClick={(e) => handleCurrentJobId(e, newIndex)} 
                                 className={`
-                                    group w-full h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px]' : 'lg:w-3/6'}
-                                    ${currentJobId && currentJobId >= 0 ? 'mr-5 sm:mx-auto' : '' }
-                                    ${currentJobId && currentJobId === newIndex ? 'border-violet-700' : 'border-black' }
+                                    group w-full h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobIdFromSearch ? 'lg:w-[500px]' : 'lg:w-3/6 md:w-4/6 sm:w-11/12 extraSm:w-11/12 max-extraSm:w-11/12' }
+                                    ${currentJobIdFromSearch && currentJobIdFromSearch >= 0 ? 'mr-5 extraSm:mx-auto' : '' }
+                                    ${currentJobIdFromSearch && currentJobIdFromSearch === newIndex ? 'border-violet-700' : 'border-black' }
                                 `}>
 
                                 <div className='flex items-center justify-between p-5'>
@@ -373,7 +389,7 @@ const JobListing = () => {
                                         <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
                                             {job.tags.map((tag, indexTag) => {
                                                 return (
-                                                    <div key={indexTag} className='bg-slate-100 px-2 py-1 rounded-md text-ellipsis'>
+                                                    <div key={indexTag} className='bg-slate-100 px-2 py-1 rounded-md text-ellipsis overflow-hidden'>
                                                         <p className='text-xs'>{tag.name}</p>
                                                     </div>
                                                 )
@@ -394,7 +410,7 @@ const JobListing = () => {
                     </div>
                 </div>
 
-                {currentJobId && currentJobId >= 0 && (
+                {currentJobIdFromSearch && currentJobIdFromSearch >= 0 && (
                     <div className='w-[600px] h-dvh md:min-h-svh max-md:min-h-svh sticky top-2 bottom-2 z-50 lg:block md:hidden sm:hidden extraSm:hidden max-extraSm:hidden'>
                         <div 
                             className={`bg-white border-2 border-black rounded-lg box-border`}
@@ -403,18 +419,18 @@ const JobListing = () => {
                             <div className='flex items-center'>
                                 <div className='shadow-md w-full rounded-sm'>
                                     <div className='p-5'>
-                                        <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobId)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
+                                        <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobIdFromSearch)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
                                             <span className='text-black'>X</span>
                                         </Button>
 
-                                        <h1 className='w-fit text-2xl font-bold text-slate-900'>{jobListings[currentJobId-1]?.title}</h1>
-                                        <h1 className='w-fit text-md text-slate-900 underline hover:cursor-pointer'>by {jobListings[currentJobId-1]?.person}</h1>
-                                        <p className='w-fit text-slate-600 text-opacity-75'>{jobListings[currentJobId-1]?.location}</p>
+                                        <h1 className='w-fit text-2xl font-bold text-slate-900'>{jobListings[currentJobIdFromSearch-1]?.title}</h1>
+                                        <h1 className='w-fit text-md text-slate-900 underline hover:cursor-pointer'>by {jobListings[currentJobIdFromSearch-1]?.person}</h1>
+                                        <p className='w-fit text-slate-600 text-opacity-75'>{jobListings[currentJobIdFromSearch-1]?.location}</p>
 
                                         <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
-                                            {jobListings[currentJobId-1]?.tags.map((tag, indexTag) => {
+                                            {jobListings[currentJobIdFromSearch-1]?.tags.map((tag, indexTag) => {
                                                 return (
-                                                    <div key={indexTag} className='bg-slate-100 px-2 py-1 rounded-md text-ellipsis'>
+                                                    <div key={indexTag} className='bg-slate-100 px-2 py-1 rounded-md text-ellipsis overflow-hidden'>
                                                         <p className='text-xs'>{tag.name}</p>
                                                     </div>
                                                 )
@@ -426,7 +442,7 @@ const JobListing = () => {
                                 </div>
                             </div>
 
-                            <ScrollArea className='w-full h-[calc(100%-215px)]'>
+                            <ScrollArea className='w-full h-[calc(100%-240px)]'>
                                 <div className='p-5'>
                                     <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
                                     <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
