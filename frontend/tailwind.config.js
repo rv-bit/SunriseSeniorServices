@@ -33,6 +33,9 @@ module.exports = {
       screens: {
         'extraSm': '400px',
         // => @media (min-width: 400px) { ... } WHO TF STILL USES PHONES WITH 400PX WIDTH?
+
+        'lg': '1180px',
+        // => @media (min-width: 1180px) { ... }
       },
       textDecoration: ['group-hover'],
       colors: {

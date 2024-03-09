@@ -123,7 +123,76 @@ const jobListings = [
         person: 'John Doe',
         postedOn: '21st August 2021'
     },
-
+            {
+        title: 'Help with childcare',
+        location: 'London, UK, WV10 9QL',
+        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
+        tags: [
+            { name: '£30hr, 7hr / week' }
+        ],
+        person: 'John Doe',
+        postedOn: '21st August 2021'
+    },
+            {
+        title: 'Help with childcare',
+        location: 'London, UK, WV10 9QL',
+        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
+        tags: [
+            { name: '£30hr, 7hr / week' }
+        ],
+        person: 'John Doe',
+        postedOn: '21st August 2021'
+    },
+            {
+        title: 'Help with childcare',
+        location: 'London, UK, WV10 9QL',
+        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
+        tags: [
+            { name: '£30hr, 7hr / week' }
+        ],
+        person: 'John Doe',
+        postedOn: '21st August 2021'
+    },
+            {
+        title: 'Help with childcare',
+        location: 'London, UK, WV10 9QL',
+        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
+        tags: [
+            { name: '£30hr, 7hr / week' }
+        ],
+        person: 'John Doe',
+        postedOn: '21st August 2021'
+    },
+            {
+        title: 'Help with childcare',
+        location: 'London, UK, WV10 9QL',
+        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
+        tags: [
+            { name: '£30hr, 7hr / week' }
+        ],
+        person: 'John Doe',
+        postedOn: '21st August 2021'
+    },
+            {
+        title: 'Help with childcare',
+        location: 'London, UK, WV10 9QL',
+        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
+        tags: [
+            { name: '£30hr, 7hr / week' }
+        ],
+        person: 'John Doe',
+        postedOn: '21st August 2021'
+    },
+            {
+        title: 'Help with childcare',
+        location: 'London, UK, WV10 9QL',
+        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
+        tags: [
+            { name: '£30hr, 7hr / week' }
+        ],
+        person: 'John Doe',
+        postedOn: '21st August 2021'
+    },
 ]
 
 
@@ -159,10 +228,57 @@ const JobListing = () => {
         });
     }
 
+    const handleCloseCurrentJobId = (e, index) => {
+        e.preventDefault();
+        if (index !== currentJobId) return;
+
+        setCurrentJobId(null);
+    }
+
+    const [newHeight, setNewHeight] = useState(930);
+    useEffect(() => {
+        const handleEvent = () => {
+            const scrollPosition = window.pageYOffset;
+            const windowHeight = window.innerHeight;
+            const height = Math.round(scrollPosition * 1.05);
+
+            let newHeight = 930 + (height * 0.8);
+
+            switch (true) {
+                case (newHeight > windowHeight):
+                    newHeight = windowHeight - 20;
+                    break;
+                
+                case (newHeight <= 300):
+                    newHeight = 300;
+                    break;
+
+                case (newHeight < windowHeight && newHeight > 300):
+                    newHeight = windowHeight - 410 + height;
+                    if (newHeight >= windowHeight) newHeight = windowHeight - 20;
+                    break;
+
+                default:
+                    break;
+            }
+
+            setNewHeight(newHeight);
+        };
+
+        window.addEventListener('scroll', handleEvent);
+        window.addEventListener('resize', handleEvent);
+
+        return () => {
+            window.removeEventListener('scroll', handleEvent);
+            window.removeEventListener('resize', handleEvent);
+        };
+    }, []);
+
     return (
-        <section>
+        <section className='mx-auto min-h-5'>
             <div className='flex items-center justify-center'>
                 <div className='mx-auto'>
+
                     <h1 className='mb-10 text-3xl text-center font-bold text-slate-900'>Find your next job</h1>
 
                     <div className='flex items-center max-md:hidden'>
@@ -170,7 +286,7 @@ const JobListing = () => {
                             {inputFields.map((input, index) => {
                                 return (
                                     <React.Fragment key={index}>
-                                        <div className='lg:w-[280px] h-full mr-1'>
+                                        <div className='w-[280px] h-full mr-1'>
                                             <label className={input.styleProps}>
                                                 {input.icon && (
                                                     input.icon
@@ -231,145 +347,148 @@ const JobListing = () => {
 
             <hr className='w-full opacity-30 border-t border-slate-400' />
 
-            <div className='flex items-center justify-center'>
-                <div className='mx-auto'>
-                    <div className='flex gap-2 my-10'>
-                        
-                        <div className='flex flex-col gap-2 mt-5'>
-                            {jobListings.map((job, index) => {
-                                const newIndex = index + 1;
-                                return (
-                                    <div 
-                                        key={newIndex} 
-                                        onClick={(e) => handleCurrentJobId(e, newIndex)} 
-                                        className={`
-                                            group w-[500px] max-md:w-[500px] max-sm:w-[400px] max-extraSm:w-[300px] h-auto bg-white border-2 border-black rounded-lg hover:cursor-pointer 
-                                            ${currentJobId && currentJobId >= 0 ? 'mr-[50px]' : '' }
-                                            ${currentJobId && currentJobId === newIndex ? 'border-violet-700' : 'border-black' }
-                                        `}>
+            <div className='flex justify-center min-h-5 my-5'>
+                <div className='flex items-center flex-col flex-nowrap mt-5 mx-4'>
+                    {jobListings.map((job, index) => {
+                        const newIndex = index + 1;
+                        return (
+                            <div 
+                                key={newIndex} 
+                                onClick={(e) => handleCurrentJobId(e, newIndex)} 
+                                className={`
+                                    group w-full h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px]' : 'lg:w-3/6'}
+                                    ${currentJobId && currentJobId >= 0 ? 'mr-5 sm:mx-auto' : '' }
+                                    ${currentJobId && currentJobId === newIndex ? 'border-violet-700' : 'border-black' }
+                                `}>
 
-                                        <div className='flex items-center justify-between p-5'>
-                                            <div>
-                                                <h1 className='text-xl font-bold text-slate-900 group-hover:underline'>{job.title}</h1>
-                                                <p className='text-slate-600'>{job.location}</p>
+                                <div className='flex items-center justify-between p-5'>
+                                    <div>
+                                        <h1 className='text-xl font-bold text-slate-900 group-hover:underline'>{job.title}</h1>
+                                        <p className='text-slate-600'>{job.location}</p>
 
-                                                <div className='flex items-center my-4'>
-                                                    <p className='text-slate-600 text-sm line-clamp-2'>{job.description}</p>
-                                                </div>
+                                        <div className='flex items-center my-4'>
+                                            <p className='text-slate-600 text-sm line-clamp-2'>{job.description}</p>
+                                        </div>
 
-                                                <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
-                                                    {job.tags.map((tag, indexTag) => {
-                                                        return (
-                                                            <div key={indexTag} className='bg-slate-100 px-2 py-1 rounded-md text-ellipsis'>
-                                                                <p className='text-xs'>{tag.name}</p>
-                                                            </div>
-                                                        )
-                                                    })}
-                                                </div>
+                                        <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
+                                            {job.tags.map((tag, indexTag) => {
+                                                return (
+                                                    <div key={indexTag} className='bg-slate-100 px-2 py-1 rounded-md text-ellipsis'>
+                                                        <p className='text-xs'>{tag.name}</p>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
 
-                                                <div className='flex items-center mt-3'>
-                                                    <p className='text-slate-600 text-sm'>Posted on {job.postedOn}</p>
-                                                </div>
-                                            </div>
+                                        <div className='flex items-center mt-3'>
+                                            <p className='text-slate-600 text-sm'>Posted on {job.postedOn}</p>
                                         </div>
                                     </div>
-                                )
-                            })}
-
-                            <div className='flex items-center justify-center'>
-                                <Button className='mx-auto w-4/5 ml-6'>Load more</Button>
-                            </div>
-                        </div>
-
-                        {currentJobId && currentJobId >= 0 && (
-                            <div className='h-screen sticky top-2 bottom-2 z-50'>
-                                <div className='bg-white border border-black rounded-lg box-border h-[calc(100dvh-15px)]'>
-                                    <div className='flex items-center'>
-                                        <div className='shadow-md w-full rounded-sm'>
-                                            <div className='p-5'>
-                                                <h1 className='text-2xl font-bold text-slate-900'>{jobListings[currentJobId-1]?.title}</h1>
-                                                <h1 className='text-md text-slate-900 underline hover:cursor-pointer'>by {jobListings[currentJobId-1]?.person}</h1>
-                                                <p className='text-slate-600 text-opacity-75'>{jobListings[currentJobId-1]?.location}</p>
-
-                                                <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
-                                                    {jobListings[currentJobId-1]?.tags.map((tag, indexTag) => {
-                                                        return (
-                                                            <div key={indexTag} className='bg-slate-100 px-2 py-1 rounded-md text-ellipsis'>
-                                                                <p className='text-xs'>{tag.name}</p>
-                                                            </div>
-                                                        )
-                                                    })}
-                                                </div>
-
-                                                <Button className='mt-5 bg-violet-700 bg-opacity-80 hover:bg-violet-700 hover:bg-opacity-100'>Message</Button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <ScrollArea className='w-full h-[calc(100%-240px)]'>
-                                        <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-                                                                                <div className='p-5'>
-                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                            <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                        </div>
-
-                                        <ScrollBar orientation="vertical" />
-                                    </ScrollArea>
                                 </div>
                             </div>
-                        )}
+                        )
+                    })}
+
+                    <div className='flex items-center justify-center my-2'>
+                        <Button className='w-full'>Load More</Button>
                     </div>
                 </div>
+
+                {currentJobId && currentJobId >= 0 && (
+                    <div className='w-[600px] h-dvh md:min-h-svh max-md:min-h-svh sticky top-2 bottom-2 z-50 lg:block md:hidden sm:hidden extraSm:hidden max-extraSm:hidden'>
+                        <div 
+                            className={`bg-white border-2 border-black rounded-lg box-border`}
+                            style={{ height: `${newHeight + 2}px`  }}
+                        >
+                            <div className='flex items-center'>
+                                <div className='shadow-md w-full rounded-sm'>
+                                    <div className='p-5'>
+                                        <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobId)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
+                                            <span className='text-black'>X</span>
+                                        </Button>
+
+                                        <h1 className='w-fit text-2xl font-bold text-slate-900'>{jobListings[currentJobId-1]?.title}</h1>
+                                        <h1 className='w-fit text-md text-slate-900 underline hover:cursor-pointer'>by {jobListings[currentJobId-1]?.person}</h1>
+                                        <p className='w-fit text-slate-600 text-opacity-75'>{jobListings[currentJobId-1]?.location}</p>
+
+                                        <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
+                                            {jobListings[currentJobId-1]?.tags.map((tag, indexTag) => {
+                                                return (
+                                                    <div key={indexTag} className='bg-slate-100 px-2 py-1 rounded-md text-ellipsis'>
+                                                        <p className='text-xs'>{tag.name}</p>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+
+                                        <Button className='mt-5 bg-violet-700 bg-opacity-80 hover:bg-violet-700 hover:bg-opacity-100'>Message</Button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <ScrollArea className='w-full h-[calc(100%-215px)]'>
+                                <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+                                                                        <div className='p-5'>
+                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                </div>
+
+                                <ScrollBar orientation="vertical" />
+                            </ScrollArea>
+                        </div>
+                    </div>
+                )}
             </div>
+
         </section>
     )
 }
