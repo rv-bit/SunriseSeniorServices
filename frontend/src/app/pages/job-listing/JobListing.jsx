@@ -283,7 +283,7 @@ const JobListing = () => {
 
                         {currentJobId && currentJobId >= 0 && (
                             <div className='h-screen sticky top-2 bottom-2 z-50'>
-                                <div className='bg-white border border-black rounded-lg box-border h-full'>
+                                <div className='bg-white border border-black rounded-lg box-border h-[calc(100dvh-15px)]'>
                                     <div className='flex items-center'>
                                         <div className='shadow-md w-full rounded-sm'>
                                             <div className='p-5'>
