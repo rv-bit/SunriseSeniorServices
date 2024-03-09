@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-import AuthContext from '../../context/AuthContext'
+import AuthContext from '@/app/context/AuthContext'
 
 import {
     DropdownMenu,
@@ -35,7 +35,7 @@ const Navbar = () => {
     const {userAuthData} = useContext(AuthContext);    
 
     return (
-        <section className="max-w-screen-lg px-2 md:px-8 mx-auto sticky top-0 backdrop-blur-xl bg-[#ffffff90] z-50 mb-10 mt-12">
+        <section className="max-w-screen-lg px-2 md:px-8 mx-auto backdrop-blur-xl bg-[#ffffff90] mb-10 mt-12">
             <nav className="w-full flex items-center justify-between">
                 
                 <ul className="flex flex-row items-center">

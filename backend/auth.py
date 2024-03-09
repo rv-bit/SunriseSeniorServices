@@ -23,8 +23,7 @@ def login():
         email = request.json.get('email')
         password = request.json.get('password')
 
-        users = current_app.config['DB'].Get('users')
-        userFound = users.find_one({"email": email})
+        userFound = current_app.config['DB'].Find('users', {"email": email})
 
         if not userFound:
             return jsonify({"Error": "This user was not found, please try again later."}), 403

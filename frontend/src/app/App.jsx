@@ -2,8 +2,8 @@ import { Suspense, lazy, useState, useEffect, useMemo } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import CookieConsent from "react-cookie-consent";
 
-import AuthContext from './context/AuthContext'
-import { Get } from './lib/utils' // Common functions
+import AuthContext from '@/app/context/AuthContext'
+import { Get } from '@/app/lib/utils.js' // Common functions
 
 const Navbar = lazy(() => import('./components/custom/Navbar.jsx'))
 const Footer = lazy(() => import('./components/custom/Footer.jsx'))
@@ -73,7 +73,7 @@ export default function App () {
       </CookieConsent>
 
       <AuthContext.Provider value={value}>
-        <div className="flex flex-col min-h-screen">
+        <div className="  flex flex-col min-h-screen">
           <Suspense fallback={
             <div className="flex items-center justify-center h-screen">
               <div className="relative">
