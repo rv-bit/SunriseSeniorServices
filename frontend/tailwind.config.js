@@ -34,6 +34,9 @@ module.exports = {
         'extraSm': '400px',
         // => @media (min-width: 400px) { ... } WHO TF STILL USES PHONES WITH 400PX WIDTH?
 
+        'tablet': '1000px',
+        // => @media (min-width: 1040px) { ... }
+
         'lg': '1180px',
         // => @media (min-width: 1180px) { ... }
       },

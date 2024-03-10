@@ -16,6 +16,8 @@ const Chat = lazy(() => import('./pages/chat/Chat.jsx'))
 const JobListing = lazy(() => import('./pages/job-listing/JobListing.jsx'))
 const FormCreateAccount = lazy(() => import('./pages/get-started-form/FormCreateAccount.jsx'))
 
+const ViewJobListing = lazy(() => import('./pages/job-listing/ViewJobListing.jsx'))
+
 export default function App () {
   const [userAuthData, setUserAuth] = useState(null);
 
@@ -96,6 +98,8 @@ export default function App () {
                 <Route path='/job-listings' element={<JobListing />} />
 
                 <Route path='/signup/get-started' element={<FormCreateAccount />} />
+
+                <Route path='/job-listings/viewjob' element={<ViewJobListing />} />
 
                 {/* Create pages for not found then add a button for redirect */}
                 <Route path='/404' element={<Home />} />

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, createSearchParams, useSearchParams } from 'react-router-dom';
+
+import { isMobile } from 'react-device-detect';
 
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -7,6 +9,8 @@ import { Separator } from '@/app/components/ui/separator';
 
 import { BsSearch, BsFillGeoAltFill } from "react-icons/bs";
 import { ScrollArea, ScrollBar } from '@/app/components/ui/scroll-area';
+
+import ViewJobListing from './ViewJobListing';
 
 const inputFields = [
     { name: 'jobTitle', placeholder: 'Job Title', icon: <BsSearch className='mx-3 size-5'/>, styleProps: `
@@ -19,183 +23,7 @@ const inputFields = [
     `}
 ]
 
-const jobListings = [
-    {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' },
-            { name: 'Starts: 12/05/2024' },
-            { name: 'Starts: 12/05/2024' },
-            { name: 'Starts: 12/05/2024' },
-            { name: 'Starts: 12/05/2024' },
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-    {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-    {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-    {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-    {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-        {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-        {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-        {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-        {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-        {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-            {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-            {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-            {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-            {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-            {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-            {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-            {
-        title: 'Help with childcare',
-        location: 'London, UK, WV10 9QL',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, dignissimos. Rem vitae quos nulla aliquam molestiae ipsam, doloribus repellendus omnis quas officiis provident possimus eligendi culpa veritatis voluptas unde fugiat.',
-        tags: [
-            { name: '£30hr, 7hr / week' }
-        ],
-        person: 'John Doe',
-        postedOn: '21st August 2021'
-    },
-]
-
+import jobListings from '@/app/data/JobListinTemp';
 
 const JobListing = () => {
     const navigate = useNavigate();
@@ -209,7 +37,6 @@ const JobListing = () => {
 
     const handleCurrentJobId = (e, index) => {
         e.preventDefault();
-
         setCurrentJobId(index);
     }
 
@@ -217,6 +44,15 @@ const JobListing = () => {
         if (!currentJobId) return;
 
         setSearchParams({ 'currentJobId': currentJobId });
+
+        if (isMobile || window.innerWidth < 1180) {
+            navigate({
+                pathname: '/job-listings/viewjob',
+                search: `?currentJobId=${currentJobId}`
+            })
+
+            return;
+        }
 
         return () => {}
     }, [currentJobId]);
@@ -244,7 +80,6 @@ const JobListing = () => {
             searchParams.delete('currentJobId');
             setSearchParams(searchParams);
         }
-        // setSearchParams({ 'currentJobId': null });
 
         setCurrentJobId(null);
     }
@@ -254,6 +89,8 @@ const JobListing = () => {
         const handleEvent = () => {
             const scrollPosition = window.pageYOffset;
             const windowHeight = window.innerHeight;
+            const windowWidth = window.innerWidth;
+
             const height = Math.round(scrollPosition * 1.05);
 
             let newHeight = 930 + (height * 0.8);
@@ -287,6 +124,7 @@ const JobListing = () => {
             window.removeEventListener('resize', handleEvent);
         };
     }, []);
+
 
     return (
         <section className='mx-auto min-h-5'>
@@ -372,8 +210,8 @@ const JobListing = () => {
                                 key={newIndex} 
                                 onClick={(e) => handleCurrentJobId(e, newIndex)} 
                                 className={`
-                                    group w-full h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobIdFromSearch ? 'lg:w-[500px]' : 'lg:w-3/6 md:w-4/6 sm:w-11/12 extraSm:w-11/12 max-extraSm:w-11/12' }
-                                    ${currentJobIdFromSearch && currentJobIdFromSearch >= 0 ? 'mr-5 extraSm:mx-auto' : '' }
+                                    group w-full h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobIdFromSearch ? 'lg:w-[500px] max-extraSm:w-11/12' : 'lg:w-3/6 md:w-4/6 sm:w-11/12 extraSm:w-11/12 max-extraSm:w-11/12' }
+                                    ${currentJobIdFromSearch && currentJobIdFromSearch >= 0 ? 'mr-5 extraSm:mx-5 max-extraSm:mx-5' : '' }
                                     ${currentJobIdFromSearch && currentJobIdFromSearch === newIndex ? 'border-violet-700' : 'border-black' }
                                 `}>
 
@@ -442,7 +280,7 @@ const JobListing = () => {
                                 </div>
                             </div>
 
-                            <ScrollArea className='w-full h-[calc(100%-240px)]'>
+                            <ScrollArea className='w-full h-[calc(100%-270px)]'>
                                 <div className='p-5'>
                                     <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
                                     <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
