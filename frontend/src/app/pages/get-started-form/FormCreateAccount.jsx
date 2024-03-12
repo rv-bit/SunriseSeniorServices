@@ -42,8 +42,6 @@ async function checkAccountUsingEmail(email, alertState, setAlertState) {
 async function createUser(formData, alertState, setAlertState) {
     if (!formData) return;
 
-    console.log('formData', formData);
-
     const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {formData});
     if (!response.ok) {
         const data = await response.json();
@@ -156,6 +154,7 @@ const FormCreateAccount = () => {
 
             const currentStepBasedOnSubStep = formSteps.find(stepObj => stepObj.fields.some(field => field.step === subStep));
             const stepName = currentStepBasedOnSubStep?.stepsNames?.[subStep];
+
             if (!stepName) return prevState;
 
             const newState = { ...prevState };
@@ -303,6 +302,7 @@ const FormCreateAccount = () => {
                 alertHandleClose={alertHandleClose}
                 setCurrentStep={setCurrentStep}
                 setCurrentSubStep={setCurrentSubStep}
+                setHasUserNavigatedBack={setHasUserNavigatedBack}        
 
                 alertState={alertState}
                 userIsLoading={userIsLoading}

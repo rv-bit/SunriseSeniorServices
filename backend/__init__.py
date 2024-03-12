@@ -12,11 +12,14 @@ def initializeApp():
     from backend.auth import auth
     from backend.chats import chat
 
+    from backend.joblisting import jobListing
+
     from backend.db import DB
 
     app.register_blueprint(views, url_prefix="/")
     app.register_blueprint(auth, url_prefix="/")
     app.register_blueprint(chat, url_prefix="/")
+    app.register_blueprint(jobListing, url_prefix="/")
 
     app.config["DB"] = DB(os.environ.get("MONGO_URI"))
 

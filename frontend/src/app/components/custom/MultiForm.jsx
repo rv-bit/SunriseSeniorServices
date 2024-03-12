@@ -12,16 +12,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/app/components/ui/form"
+
 import { Card } from "@/app/components/ui/card"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
+import { Checkbox } from "@/app/components/ui/checkbox"
 
 import { DatePicker } from "antd"
 import dayjs from "dayjs"
 
 import { Stepper, Step } from 'react-form-stepper';
 
-const MultiForm = ({ onSubmit, handleSetOptionClick, alertHandleClose, setCurrentStep, setCurrentSubStep, alertState, userIsLoading, currentStep, currentSubStep, formSteps, form, formData, errors }) => {
+const MultiForm = ({ onSubmit, handleSetOptionClick, alertHandleClose, setCurrentStep, setCurrentSubStep, setHasUserNavigatedBack, alertState, userIsLoading, currentStep, currentSubStep, formSteps, form, formData, errors, handleSetCheckboxValues }) => {
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
     useEffect(() => {
@@ -77,6 +79,33 @@ const MultiForm = ({ onSubmit, handleSetOptionClick, alertHandleClose, setCurren
                                                         <FormMessage key={errorIndex}>
                                                             {error}
                                                         </FormMessage>
+                                                    ))}
+                                                </div>
+                                            </FormItem>
+                                        :
+                                            stepField.type === "checkbox" ?
+                                            <FormItem key={`formItem-checkbox-${index}`}>
+                                                <div key={`formItem-checkbox-${index}`} className="flex flex-col justify-between gap-2">
+                                                    {stepField.options?.map((option, optionIndex) => (
+                                                        <FormControl>
+                                                            <div>
+                                                                <Checkbox key={optionIndex}
+                                                                    className="size-6 align-middle"
+                                                                    checked={field.value?.includes(option.id)}
+                                                                    onCheckedChange={(checked) => {
+                                                                        handleSetCheckboxValues(option.id, checked);
+                                                                        return checked
+                                                                            ? field.onChange([...field.value, option.id])
+                                                                            : field.onChange(
+                                                                                field.value?.filter(
+                                                                                    (value) => value !== option.id
+                                                                                )
+                                                                        )
+                                                                    }}
+                                                                />
+                                                                <FormLabel className='ml-2 text-center text-md font-normal'>{option.id}</FormLabel>
+                                                            </div>
+                                                        </FormControl>
                                                     ))}
                                                 </div>
                                             </FormItem>
@@ -139,15 +168,16 @@ const MultiForm = ({ onSubmit, handleSetOptionClick, alertHandleClose, setCurren
                             }
 
                             {
-                                currentStep === formSteps.length ? 
+                                userIsLoading ?
                                     <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
                                 :
-                                    !formSteps[currentStep]?.fields.some(field => field.type === "button") && (
-                                        userIsLoading ?
-                                            <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
+                                    currentStep === formSteps.length ? 
+                                        <Button disabled ><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button>
+                                    :
+                                        formSteps[currentStep]?.fields.filter(field => field.step ? field.step === currentSubStep : true).some(field => field.type !== "button") ?
+                                            <Button type="submit"> { (currentStep !== formSteps.length - 1 || currentSubStep !== Math.max(...formSteps[currentStep - 1].fields.map(field => field.step || 1))) ? "Next" : "Submit" } </Button>
                                         :
-                                            <Button type="submit"> { (currentStep !== formSteps.length - 1) ? "Next" : "Submit" } </Button>
-                                    )   
+                                            null
                             }
                         </div>
                     </form>

@@ -9,7 +9,7 @@ def prepare_document(collection_name, variables):
         schema = CHAT_TABLE
     elif collection_name == 'messages':
         schema = MESSAGE_TABLE
-    elif collection_name == 'jobs':
+    elif collection_name == 'jobListings':
         schema = JOB_TABLE
     else:
         raise ValueError(f"Unknown collection name: {collection_name}")

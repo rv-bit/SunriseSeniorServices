@@ -48,5 +48,8 @@ def JOB_TABLE():
         "description": {"default_value": "", "type": str, "required": True},
         "category": {"default_value": "", "type": str, "required": True},
 
+        "tags": {"default_value": [], "type": list, "required": True},
+        "days": {"default_value": [], "type": list, "required": True},
+
         "created_at": {"default_value": datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S'), "type": str},
     }

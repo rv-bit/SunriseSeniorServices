@@ -8,15 +8,19 @@ import { Get } from '@/app/lib/utils.js' // Common functions
 const Navbar = lazy(() => import('./components/custom/Navbar.jsx'))
 const Footer = lazy(() => import('./components/custom/Footer.jsx'))
 
+const NotFound = lazy(() => import('./pages/home/NotFound.jsx'))
 const Home = lazy(() => import('./pages/home/Home.jsx'))
+
 const Login = lazy(() => import('./pages/login/Login.jsx'))
 const Signup = lazy(() => import('./pages/signup/Signup.jsx'))
 const Logout = lazy(() => import('./pages/logout/Logout.jsx'))
-const Chat = lazy(() => import('./pages/chat/Chat.jsx'))
-const JobListing = lazy(() => import('./pages/job-listing/JobListing.jsx'))
 const FormCreateAccount = lazy(() => import('./pages/get-started-form/FormCreateAccount.jsx'))
 
+const Chat = lazy(() => import('./pages/chat/Chat.jsx'))
+
 const ViewJobListing = lazy(() => import('./pages/job-listing/ViewJobListing.jsx'))
+const JobListing = lazy(() => import('./pages/job-listing/JobListing.jsx'))
+const FormNewJobListing = lazy(() => import('./pages/job-listing/FormNewJobListing.jsx'))
 
 export default function App () {
   const [userAuthData, setUserAuth] = useState(null);
@@ -93,17 +97,18 @@ export default function App () {
                 <Route path='/login' element={<Login />} />
                 <Route path='/signup' element={<Signup />} />
                 <Route path='/logout' element={<Logout />} />
+
+                <Route path='/signup/get-started' element={<FormCreateAccount />} />
+                
                 <Route path='/chat' element={<Chat />} />
 
                 <Route path='/job-listings' element={<JobListing />} />
-
-                <Route path='/signup/get-started' element={<FormCreateAccount />} />
-
                 <Route path='/job-listings/viewjob' element={<ViewJobListing />} />
+                <Route path='/job-listings/new' element={<FormNewJobListing />} />
 
                 {/* Create pages for not found then add a button for redirect */}
-                <Route path='/404' element={<Home />} />
-                <Route path='*' element={<Home />} />
+                <Route path='/404' element={<NotFound />}/>
+                <Route path='*' element={<NotFound />}  />
               </Routes>
             </div>
             <Footer className="mt-auto"/>

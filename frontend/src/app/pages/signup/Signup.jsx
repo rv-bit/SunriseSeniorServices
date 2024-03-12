@@ -94,7 +94,7 @@ const Signup = () => {
 
                     setUserLoad(false);
                     navigate('/');
-                return;
+                    return;
                 }
 
                 navigate('/signup/get-started', { state: { informationGiven: promiseGoogleAccount } });

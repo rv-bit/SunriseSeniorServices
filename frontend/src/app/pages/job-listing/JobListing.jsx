@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, createSearchParams, useSearchParams } from 'react-router-dom';
 
 import { isMobile } from 'react-device-detect';
@@ -24,35 +24,38 @@ const inputFields = [
 ]
 
 import jobListings from '@/app/data/JobListinTemp';
+import useDocumentTitle from '@/app/hooks/UseDocumentTitle';
 
 const JobListing = () => {
+    useDocumentTitle('Job Listings');
+
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-
+    
     const [searchInput, setSearchInput] = useState({ jobTitle: '', location: '' });
     const [searchResults, setSearchResults] = useState([]);
-
+    
     const [currentJobId, setCurrentJobId] = useState(null);
     const currentJobIdFromSearch = searchParams && searchParams.get('currentJobId') ? parseInt(searchParams.get('currentJobId')) : null;
 
     const handleCurrentJobId = (e, index) => {
         e.preventDefault();
         setCurrentJobId(index);
+
+        if (isMobile || window.innerWidth < 1180) {
+            navigate({
+                pathname: '/job-listings/viewjob',
+                search: `?currentJobId=${index}`
+            })
+
+            return;
+        }
     }
 
     useEffect(() => {
         if (!currentJobId) return;
 
         setSearchParams({ 'currentJobId': currentJobId });
-
-        if (isMobile || window.innerWidth < 1180) {
-            navigate({
-                pathname: '/job-listings/viewjob',
-                search: `?currentJobId=${currentJobId}`
-            })
-
-            return;
-        }
 
         return () => {}
     }, [currentJobId]);
@@ -82,6 +85,12 @@ const JobListing = () => {
         }
 
         setCurrentJobId(null);
+    }
+
+    const handleCreateNewJobListing = (e) => {
+        e.preventDefault();
+
+        navigate('/job-listings/new');
     }
 
     const [newHeight, setNewHeight] = useState(930);
@@ -125,6 +134,14 @@ const JobListing = () => {
         };
     }, []);
 
+    const elementCurrentJobHeaderRef = useRef(null);
+    const [elementCurrentJobHeaderHeight, setElementCurrentJobHeaderHeight] = useState(0);
+    
+    useEffect(() => {
+        if (elementCurrentJobHeaderRef.current) {
+            setElementCurrentJobHeaderHeight(elementCurrentJobHeaderRef.current.getBoundingClientRect().height);
+        }
+    }, [currentJobIdFromSearch]);
 
     return (
         <section className='mx-auto min-h-5'>
@@ -195,7 +212,9 @@ const JobListing = () => {
                         </div>
                     </div>
 
-                    <div className='my-5 text-center hover:underline hover:cursor-pointer text-violet-700 font-bold'>Post a help enquiry</div>
+                    <div className='flex items-center justify-center'>
+                        <h1 onClick={handleCreateNewJobListing} className='w-fit my-5 text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
+                    </div>
                 </div>
             </div>
 
@@ -206,13 +225,13 @@ const JobListing = () => {
                     {jobListings.map((job, index) => {
                         const newIndex = index + 1;
                         return (
-                            <div 
-                                key={newIndex} 
+                            <div
+                                key={newIndex}
                                 onClick={(e) => handleCurrentJobId(e, newIndex)} 
                                 className={`
                                     group w-full h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobIdFromSearch ? 'lg:w-[500px] max-extraSm:w-11/12' : 'lg:w-3/6 md:w-4/6 sm:w-11/12 extraSm:w-11/12 max-extraSm:w-11/12' }
                                     ${currentJobIdFromSearch && currentJobIdFromSearch >= 0 ? 'mr-5 extraSm:mx-5 max-extraSm:mx-5' : '' }
-                                    ${currentJobIdFromSearch && currentJobIdFromSearch === newIndex ? 'border-violet-700' : 'border-black' }
+                                    ${currentJobIdFromSearch && currentJobIdFromSearch === newIndex ? 'border-[#e8562ddd]' : 'border-black' }
                                 `}>
 
                                 <div className='flex items-center justify-between p-5'>
@@ -249,13 +268,13 @@ const JobListing = () => {
                 </div>
 
                 {currentJobIdFromSearch && currentJobIdFromSearch >= 0 && (
-                    <div className='w-[600px] h-dvh md:min-h-svh max-md:min-h-svh sticky top-2 bottom-2 z-50 lg:block md:hidden sm:hidden extraSm:hidden max-extraSm:hidden'>
+                    <div className='w-[600px] h-dvh md:min-h-svh max-md:min-h-svh sticky top-2 bottom-2 z-50 lg:block md:hidden sm:hidden extraSm:hidden max-extraSm:hidden mr-5'>
                         <div 
-                            className={`bg-white border-2 border-black rounded-lg box-border`}
+                            className={`bg-white border-2 border-black rounded-lg box-border overflow-hidden`}
                             style={{ height: `${newHeight + 2}px`  }}
                         >
                             <div className='flex items-center'>
-                                <div className='shadow-md w-full rounded-sm'>
+                                <div ref={elementCurrentJobHeaderRef} className='shadow-md w-full rounded-sm'>
                                     <div className='p-5'>
                                         <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobIdFromSearch)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
                                             <span className='text-black'>X</span>
@@ -275,12 +294,12 @@ const JobListing = () => {
                                             })}
                                         </div>
 
-                                        <Button className='mt-5 bg-violet-700 bg-opacity-80 hover:bg-violet-700 hover:bg-opacity-100'>Message</Button>
+                                        <Button className='mt-5 bg-[#dd673cfd] bg-opacity-90 hover:bg-[#e8432dea] hover:bg-opacity-100'>Message</Button>
                                     </div>
                                 </div>
                             </div>
 
-                            <ScrollArea className='w-full h-[calc(100%-270px)]'>
+                            <ScrollArea className='w-full' style={{ height: `calc(100% - ${elementCurrentJobHeaderHeight}px)` }}>
                                 <div className='p-5'>
                                     <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
                                     <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>

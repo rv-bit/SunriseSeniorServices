@@ -22,15 +22,17 @@ const defaultValues = formSteps.reduce((values, step) => {
 async function createJobListing(formData, alertState, setAlertState) {
     if (!formData) return;
 
-    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createJobListing`, {formData});
-    if (!response.ok) {
-        const data = await response.json();
-        setAlertState({ ...alertState, open: true, message: data.Error });
-        return false;
-    }
+    console.log(formData);
 
-    const data = await response.json();
-    return true;
+    // const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createJobListing`, {formData});
+    // if (!response.ok) {
+    //     const data = await response.json();
+    //     setAlertState({ ...alertState, open: true, message: data.Error });
+    //     return false;
+    // }
+
+    // const data = await response.json();
+    // return true;
 }
 
 const FormNewJobListing = () => {
@@ -42,7 +44,9 @@ const FormNewJobListing = () => {
     const [currentSubStep, setCurrentSubStep] = useState(1);
     
     const [formData, setFormData] = useState({});
-    const [formDataOptions, setFormDataOptions] = useState({});
+    
+    const [formDataOptions, setFormDataOptions] = useState([]);
+    const [daysWeek, setDaysWeek] = useState([]);
 
     const [hasUserNavigatedBack, setHasUserNavigatedBack] = useState(false);
     const [errors, setErrors] = useState(null);
@@ -50,10 +54,10 @@ const FormNewJobListing = () => {
     const form = useForm({defaultValues});
 
     useEffect(() => {
-        if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
-            navigate('/');
-            return;
-        }
+        // if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
+        //     navigate('/');
+        //     return;
+        // }
 
         return () => {};
     }, []);
@@ -103,7 +107,7 @@ const FormNewJobListing = () => {
         createJobListingAndNavigate();
     }, [formData]);
 
-    const handleSetOptionClick = (optionName, subStep) => {    
+    const handleSetOptionClick = (optionName) => {
         setFormDataOptions(prevState => {
             const currentStepOptions = formSteps
                 .filter(stepObj => stepObj.fields.some(field => field.step === currentStep))
@@ -112,14 +116,24 @@ const FormNewJobListing = () => {
 
             const sameStepKeys = currentStepOptions.map(option => option.name);
 
-            const currentStepBasedOnSubStep = formSteps.find(stepObj => stepObj.fields.some(field => field.step === subStep));
-            const stepName = currentStepBasedOnSubStep?.stepsNames?.[subStep];
+            const currentStepBasedOnSubStep = formSteps[currentStep];
+            const stepName = currentStepBasedOnSubStep?.stepsNames?.[currentSubStep];
+
             if (!stepName) return prevState;
 
             const newState = { ...prevState };
             if (!newState[stepName]) newState[stepName] = [];
 
-            newState[stepName] = newState[stepName].filter(option => option !== optionName);
+            if (newState[stepName].length === 0) {
+                newState[stepName].push(optionName);
+
+                return newState;
+            }
+
+            newState[stepName] = newState[stepName].filter(option => {
+                return option !== optionName;
+            });            
+
             sameStepKeys.forEach(key => {
                 newState[stepName].splice(key, 1);
             });
@@ -130,7 +144,19 @@ const FormNewJobListing = () => {
         });
     };
 
-    const onSubmit = async (data) => {
+    const handleSetDays = (optionName) => {
+        setDaysWeek(prevState => {
+            const newState = [...prevState];
+            if (newState.includes(optionName)) {
+                newState.splice(newState.indexOf(optionName), 1);
+            } else {
+                newState.push(optionName);
+            }
+            return newState;
+        });
+    };
+
+    const onSubmit = (data) => {
         const dataWithoutOptionKeys = Object.keys(data)
             .filter(key => !key.includes('option_'))
             .reduce((result, key) => {
@@ -138,7 +164,7 @@ const FormNewJobListing = () => {
                 return result;
             }, {});
 
-        const formDataWithOptions = { ...dataWithoutOptionKeys, options: formDataOptions };
+        const formDataWithOptions = { ...dataWithoutOptionKeys, ...formDataOptions};
 
         const currentFields = formSteps[currentStep].fields.filter(field => field.step ? field.step === currentSubStep : true);
         let currentValidationSchema = z.object(currentFields.reduce((schema, field) => {
@@ -234,6 +260,7 @@ const FormNewJobListing = () => {
                 alertHandleClose={alertHandleClose}
                 setCurrentStep={setCurrentStep}
                 setCurrentSubStep={setCurrentSubStep}
+                setHasUserNavigatedBack={setHasUserNavigatedBack}        
 
                 alertState={alertState}
                 userIsLoading={userIsLoading}
@@ -245,6 +272,8 @@ const FormNewJobListing = () => {
                 form={form}
                 formData={formData}
                 errors={errors}
+
+                handleSetCheckboxValues={handleSetDays}
             />
         </Suspense>
     )

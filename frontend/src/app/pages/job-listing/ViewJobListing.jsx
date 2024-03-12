@@ -53,7 +53,7 @@ const ViewJobListing = () => {
                             
                                 <div className='lg:hidden md:block sm:block extraSm:block max-extraSm:block'>
                                     <div className='flex justify-start mt-5'>
-                                        <Button className='w-[300px]' onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}>Message</Button>
+                                        <Button className='w-[300px] bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]' onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}>Message</Button>
                                     </div>
                                 </div>
 
@@ -87,7 +87,7 @@ const ViewJobListing = () => {
 
                         <div className='hidden lg:flex md:hidden sm:hidden extraSm:hidden max-extraSm:hidden'>
                             <div className='ml-32 w-[300px]'>
-                                <Button className='w-full mt-5' onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}>Message</Button>
+                                <Button className='w-full mt-5 bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]' onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}>Message</Button>
 
                                 <div className='flex items-center justify-center mt-5'>
                                     <div role='tags' className='grid grid-flow-row-dense grid-cols-3 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
