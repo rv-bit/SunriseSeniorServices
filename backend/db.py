@@ -13,6 +13,10 @@ class DB:
         collection = self.Get(collection_name)
         return collection.insert_one(data)
 
+    def FindAll(self, collection_name, query):
+        collection = self.Get(collection_name)
+        return collection.find(query)
+
     def Find(self, collection_name, query):
         collection = self.Get(collection_name)
         return collection.find_one(query)

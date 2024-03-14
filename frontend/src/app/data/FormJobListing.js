@@ -24,13 +24,8 @@ const formSteps = [
         ],
 
         validationSchema: z.object({
-            title: z.string().nonempty('Title is required'),
-            title: z.string().max(100, 'Title is too long'),
-            title: z.string().min(5, 'Title is too short'),
-
-            description: z.string().nonempty('Description is required'),
-            description: z.string().max(250, 'Description is too long'),
-            description: z.string().min(20, 'Description is too short'),
+            title: z.string().nonempty('Title is required').min(5, 'Title is too short').max(100, 'Title is too long'),
+            description: z.string().nonempty('Description is required').min(25, 'Description is too little').max(250, 'Description is too long'),
         }),
     },
     {
@@ -76,9 +71,16 @@ const formSteps = [
                 placeholder: 'Enter the payment for the job',
                 description: 'This is the payment for the job listing',
                 type: 'number',
+                currency: true,
                 step: 1,
             },
 
+            {
+                name: 'option_once',
+                label: 'Once',
+                type: 'button',
+                step: 2,
+            },
             {
                 name: 'option_hourly',
                 label: 'Hourly',
@@ -102,12 +104,21 @@ const formSteps = [
                 label: 'Monthly',
                 type: 'button',
                 step: 2,
+            },
 
+            {
+                name: 'work_hours',
+                label: 'Work Hours',
+                placeholder: 'Enter the hours of the job',
+                description: 'This is the hours of the job listing. Max 250 characters.',
+                type: 'text',
+
+                step: 3,
             },
 
             {
                 name: 'days',
-                label: 'Days',
+                label: 'Work Days',
                 description: 'This is the days of the week the job listing is available. Max 250 characters.',
                 type: 'checkbox',
 
@@ -121,27 +132,103 @@ const formSteps = [
                     { id: 'Sunday' },
                 ],
 
-                step: 3,
+                step: 4,
             },
         ],
 
         validationSchema: z.object({
             payment: z.string().nonempty('Payment is required'),
-            payment: z.string().min(1, 'Payment is required'),
+            work_hours: z.string().nonempty('Work hours is required'),
 
-            days: z.array(z.string().nonempty('Days is required')),
+            days: z.union([z.array(z.string()), z.string()]),
 
+            option_once: z.string(),
             option_hourly: z.string(),
             option_daily: z.string(),
             option_weekly: z.string(),
             option_monthly: z.string(),
         }),
 
+        refineData: [
+            {
+                key: "payment",
+                func: (data) => {
+                    return data.payment > 0;
+                },
+                message: "Payment must be greater than 0.",
+                path: ["payment"],
+            },
+
+            {
+                key: "work_hours",
+                func: (data) => {
+                    return data.work_hours.length > 0;
+                },
+                message: "Work hours must be at least an hour.",
+                path: ["work_hours"],
+            },
+
+            {
+                key: "days",
+                func: (data) => {
+                    return data.days.length > 0;
+                },
+
+                message: "Days must be selected.",
+                path: ["days"],
+            }
+        ],
+
         stepsNames: {
             1: "payment",
             2: "payment_type",
             3: "work_days",
         },
+    },
+    {
+        name: "Additional Information",
+        fields: [
+            {
+                name: 'start_date',
+                label: 'Start Date',
+                placeholder: 'mm/dd/yyyy',
+                description: 'This is the start date of the job listing.',
+                type: 'date',
+                step: 1
+            },
+            {
+                name: 'additional_information',
+                label: 'Extra Information',
+                placeholder: 'Enter any extra information',
+                description: 'This is the extra information of the job listing. Max 250 characters.',
+                type: 'textarea',
+                optional: true,
+                step: 2,
+            },
+        ],
+
+        validationSchema: z.object({
+            start_date: z.string().nonempty('Date of birth must be in the format mm/dd/yyyy.,'),
+
+            additional_information: z.optional(z.string().max(250, 'Additional information is too long.'))
+        }),
+
+        refineData: [
+            {
+                key: "start_date",
+                func: (data) => {
+                    const date = new Date(data.start_date);
+                    date.setHours(0, 0, 0, 0);
+
+                    const currentDate = new Date();
+                    currentDate.setHours(0, 0, 0, 0);
+
+                    return date >= currentDate;
+                },
+                message: "Start date must be in the future.",
+                path: ["start_date"],
+            },
+        ]
     }
 ];
 

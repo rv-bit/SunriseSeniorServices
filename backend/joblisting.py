@@ -29,9 +29,13 @@ def createJobListing():
 
                 "title": jobListingData['title'],
                 "description": jobListingData['description'],
-                "category": jobListingData['category'],
+                "category": jobListingData['options'].get('category')[0],
 
-                "tags": jobListingData['tags'],
+                # optional
+                "additional_information": jobListingData['additional_information'],
+                "payment_type": jobListingData['options'].get('payment_type')[0],
+                "payment_amount": int(jobListingData['payment']),
+                "start_date": jobListingData['start_date'],
                 "days": jobListingData['days'],
             }
 
@@ -44,9 +48,44 @@ def createJobListing():
             print("Error:", e)
             return jsonify({"Error": "There has been an error, please try again later"}), 403
 
-    # if request.method == 'GET':
-    #     chats = {i: f"Chat {i}" for i in range(100)}
-
-    #     return jsonify({"chats": chats}), 200
-
     return {}, 200
+
+
+@jobListing.route("/getJobListings", methods=["GET"])
+@login_required
+def getJobListings():
+    if not current_user.is_authenticated:
+        return jsonify({"Error": "You are not logged in"}), 403
+
+    jobListings = list(current_app.config['DB'].FindAll("jobListings", {}))
+
+    if not jobListings:
+        return jsonify({"Error": "No job listings found"}), 403
+
+    newJobListings = []
+
+    for job in jobListings:
+        job['location'] = job.get(
+            'location', None) or "Remote"
+
+        newJob = {
+            "id": job['_id'],
+            "title": job['title'],
+            "description": job['description'],
+            "category": job['category'],
+            "additional_information": job['additional_information'],
+
+            "tags": {
+                "payment_amount": str(job['payment_amount']) + " " + job['payment_type'],
+                "start_date": job['start_date'],
+                "days": job['days'],
+                "category": job['category']
+            },
+
+            "posted_at": job['created_at'],
+            "location": job['location'],
+        },
+
+        newJobListings.append(newJob)
+
+    return jsonify(newJobListings), 200

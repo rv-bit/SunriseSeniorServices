@@ -11,6 +11,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 const MultiForm = lazy(() => import('@/app/components/custom/MultiForm'));
+const Notification = lazy(() => import('@/app/components/custom/Notifications'));
 
 const defaultValues = formSteps.reduce((values, step) => {
     step.fields.forEach(field => {
@@ -24,7 +25,7 @@ async function createJobListing(formData, alertState, setAlertState) {
 
     console.log(formData);
 
-    // const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createJobListing`, {formData});
+    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createJobListing`, {formData});
     // if (!response.ok) {
     //     const data = await response.json();
     //     setAlertState({ ...alertState, open: true, message: data.Error });
@@ -54,10 +55,10 @@ const FormNewJobListing = () => {
     const form = useForm({defaultValues});
 
     useEffect(() => {
-        // if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
-        //     navigate('/');
-        //     return;
-        // }
+        if (userAuthData === null || userAuthData === undefined) {
+            navigate('/');
+            return;
+        }
 
         return () => {};
     }, []);
@@ -81,12 +82,12 @@ const FormNewJobListing = () => {
             if (currentStep === formSteps.length) {
                 setUserLoad(true);
 
-                const userCreated = await createJobListing(formData, alertState, setAlertState);
+                const JobListingCreated = await createJobListing(formData, alertState, setAlertState);
 
                 setTimeout(() => {
-                    if (userCreated) {
+                    if (JobListingCreated) {
                         setUserLoad(false);
-                        navigate('/login');
+                        navigate('/job-listing');
                     } else {
                         setUserLoad(false);
                         navigate('/');
@@ -164,7 +165,7 @@ const FormNewJobListing = () => {
                 return result;
             }, {});
 
-        const formDataWithOptions = { ...dataWithoutOptionKeys, ...formDataOptions};
+        const formDataWithOptions = { ...dataWithoutOptionKeys, options: formDataOptions};
 
         const currentFields = formSteps[currentStep].fields.filter(field => field.step ? field.step === currentSubStep : true);
         let currentValidationSchema = z.object(currentFields.reduce((schema, field) => {
@@ -203,10 +204,11 @@ const FormNewJobListing = () => {
             setErrors(errorMessages);
             return;
         }
-        
+
         const allFieldsFilled = formSteps[currentStep].fields
             .filter(field => field.step ? field.step === currentSubStep : true)
-            .every(field => data[field.name]);
+            .every(field => field.optional || data[field.name]);
+
         const hasButton = formSteps[currentStep].fields
             .filter(field => field.step ? field.step === currentSubStep : true)
             .some(field => field.type === "button");
@@ -254,6 +256,14 @@ const FormNewJobListing = () => {
                 </div>
             </div>
         }>
+            {alertState.open && (
+                <Notification
+                    open={alertState.open}
+                    handleClose={alertHandleClose}
+                    message={alertState.message}
+                />
+            )}
+
             <MultiForm
                 onSubmit={onSubmit}
                 handleSetOptionClick={handleSetOptionClick}

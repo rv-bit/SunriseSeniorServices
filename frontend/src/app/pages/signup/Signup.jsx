@@ -38,7 +38,7 @@ const Signup = () => {
     useEffect(() => {
         if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
             navigate('/');
-        return;
+            return;
         }
     }, []);
 
@@ -153,14 +153,6 @@ const Signup = () => {
                         </Card>
                     </TabsContent>
                 </Tabs>
-
-                {alertState.open && (
-                    <Notification
-                        open={alertState.open}
-                        handleClose={alertHandleClose}
-                        message={alertState.message}
-                    />
-                )}
             </div>
         </div>
     );

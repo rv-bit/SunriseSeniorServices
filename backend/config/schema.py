@@ -48,7 +48,10 @@ def JOB_TABLE():
         "description": {"default_value": "", "type": str, "required": True},
         "category": {"default_value": "", "type": str, "required": True},
 
-        "tags": {"default_value": [], "type": list, "required": True},
+        "additional_information": {"default_value": "", "type": str},
+        "payment_type": {"default_value": "", "type": str, "required": True},
+        "payment_amount": {"default_value": 0, "type": int, "required": True},
+        "start_date": {"default_value": "", "type": str, "required": True},
         "days": {"default_value": [], "type": list, "required": True},
 
         "created_at": {"default_value": datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S'), "type": str},

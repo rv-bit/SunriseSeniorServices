@@ -11,7 +11,7 @@ const ViewJobListing = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const currentJobIdFromSearch = searchParams && searchParams.get('currentJobId') ? parseInt(searchParams.get('currentJobId')) : null;
+    const currentJobIdFromSearch = searchParams && searchParams.get('currentJobId') ? searchParams.get('currentJobId') : null;
     
     useEffect(() => {        
         if (!currentJobIdFromSearch) {
@@ -23,6 +23,8 @@ const ViewJobListing = () => {
 
     const handleCloseCurrentJobId = (e, currentJobId) => {
         e.preventDefault();
+
+        console.log('currentJobId from yes', currentJobId);
 
         navigate({
             pathname: '/job-listings',
