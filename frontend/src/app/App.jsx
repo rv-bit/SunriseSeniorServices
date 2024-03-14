@@ -79,7 +79,7 @@ export default function App () {
       </CookieConsent>
 
       <AuthContext.Provider value={value}>
-        <div className="  flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen">
           <Suspense fallback={
             <div className="flex items-center justify-center h-screen">
               <div className="relative">

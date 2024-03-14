@@ -23,6 +23,9 @@ def createJobListing():
         try:
             _id = uuid.uuid4().hex
 
+            if int(jobListingData['work_hours']) < 1:
+                return jsonify({"Error": "Work hours must be greater than 0"}), 403
+
             variables = {
                 "_id": _id,
                 "user_id": current_user.get_id(),
@@ -37,6 +40,7 @@ def createJobListing():
                 "payment_amount": int(jobListingData['payment']),
                 "start_date": jobListingData['start_date'],
                 "days": jobListingData['days'],
+                "hours": int(jobListingData['work_hours']),
             }
 
             document = prepare_document('jobListings', variables)
@@ -51,41 +55,114 @@ def createJobListing():
     return {}, 200
 
 
-@jobListing.route("/getJobListings", methods=["GET"])
-@login_required
-def getJobListings():
-    if not current_user.is_authenticated:
-        return jsonify({"Error": "You are not logged in"}), 403
+@jobListing.route("/getJobListingById", methods=["GET"])
+def getJobListingById():
+    if request.method == 'GET':
+        job_id = request.args.get('currentJobIdFromSearch')
 
-    jobListings = list(current_app.config['DB'].FindAll("jobListings", {}))
+        if not job_id:
+            return jsonify({"Error": "No job id provided"}), 403
 
-    if not jobListings:
-        return jsonify({"Error": "No job listings found"}), 403
+        job = current_app.config['DB'].Find(
+            "jobListings", {"_id": job_id})
 
-    newJobListings = []
+        if not job:
+            return jsonify({"Error": "No job found"}), 403
 
-    for job in jobListings:
         job['location'] = job.get(
             'location', None) or "Remote"
+        job['hours'] = job.get('hours', None) or 0
 
         newJob = {
             "id": job['_id'],
+            "user_id": job['user_id'],
             "title": job['title'],
             "description": job['description'],
             "category": job['category'],
             "additional_information": job['additional_information'],
 
             "tags": {
-                "payment_amount": str(job['payment_amount']) + " " + job['payment_type'],
+                "payment_type": job['payment_type'],
+                "payment_amount": str(job['payment_amount']),
                 "start_date": job['start_date'],
                 "days": job['days'],
-                "category": job['category']
+                "category": job['category'],
+                "hours": job['hours'],
             },
 
             "posted_at": job['created_at'],
             "location": job['location'],
-        },
+        }
 
-        newJobListings.append(newJob)
+        return jsonify(newJob), 200
 
-    return jsonify(newJobListings), 200
+    return {}, 200
+
+
+@jobListing.route("/getJobListings", methods=["GET"])
+def getJobListings():
+    if request.method == 'GET':
+        print("current_user", current_user)
+
+        jobListings = list(current_app.config['DB'].FindAll("jobListings", {}))
+
+        if not jobListings:
+            return jsonify({"Error": "No job listings found"}), 403
+
+        newJobListings = []
+
+        for job in jobListings:
+            job['location'] = job.get(
+                'location', None) or "Remote"
+            job['hours'] = job.get('hours', None) or 0
+
+            newJob = {
+                "id": job['_id'],
+                "user_id": job['user_id'],
+                "title": job['title'],
+                "description": job['description'],
+                "category": job['category'],
+                "additional_information": job['additional_information'],
+
+                "tags": {
+                    "payment_type": job['payment_type'],
+                    "payment_amount": str(job['payment_amount']),
+                    "start_date": job['start_date'],
+                    "days": job['days'],
+                    "category": job['category'],
+                    "hours": job['hours'],
+                },
+
+                "posted_at": job['created_at'],
+                "location": job['location'],
+            },
+
+            newJobListings.append(newJob)
+
+        return jsonify(newJobListings), 200
+
+
+@jobListing.route("/getUserByIdForJobListing", methods=["GET"])
+def getUserByIdForJobListing():
+    if request.method == 'GET':
+        user_id = request.args.get('user_id')
+
+        print("user_id", user_id)
+
+        if not user_id:
+            return jsonify({"Error": "No user id provided"}), 403
+
+        user = current_app.config['DB'].Find(
+            "users", {"_id": user_id})
+
+        if not user:
+            return jsonify({"Error": "No user found"}), 403
+
+        newUserData = {
+            "id": user['_id'],
+            "name": user['first_name'] + " " + user['last_name'],
+        }
+
+        return jsonify(newUserData), 200
+
+    return {}, 200

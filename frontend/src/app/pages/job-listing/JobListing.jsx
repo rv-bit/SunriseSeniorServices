@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useRef, useEffect, useCallback, Suspense, lazy } from 'react';
 import { useNavigate, createSearchParams, useSearchParams } from 'react-router-dom';
 
 import { isMobile } from 'react-device-detect';
@@ -26,6 +26,10 @@ const inputFields = [
 // import jobListings from '@/app/data/JobListinTemp';
 import useDocumentTitle from '@/app/hooks/UseDocumentTitle';
 
+import { formatTags } from '@/app/lib/format';
+import { Get } from '@/app/lib/utils';
+import { Skeleton } from '@/app/components/ui/skeleton';
+
 const Notification = lazy(() => import('@/app/components/custom/Notifications'));
 
 const JobListing = () => {
@@ -36,8 +40,16 @@ const JobListing = () => {
 
     const [jobListings, setJobListings] = useState([]);
     const [jobsDataIsLoading, setJobsDataLoad] = useState(false);
+    
+    const [searchInput, setSearchInput] = useState({ jobTitle: '', location: '' });
+    const [searchResults, setSearchResults] = useState([]);
+    
+    const [currentJobId, setCurrentJobIds] = useState(null);
+    const currentJobIdFromSearch = searchParams && searchParams.get('currentJobId') ? searchParams.get('currentJobId') : null;
 
-    const [userIsLoading, setUserLoad] = useState(false);
+    const [userFromJobId, setUserFromJobId] = useState(null);
+    const [waitingForUser, setWaitingForUser] = useState(false);
+
     const [alertState, setAlertState] = useState({
         open: false,
         message: '',
@@ -51,56 +63,82 @@ const JobListing = () => {
         setAlertState({ ...alertState, open: false });
     }
 
-    useEffect(() => {
-        const getJobListings = async () => {
-            setJobsDataLoad(true);
+    const getJobListings = async () => {
+        setJobsDataLoad(true);
 
-            const response = await fetch(`${import.meta.env.VITE_API_PREFIX}/getJobListings`);
-            
-            if (!response.ok) {
-                const data = await response.json();
-                setAlertState({ ...alertState, open: true, message: data.Error });
-                return;
-            }
-    
+        const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getJobListings`);
+        
+        if (!response.ok) {
             const data = await response.json();
-
-            const newData = data.flat().map((job, index) => {
-                return {
-                    ...job
-                }
-            });
-
-            setJobsDataLoad(false);
-            setJobListings(newData);
+            setAlertState({ ...alertState, open: true, message: data.Error });
+            return;
         }
 
+        const data = await response.json();
+
+        const newData = data.flat().map((job, index) => {
+            const newJobTags = formatTags(job.tags);
+            var dateParts = job.posted_at.split('-');
+            var formattedDate = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
+
+            return {
+                ...job,
+                tags: newJobTags,
+                posted_at: formattedDate
+            }
+        });
+
+        setJobsDataLoad(false);
+        setJobListings(newData);
+    }
+
+    const getUserByIdFromJob = async (userId) => {
+        setWaitingForUser(true);
+        setUserFromJobId(null);
+
+        const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getUserByIdForJobListing?user_id=${userId}`);
+
+        if (!response.ok) {
+            const data = await response.json();
+            setAlertState({ ...alertState, open: true, message: data.Error });
+            return;
+        }
+
+        const data = await response.json();
+
+        setTimeout(() => {
+            setWaitingForUser(false);
+            setUserFromJobId(data);
+        }, 2500);
+    };
+
+    useEffect(() => {
         getJobListings();
+
+        if (searchParams.has('currentJobId') && !currentJobId) {
+            searchParams.delete('currentJobId');
+            setSearchParams(searchParams);
+        }
+
         return () => {}
     }, []);
     
-    const [searchInput, setSearchInput] = useState({ jobTitle: '', location: '' });
-    const [searchResults, setSearchResults] = useState([]);
-    
-    const [currentJobId, setCurrentJobId] = useState(null);
-    const currentJobIdFromSearch = searchParams && searchParams.get('currentJobId') ? searchParams.get('currentJobId') : null;
-
     const handleCurrentJobId = (e, index) => {
         e.preventDefault();
-        const idJob = jobListings[index].id;
 
-        setCurrentJobId(idJob);
+        setCurrentJobIds({index: index, id: jobListings[index-1].id});
     }
 
     useEffect(() => {
         if (!currentJobId) return;
-
-        setSearchParams({ 'currentJobId': currentJobId });
+        
+        setSearchParams({ 'currentJobId': currentJobId.id});
+        getUserByIdFromJob(jobListings[currentJobId.index-1].user_id);
 
         if (isMobile || window.innerWidth < 1180) {
             navigate({
                 pathname: '/job-listings/viewjob',
-                search: `?currentJobId=${currentJobId}`
+                search: `?currentJobId=${currentJobId.id}`
             })
 
             return;
@@ -126,14 +164,14 @@ const JobListing = () => {
 
     const handleCloseCurrentJobId = (e, index) => {
         e.preventDefault();
-        if (index !== currentJobIdFromSearch) return;
+        if (index !== currentJobId.index) return;
 
         if (searchParams.has('currentJobId')) {
             searchParams.delete('currentJobId');
             setSearchParams(searchParams);
         }
 
-        setCurrentJobId(null);
+        setCurrentJobIds(null);
     }
 
     const handleCreateNewJobListing = (e) => {
@@ -190,6 +228,24 @@ const JobListing = () => {
         if (elementCurrentJobHeaderRef.current) {
             setElementCurrentJobHeaderHeight(elementCurrentJobHeaderRef.current.getBoundingClientRect().height);
         }
+
+        if ((currentJobIdFromSearch && currentJobId) && currentJobIdFromSearch !== currentJobId.id) {
+            jobListings.forEach((job, index) => {
+                if (job.id === currentJobIdFromSearch) {
+                    setCurrentJobIds({index: index+1, id: job.id});
+                }
+            });
+        } else if (currentJobIdFromSearch && !currentJobId) {
+            jobListings.forEach((job, index) => {
+                if (job.id === currentJobIdFromSearch) {
+                    setCurrentJobIds({index: index+1, id: job.id});
+                }
+            });
+        } else if (!currentJobIdFromSearch && currentJobId) {
+            setCurrentJobIds(null);
+        }
+
+        return () => {}
     }, [currentJobIdFromSearch]);
 
     return (
@@ -202,7 +258,6 @@ const JobListing = () => {
                 </div>
             </div>
         }>
-
             {alertState.open && (
                 <Notification
                     open={alertState.open}
@@ -213,8 +268,7 @@ const JobListing = () => {
             
             <section className='mx-auto min-h-5'>
                 <div className='flex items-center justify-center'>
-                    <div className='mx-auto'>
-
+                    <div className='mx-5'>
                         <h1 className='mb-10 text-3xl text-center font-bold text-slate-900'>Find your next job</h1>
 
                         <div className='flex items-center max-md:hidden'>
@@ -246,12 +300,12 @@ const JobListing = () => {
                         </div>
 
                         <div className='hidden max-md:block'>
-                            <div className='flex items-center justify-center gap-2 h-max'>
+                            <div className='flex items-center justify-center gap-2 h-max mx-auto'>
                                 <div className='flex flex-col items-center gap-2'>
                                     {inputFields.map((input, index) => {
                                         return (
                                             <React.Fragment key={index}>
-                                                <div className='h-full mr-1 w-[400px] max-extraSm:w-[300px]'>
+                                                <div className='h-full w-[400px] max-extraSm:w-[300px]'>
                                                     <label className='flex items-center border border-slate-600 text-slate-600 w-full h-[60px] px-2 rounded-lg focus-within:outline-none focus-within:border focus-within:border-violet-700 focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text'>
                                                         <div className='flex items-center text-slate-600 w-full'>
                                                             {input.icon && (
@@ -274,7 +328,7 @@ const JobListing = () => {
                                 </div>
                             </div>
 
-                            <div className='flex items-center justify-center mt-5 mr-2'>
+                            <div className='flex items-center justify-center mt-5'>
                                 <Button className='w-full'>Search</Button>
                             </div>
                         </div>
@@ -287,145 +341,196 @@ const JobListing = () => {
 
                 <hr className='w-full opacity-30 border-t border-slate-400' />
 
-                <div className='flex justify-center min-h-5 my-5'>
-                    <div className='flex items-center flex-col flex-nowrap mt-5 mx-4'>
-                        {jobListings.map((job, index) => {
-                            return (
-                                <div
-                                    key={index}
-                                    onClick={(e) => handleCurrentJobId(e, index)} 
-                                    className={
-                                        `group w-full h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobIdFromSearch ? 'lg:w-[500px] max-extraSm:w-11/12' : 'lg:w-full md:w-11/12 sm:w-11/12 extraSm:w-2/3 max-extraSm:w-2/3' }
-                                        ${currentJobIdFromSearch && currentJobIdFromSearch >= 0 ? 'mr-5 extraSm:mx-5 max-extraSm:mx-5' : '' }
-                                        ${currentJobIdFromSearch && currentJobIdFromSearch === index ? 'border-[#e8562ddd]' : 'border-black' }
-                                    `}>
-
-                                    <div className='flex items-center justify-between m-5 overflow-hidden'>
-                                        <div>
-                                            <h1 className='text-xl font-bold text-slate-900 group-hover:underline'>{job.title}</h1>
-                                            <p className='text-slate-600'>{job.location}</p>
-
-                                            <div className='flex items-center my-4'>
-                                                <p className='text-slate-600 text-sm line-clamp-2'>{job.description}</p>
+                <div className='flex items-center justify-center w-full'>
+                    <div className={`flex justify-center my-5 w-[900px]`}>
+                        <div className='flex items-center flex-col mt-5 w-full'>
+                            {
+                                jobsDataIsLoading ?
+                                    <div className='flex items-center justify-center h-screen'>
+                                        <div className='relative'>
+                                            <div className='h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200'></div>
+                                            <div className='absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin'></div>
+                                        </div>
+                                    </div>
+                                : 
+                                    jobListings.length === 0 ?
+                                        <div className='flex items-center justify-center w-full h-full gap-2'>
+                                            <div className='flex items-center justify-center gap-2 w-full'>
+                                                <div className='flex items-center justify-center w-full h-full gap-2'>
+                                                    <div className='flex items-center justify-center w-full h-full gap-2'>
+                                                        <h1 className='text-xl font-bold text-slate-900'>No job listings found</h1>
+                                                    </div>
+                                                </div>
                                             </div>
+                                        </div>
+                                    : null
+                            }
 
-                                            <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
-                                                {/* {job.tags.map((tag, indexTag) => {
-                                                    return (
-                                                        <div key={indexTag} className='bg-slate-100 px-2 py-1 rounded-md text-ellipsis overflow-hidden'>
-                                                            <p className='text-xs'>{tag.name}</p>
-                                                        </div>
-                                                    )
-                                                })} */}
-                                            </div>
+                            {jobListings.length !== 0 && jobListings.map((job, index) => {
+                                const newIndex = index + 1;
 
-                                            <div className='flex items-center mt-3'>
-                                                <p className='text-slate-600 text-sm'>Posted on {job.posted_at}</p>
+                                return (
+                                    <div
+                                        key={newIndex}
+                                        onClick={(e) => handleCurrentJobId(e, newIndex)} 
+                                        className={`mx-5 group h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' } ${currentJobId && currentJobId.index === newIndex ? 'border-[#e8562d]' : 'border-black' }`}>
+
+                                        <div className='flex items-center justify-between m-5'>
+                                            <div className='w-full'>
+                                                
+                                                <div className='w-full inline-block break-words whitespace-normal'>
+                                                    <h1 className='text-xl font-bold text-slate-900 group-hover:underline'>{job.title}</h1>
+                                                    <p className='text-slate-600'>{job.location}</p>
+                                                    <p className='text-slate-600 text-sm line-clamp-2'>{job.description}</p>
+                                                </div>
+
+                                                <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
+                                                    {Object.entries(job.tags)
+                                                        .filter(([key, value]) => value !== '' && key.startsWith('Tag_'))
+                                                        .map(([key, value], index) => {
+                                                            return (
+                                                                <div key={index} className='bg-slate-100 px-2 py-1 h-full rounded-md text-ellipsis overflow-hidden flex items-center justify-center'>
+                                                                    <p className='text-xs'>{value}</p>
+                                                                </div>
+                                                            )
+                                                        })
+                                                    }
+                                                </div>
+
+                                                <div className='flex items-center mt-3'>
+                                                    <p className='text-slate-600 text-sm'>Posted on {job.posted_at}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
 
-                        <div className='flex items-center justify-center my-2'>
-                            <Button className='w-full'>Load More</Button>
+                            {jobListings.length !== 0 && (
+                                <div className='flex items-center justify-center my-2'>
+                                    <Button className='w-full'>Load More</Button>
+                                </div>
+                            )}
                         </div>
-                    </div>
 
-                    {currentJobIdFromSearch && currentJobIdFromSearch >= 0 && (
-                        <div className='w-[600px] h-dvh md:min-h-svh max-md:min-h-svh sticky top-2 bottom-2 z-50 lg:block md:hidden sm:hidden extraSm:hidden max-extraSm:hidden mr-5'>
-                            <div 
-                                className={`bg-white border-2 border-black rounded-lg box-border overflow-hidden`}
-                                style={{ height: `${newHeight + 2}px`  }}
-                            >
-                                <div className='flex items-center'>
-                                    <div ref={elementCurrentJobHeaderRef} className='shadow-md w-full rounded-sm'>
-                                        <div className='p-5'>
-                                            <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobIdFromSearch)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
-                                                <span className='text-black'>X</span>
-                                            </Button>
+                        {currentJobId && (
+                            <div className='w-[600px] h-dvh md:min-h-svh max-md:min-h-svh sticky top-2 bottom-2 z-50 lg:block md:hidden sm:hidden extraSm:hidden max-extraSm:hidden mr-5'>
+                                <div 
+                                    className={`bg-white border-2 border-black rounded-lg box-border overflow-hidden`}
+                                    style={{ height: `${newHeight + 2}px`  }}
+                                >
+                                    {waitingForUser ? 
+                                        <div className='w-[600px]'>
+                                            <div className='flex items-center'>
+                                                <div className="space-y-2 p-5">
+                                                    <Skeleton className="h-4 w-[350px]" />
+                                                    <Skeleton className="h-4 w-[200px]" />
+                                                </div>
+                                            </div>
+                                            
+                                            <hr className='w-11/12 mx-5 opacity-30 border-t border-slate-400' />
 
-                                            <h1 className='text-2xl font-bold text-slate-900'>{jobListings[currentJobIdFromSearch-1]?.title}</h1>
-                                            <h1 className='text-md text-slate-900 underline hover:cursor-pointer'>by {jobListings[currentJobIdFromSearch-1]?.person}</h1>
-                                            <p className='text-slate-600 text-opacity-75'>{jobListings[currentJobIdFromSearch-1]?.location}</p>
+                                            <div className="space-y-2 p-5">
+                                                <Skeleton className="h-4 w-[300px]" />
+                                                <Skeleton className="h-4 w-[200px]" />
+                                                <Skeleton className="h-4 w-full" />
+                                                <Skeleton className="h-4 w-full" />
+                                            </div>
+                                        </div>
+                                    :
+                                        <React.Fragment>
+                                            <div className='flex items-center'>
+                                                <div ref={elementCurrentJobHeaderRef} className='shadow-md w-full rounded-sm'>
+                                                    <div className='p-5'>
+                                                        <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobId.index)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
+                                                            <span className='text-black'>X</span>
+                                                        </Button>
 
-                                            <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
-                                                {jobListings[currentJobIdFromSearch-1]?.tags.map((tag, indexTag) => {
-                                                    return (
-                                                        <div key={indexTag} className='bg-slate-100 px-2 py-1 rounded-md text-ellipsis overflow-hidden'>
-                                                            <p className='text-xs'>{tag.name}</p>
+                                                        <div className='w-11/12 inline-block whitespace-normal break-words'>
+                                                            <h1 className='text-2xl font-bold text-slate-900'>{jobListings[currentJobId.index-1]?.title}</h1>
+                                                            <h1 className='w-fit text-md text-slate-900 underline hover:cursor-pointer'>by {userFromJobId ? userFromJobId.name : ''}</h1>
+                                                            <p className='text-slate-600 text-opacity-75'>{jobListings[currentJobId.index-1]?.location}</p>
                                                         </div>
-                                                    )
-                                                })}
+
+                                                        <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
+                                                            {Object.entries(jobListings[currentJobId.index-1]?.tags).filter(([key, value]) => value !== '' && key.startsWith('Tag_')).map(([key, value], index) => {
+                                                                return (
+                                                                    <div key={index} className='bg-slate-100 px-2 py-1 h-full rounded-md text-ellipsis overflow-hidden flex items-center justify-center'>
+                                                                        <p className='text-xs'>{value}</p>
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                        </div>
+
+                                                        <Button className='mt-5 bg-[#dd673cfd] bg-opacity-90 hover:bg-[#e8432dea] hover:bg-opacity-100'>Message</Button>
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            <Button className='mt-5 bg-[#dd673cfd] bg-opacity-90 hover:bg-[#e8432dea] hover:bg-opacity-100'>Message</Button>
-                                        </div>
-                                    </div>
+                                            <ScrollArea className='w-full' style={{ height: `calc(100% - ${elementCurrentJobHeaderHeight}px)` }}>
+                                                <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+                                                                                        <div className='p-5'>
+                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                </div>
+
+                                                <ScrollBar orientation="vertical" />
+                                            </ScrollArea>
+                                        </React.Fragment>
+                                    }
                                 </div>
-
-                                <ScrollArea className='w-full' style={{ height: `calc(100% - ${elementCurrentJobHeaderHeight}px)` }}>
-                                    <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-                                                                            <div className='p-5'>
-                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                        <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                    </div>
-
-                                    <ScrollBar orientation="vertical" />
-                                </ScrollArea>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
 
             </section>

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Get } from '@/app/lib/utils';
+import { formatTags } from '@/app/lib/format';
 
 import { Button } from '@/app/components/ui/button';
 
 import { BsChevronLeft } from "react-icons/bs";
 
-import jobListings from '@/app/data/JobListinTemp';
+// import jobListings from '@/app/data/JobListinTemp';
 
 const ViewJobListing = () => {
     const navigate = useNavigate();
@@ -13,18 +15,48 @@ const ViewJobListing = () => {
 
     const currentJobIdFromSearch = searchParams && searchParams.get('currentJobId') ? searchParams.get('currentJobId') : null;
     
+    const [jobListing, setJobListing] = useState({});
+    const [jobsDataLoad, setJobsDataLoad] = useState(false);
+
+    const getJobListings = async () => {
+        setJobsDataLoad(true);
+
+        const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getJobListingById?currentJobIdFromSearch=${currentJobIdFromSearch}`);
+        
+        if (!response.ok) {
+            const data = await response.json();
+            setAlertState({ ...alertState, open: true, message: data.Error });
+            return;
+        }
+
+        const data = await response.json();
+        const newJobTags = formatTags(data.tags);
+
+        var dateParts = data.posted_at.split('-');
+        var formattedDate = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
+
+        const newData = {
+            ...data,
+            tags: newJobTags,
+            posted_at: formattedDate
+        }
+
+        setJobsDataLoad(false);
+        setJobListing(newData);
+    }
+
     useEffect(() => {        
         if (!currentJobIdFromSearch) {
             navigate('/job-listings');
         }
+
+        getJobListings();
 
         return () => {}
     }, []);
 
     const handleCloseCurrentJobId = (e, currentJobId) => {
         e.preventDefault();
-
-        console.log('currentJobId from yes', currentJobId);
 
         navigate({
             pathname: '/job-listings',
@@ -37,10 +69,10 @@ const ViewJobListing = () => {
             <hr className='w-full opacity-30 border-t border-slate-400' />
 
             <div className='flex items-center justify-center w-full h-full gap-2 my-10 px-10 max-extraSm:px-0'>                
-                <div className='flex items-center justify-center'>
+                <div className='flex items-center justify-center w-full h-full'>
                     <div className='flex justify-center flex-row w-full h-full'>
 
-                        <div className='flex flex-col gap-3 lg:w-3/12 max-md:w-3/4 sm:w-full extraSm:w-full'>
+                        <div className='flex flex-col gap-3 w-full lg:w-[500px] md:w-3/4 max-extraSm:w-10/12'>
 
                             <span
                                 onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}
@@ -49,41 +81,53 @@ const ViewJobListing = () => {
                                 <h1>Go Back</h1>
                             </span>
 
-                            <div className='inline-block whitespace-normal break-words'>
-                                <h1 className='text-xl max-lg:text-2xl lg:text-3xl font-bold text-slate-900'>{jobListings[currentJobIdFromSearch-1]?.title}</h1>
-                                <p className='text-slate-600 text-opacity-75 mt-3'>{jobListings[currentJobIdFromSearch-1]?.location}</p>
-                            
+                            <div className='w-full inline-block whitespace-normal break-words'>
+                                <h1 className='text-xl max-lg:text-2xl lg:text-3xl font-bold text-slate-900'>{jobListing?.title}</h1>
+                                <p className='text-slate-600 text-opacity-75 mt-3'>{jobListing?.location}</p>
+
                                 <div className='lg:hidden md:block sm:block extraSm:block max-extraSm:block'>
                                     <div className='flex justify-start mt-5'>
                                         <Button className='w-[300px] bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]' onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}>Message</Button>
                                     </div>
                                 </div>
 
-                                <div className='mt-5'>   
-                                    <p className='text-3xl font-bold text-slate-900'>Full Job Description <span className='my-5 float-end text-xl max-sm:text-base max-extraSm:text-base font-normal text-slate-600'>{jobListings[currentJobIdFromSearch-1]?.description}</span></p>
+                                <div className='mt-5'> 
+                                    <p className='text-3xl font-bold text-slate-900'>Full Job Description</p>
+                                    <p className='font-normal text-slate-600'>{jobListing?.description}</p>
                                 </div>
 
                                 <div className='lg:hidden md:block sm:block extraSm:block max-extraSm:block'>
-                                    <div className='flex my-5 w-full'>
+                                    <div className='flex my-5 w-full h-full'>
                                         <div role='tags' className='grid grid-flow-row-dense extraSm:grid-cols-3 max-extraSm:grid-cols-3 sm:grid-cols-5 md:grid-cols-7 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
-                                            {jobListings[currentJobIdFromSearch-1]?.tags.map((tag, indexTag) => {
-                                                return (
-                                                    <div key={indexTag} className='bg-slate-100 px-4 py-3 rounded-md text-ellipsis overflow-hidden'>
-                                                        <p className='text-sm'>{tag.name}</p>
-                                                    </div>
-                                                )
-                                            })}
+                                            {jobListing?.tags && typeof jobListing.tags === 'object' ? (
+                                                Object.entries(jobListing.tags)
+                                                    .filter(([key, value]) => value !== '' && key.startsWith('Tag_'))
+                                                    .map(([key, value], index) => {
+                                                        return (
+                                                            <div key={index} className='bg-slate-100 px-2 py-2 h-full rounded-md text-ellipsis overflow-hidden flex items-center justify-center'>
+                                                                <p className='text-sm'>{value}</p>
+                                                            </div>
+                                                        )
+                                                    })
+                                            ) : null}
                                         </div>
                                     </div>
                                 </div>
 
-                                <p className='text-slate-600 text-opacity-75'>Posted by <span className='text-slate-900 underline'>{jobListings[currentJobIdFromSearch-1]?.person}</span></p>
+                                <p className='text-slate-600 text-opacity-75'>Posted by <span className='text-slate-900 underline'>{jobListing?.person}</span></p>
 
                                 <div className='mt-5'>
-                                    <p className='text-slate-600 text-opacity-75'>Posted on <span className='text-slate-900'>{jobListings[currentJobIdFromSearch-1]?.postedOn}</span></p>
+                                    <p className='text-slate-600 text-opacity-75'>Posted on <span className='text-slate-900'>{jobListing?.posted_at}</span></p>
                                 </div>
 
                                 <hr className='mt-10 w-full opacity-30 border-t border-slate-400' />
+
+                                {jobListing?.additional_information !== '' && (        
+                                    <div className='mt-5'> 
+                                        <p className='text-2xl font-bold text-slate-900'>Additional Information</p>
+                                        <p className='font-normal text-slate-600'>{jobListing?.additional_information}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -93,13 +137,17 @@ const ViewJobListing = () => {
 
                                 <div className='flex items-center justify-center mt-5'>
                                     <div role='tags' className='grid grid-flow-row-dense grid-cols-3 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
-                                        {jobListings[currentJobIdFromSearch-1]?.tags.map((tag, indexTag) => {
-                                            return (
-                                                <div key={indexTag} className='bg-slate-100 px-3 py-2 rounded-md text-ellipsis overflow-hidden'>
-                                                    <p className='text-sm'>{tag.name}</p>
-                                                </div>
-                                            )
-                                        })}
+                                        {jobListing?.tags && typeof jobListing.tags === 'object' ? (
+                                            Object.entries(jobListing.tags)
+                                                .filter(([key, value]) => value !== '' && key.startsWith('Tag_'))
+                                                .map(([key, value], index) => {
+                                                    return (
+                                                        <div key={index} className='bg-slate-100 px-2 py-2 h-full rounded-md text-ellipsis overflow-hidden flex items-center justify-center'>
+                                                            <p className='text-sm'>{value}</p>
+                                                        </div>
+                                                    )
+                                                })
+                                        ) : null}
                                     </div>
                                 </div>
                             </div>

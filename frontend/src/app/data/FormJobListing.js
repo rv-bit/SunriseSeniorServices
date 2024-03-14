@@ -110,7 +110,7 @@ const formSteps = [
                 name: 'work_hours',
                 label: 'Work Hours',
                 placeholder: 'Enter the hours of the job',
-                description: 'This is the hours of the job listing. Max 250 characters.',
+                description: 'This is how many hours work a hourly, weekly, etc. Max 250 characters.',
                 type: 'text',
 
                 step: 3,

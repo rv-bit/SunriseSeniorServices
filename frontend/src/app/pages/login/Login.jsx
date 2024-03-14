@@ -101,28 +101,28 @@ const Login = () => {
                 const [statusGoogle, promiseGoogleAccount] = await googleCheckAccount(code);
 
                 if (!statusGoogle) {
-                setUserLoad(false);
-                navigate('/');
-                return;
+                    setUserLoad(false);
+                    navigate('/');
+                    return;
                 };
 
                 if (promiseGoogleAccount.accountExistsAlready) {
-                const User = promiseGoogleAccount.user;
-                const formData = {email: User.email, password: User.password};
-                const [status, promiseData] = await userLogIn(formData);
+                    const User = promiseGoogleAccount.user;
+                    const formData = {email: User.email, password: User.password};
+                    const [status, promiseData] = await userLogIn(formData);
 
-                if (!status) {
+                    if (!status) {
+                        setUserLoad(false);
+                        setAlertState({ ...alertState, open: true, message: promiseData.Error });
+                        return;
+                    }
+
+                    promiseData.user['isConnected'] = true;
+                    setUserAuth(promiseData.user);
+
                     setUserLoad(false);
-                    setAlertState({ ...alertState, open: true, message: promiseData.Error });
+                    navigate('/');
                     return;
-                }
-
-                promiseData.user['isConnected'] = true;
-                setUserAuth(promiseData.user);
-
-                setUserLoad(false);
-                navigate('/');
-                return;
                 }
 
                 navigate('/signup/get-started', { state: { informationGiven: promiseGoogleAccount } });
