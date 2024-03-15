@@ -10,8 +10,6 @@ import { Separator } from '@/app/components/ui/separator';
 import { BsSearch, BsFillGeoAltFill } from "react-icons/bs";
 import { ScrollArea, ScrollBar } from '@/app/components/ui/scroll-area';
 
-import ViewJobListing from './ViewJobListing';
-
 const inputFields = [
     { name: 'jobTitle', placeholder: 'Job Title', icon: <BsSearch className='mx-3 size-5'/>, styleProps: `
         flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-violet-700 
