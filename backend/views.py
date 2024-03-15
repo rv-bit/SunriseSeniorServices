@@ -6,6 +6,17 @@ from flask_login import current_user
 views = Blueprint('views', __name__)
 
 
+@views.route('/', defaults={'path': ''})
+@views.route('/<path:path>')
+def catch_all(path):
+    return render_template("index.html")
+
+
+@views.errorhandler(404)
+def not_found(e):
+    return render_template('index.html')
+
+
 @views.route("/", methods=["GET"])
 def home():
     if not current_user.is_authenticated:
