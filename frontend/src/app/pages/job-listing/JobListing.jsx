@@ -38,6 +38,9 @@ const JobListing = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    const queryParams = new URLSearchParams(location.search);
+    const currentJobIdFromSearch = queryParams.get('currentJobId');
+
     const [jobListings, setJobListings] = useState([]);
     const [jobsDataIsLoading, setJobsDataLoad] = useState(false);
     
@@ -45,9 +48,6 @@ const JobListing = () => {
     const [searchResults, setSearchResults] = useState([]);
     
     const [currentJobId, setCurrentJobIds] = useState(null);
-
-    const queryParams = new URLSearchParams(location.search);
-    const currentJobIdFromSearch = queryParams.get('currentJobId');
 
     const [userFromJobId, setUserFromJobId] = useState(null);
     const [waitingForUser, setWaitingForUser] = useState(false);
@@ -99,7 +99,7 @@ const JobListing = () => {
             }, 2500);
         }
 
-        getJobListings();
+        if (jobListings.length === 0) getJobListings();
 
         if (currentJobIdFromSearch && !currentJobId) {
             setCurrentJobIds(currentJobIdFromSearch);
@@ -185,8 +185,6 @@ const JobListing = () => {
 
         getUserByIdFromJob(jobListings[jobListings.findIndex((job) => job.id === currentJobId)].user_id);
 
-        console.log('currentJobId', currentJobId);
-
         return () => {
             if (timeoutId) {
                 clearTimeout(timeoutId);
@@ -243,8 +241,6 @@ const JobListing = () => {
             setElementCurrentJobHeaderHeight(elementCurrentJobHeaderRef.current.getBoundingClientRect().height);
         }
 
-        console.log('elementCurrentJobHeaderHeight', currentJobIdFromSearch);
-
         if (currentJobIdFromSearch && currentJobIdFromSearch !== currentJobId) {
             const jobIndex = jobListings.findIndex((job) => job.id === currentJobIdFromSearch);
 
@@ -252,17 +248,9 @@ const JobListing = () => {
                 setCurrentJobIds(jobListings[jobIndex].id);
                 return;
             }
-
-            if (currentJobIdFromSearch) {
-                navigate('/job-listings');
-            }
             
             setCurrentJobIds(null);
         } else if (currentJobId && !currentJobIdFromSearch) {
-            if (currentJobIdFromSearch) {
-                navigate('/job-listings');
-            }
-
             setCurrentJobIds(null);
         }
 
@@ -451,9 +439,9 @@ const JobListing = () => {
                         </div>
 
                         {currentJobId && (
-                            <div className='w-[600px] h-dvh md:min-h-svh max-md:min-h-svh sticky top-2 bottom-2 z-50 lg:block md:hidden sm:hidden extraSm:hidden max-extraSm:hidden mr-5'>
+                            <div className='w-[600px] h-dvh md:min-h-svh max-md:min-h-svh sticky top-2 z-50 lg:block md:hidden sm:hidden extraSm:hidden max-extraSm:hidden mr-5'>
                                 <div 
-                                    className={`bg-white border-2 border-black rounded-lg box-border overflow-hidden`}
+                                    className={`bg-white border-2 border-black rounded-lg box-border`}
                                     style={{ height: `${newHeight + 2}px`  }}
                                 >
                                     {waitingForUser ? 
