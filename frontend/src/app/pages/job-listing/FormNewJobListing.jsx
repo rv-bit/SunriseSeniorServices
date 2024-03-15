@@ -23,17 +23,15 @@ const defaultValues = formSteps.reduce((values, step) => {
 async function createJobListing(formData, alertState, setAlertState) {
     if (!formData) return;
 
-    console.log(formData);
-
     const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createJobListing`, {formData});
-    // if (!response.ok) {
-    //     const data = await response.json();
-    //     setAlertState({ ...alertState, open: true, message: data.Error });
-    //     return false;
-    // }
+    if (!response.ok) {
+        const data = await response.json();
+        setAlertState({ ...alertState, open: true, message: data.Error });
+        return false;
+    }
 
-    // const data = await response.json();
-    // return true;
+    const data = await response.json();
+    return true;
 }
 
 const FormNewJobListing = () => {
@@ -87,7 +85,7 @@ const FormNewJobListing = () => {
                 setTimeout(() => {
                     if (JobListingCreated) {
                         setUserLoad(false);
-                        navigate('/job-listing');
+                        navigate('/job-listings');
                     } else {
                         setUserLoad(false);
                         navigate('/');

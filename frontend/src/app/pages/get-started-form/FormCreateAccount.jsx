@@ -246,8 +246,6 @@ const FormCreateAccount = () => {
             data.email = formData.email;
         }
 
-        console.log('data', data);
-
         const email = data.email || formData.email;
         if (email && currentStep === 0 && currentSubStep === 1) {
             setUserLoad(true);

@@ -88,17 +88,16 @@ const JobListing = () => {
         setCurrentJobIds(null);
     }
     
-    const handleCurrentJobId = (e, jobId) => {
+    const handleCurrentJobId = (e, jobId, middle) => {
         e.preventDefault();
 
-        setCurrentJobIds(jobId);
-
-        console.log(e)
-
-        if (e.altKey && e.type === 'click') {
+        if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
             const newWindow = window.open(`/job-listings/viewjob?currentJobId=${jobId}`, '_blank', 'noopener,noreferrer')
             if (newWindow) newWindow.opener = null
+            
         } else {
+            setCurrentJobIds(jobId);
+
             if (isMobile || window.innerWidth < 1180) {
                 navigate(`/job-listings/viewjob?currentJobId=${jobId}`)
             } else {
@@ -429,6 +428,7 @@ const JobListing = () => {
                                         ref={elementJobListingAdvertisementRef}
                                         key={newIndex}
                                         onClick={(e) => handleCurrentJobId(e, jobId)}
+                                        onAuxClick={(e) => handleCurrentJobId(e, jobId, 'middle')}
                                         className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' } ${currentJobId && currentJobId === jobId ? 'border-[#e8562d]' : 'border-black' }`}>
 
                                         <div className='flex items-center justify-between m-5'>

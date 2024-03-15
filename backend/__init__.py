@@ -4,7 +4,15 @@ from flask_login import LoginManager
 
 
 def initializeApp():
-    app = Flask(__name__)
+    static_folder = 'static'
+    template_folder = 'templates'
+
+    if os.environ.get("NODE_ENV") == "production":
+        static_folder = '../frontend/dist/static'
+        template_folder = '../frontend/dist'
+
+    app = Flask(__name__, static_folder=static_folder,
+                template_folder=template_folder)
 
     app.config["SECRET_KEY"] = os.urandom(24)
 
@@ -33,8 +41,6 @@ def initializeApp():
 
     @login_manager.user_loader
     def load_user(user_id):
-        print("User ID:", user_id)
-
         user = app.config["DB"].Find("users", {"_id": user_id})
         if user:
             return User.make_from_dict(user)
