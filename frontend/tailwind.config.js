@@ -3,7 +3,7 @@ module.exports = {
   darkMode: ["class"],
   content: [
     './pages/**/*.{js,jsx}',
-    './components/**/*.{js,jsx}',
+    './app/components/**/*.{js,jsx}',
     './app/**/*.{js,jsx}',
     './src/**/*.{js,jsx}',
   ],
@@ -13,10 +13,34 @@ module.exports = {
       center: true,
       padding: "2rem",
       screens: {
-        "2xl": "1400px",
+        'sm': '640px',
+        // => @media (min-width: 640px) { ... }
+
+        'md': '768px',
+        // => @media (min-width: 768px) { ... }
+
+        'lg': '1024px',
+        // => @media (min-width: 1024px) { ... }
+
+        'xl': '1280px',
+        // => @media (min-width: 1280px) { ... }
+
+        '2xl': '1536px',
+        // => @media (min-width: 1536px) { ... }
       },
     },
     extend: {
+      screens: {
+        'extraSm': '400px',
+        // => @media (min-width: 400px) { ... } WHO TF STILL USES PHONES WITH 400PX WIDTH?
+
+        'tablet': '1000px',
+        // => @media (min-width: 1040px) { ... }
+
+        'lg': '1180px',
+        // => @media (min-width: 1180px) { ... }
+      },
+      textDecoration: ['group-hover'],
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
