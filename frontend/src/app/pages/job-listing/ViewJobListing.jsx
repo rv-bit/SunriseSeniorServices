@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Get } from '@/app/lib/utils';
-import { formatTags } from '@/app/lib/format';
+import { Get, formatTags } from '@/app/lib/utils';
 
 import { Button } from '@/app/components/ui/button';
 
 import { BsChevronLeft } from "react-icons/bs";
-
-// import jobListings from '@/app/data/JobListinTemp';
 
 const ViewJobListing = () => {
     const navigate = useNavigate();
@@ -31,47 +28,47 @@ const ViewJobListing = () => {
 
         setAlertState({ ...alertState, open: false });
     }
+    
+    useEffect(() => {
+        const getJobListing = async () => {
+            setJobsDataLoad(true);
 
-    const getJobListings = async () => {
-        setJobsDataLoad(true);
+            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getJobListingById?currentJobIdFromSearch=${currentJobIdFromSearch}`);
+            
+            if (!response.ok) {
+                const data = await response.json();
 
-        const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getJobListingById?currentJobIdFromSearch=${currentJobIdFromSearch}`);
-        
-        if (!response.ok) {
-            const data = await response.json();
+                if (data.Error) {
+                    setAlertState({ ...alertState, open: true, message: data.Error });
+                    navigate('/job-listings');
+                    return;
+                }
 
-            if (data.Error) {
-                setAlertState({ ...alertState, open: true, message: data.Error });
-                navigate('/job-listings');
+                setAlertState({ ...alertState, open: true, message: 'An error occurred while trying to fetch the job' });
                 return;
             }
 
-            setAlertState({ ...alertState, open: true, message: 'An error occurred while trying to fetch the job' });
-            return;
+            const data = await response.json();
+            const newJobTags = formatTags(data.tags);
+
+            var dateParts = data.posted_at.split('-');
+            var formattedDate = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
+
+            const newData = {
+                ...data,
+                tags: newJobTags,
+                posted_at: formattedDate
+            }
+
+            setJobsDataLoad(false);
+            setJobListing(newData);
         }
 
-        const data = await response.json();
-        const newJobTags = formatTags(data.tags);
+        getJobListing();
 
-        var dateParts = data.posted_at.split('-');
-        var formattedDate = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
-
-        const newData = {
-            ...data,
-            tags: newJobTags,
-            posted_at: formattedDate
-        }
-
-        setJobsDataLoad(false);
-        setJobListing(newData);
-    }
-
-    useEffect(() => {        
         if (!currentJobIdFromSearch) {
             navigate('/job-listings');
         }
-
-        getJobListings();
 
         return () => {}
     }, []);

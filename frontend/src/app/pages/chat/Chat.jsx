@@ -36,12 +36,12 @@ const Chat = () => {
 
     return (
         <section className='flex items-center justify-center min-h-5'>
-            <div className='max-w-screen-sm mx-auto mb-5'>
-                <h1 className='text-center mb-10'>Chats</h1>
+            <div className='mx-auto mb-5'>
+                {/* <h1 className='text-center mb-10'>Chats</h1>
 
                 {chatsData && Object.values(chatsData).map((value, index) => (
                     <div className='text-center' key={index}>{value}</div>
-                ))}
+                ))} */}
             </div>
         </section>
     )

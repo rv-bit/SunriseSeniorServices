@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, Suspense, lazy } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 import { isMobile } from 'react-device-detect';
@@ -23,11 +23,9 @@ const inputFields = [
     `}
 ]
 
-// import jobListings from '@/app/data/JobListinTemp';
 import useDocumentTitle from '@/app/hooks/UseDocumentTitle';
 
-import { formatTags } from '@/app/lib/format';
-import { Get } from '@/app/lib/utils';
+import { Get, formatTags } from '@/app/lib/utils';
 import { Skeleton } from '@/app/components/ui/skeleton';
 
 const Notification = lazy(() => import('@/app/components/custom/Notifications'));
@@ -63,6 +61,50 @@ const JobListing = () => {
         }
 
         setAlertState({ ...alertState, open: false });
+    }
+
+    const handleInputChange = (e, inputName) => {
+        setSearchInput({
+            ...searchInput,
+            [inputName]: e.target.value
+        });
+    }
+
+    const handleDeleteInput = (inputName) => {
+        setSearchInput({
+            ...searchInput,
+            [inputName]: ''
+        });
+    }
+
+    const handleCloseCurrentJobId = (e, jobId) => {
+        e.preventDefault();
+        if (jobId !== currentJobId) return;
+
+        if (currentJobIdFromSearch) {
+            navigate('/job-listings');
+        }
+
+        setCurrentJobIds(null);
+    }
+    
+    const handleCurrentJobId = (e, jobId) => {
+        e.preventDefault();
+
+        setCurrentJobIds(jobId);
+
+        console.log(e)
+
+        if (e.altKey && e.type === 'click') {
+            const newWindow = window.open(`/job-listings/viewjob?currentJobId=${jobId}`, '_blank', 'noopener,noreferrer')
+            if (newWindow) newWindow.opener = null
+        } else {
+            if (isMobile || window.innerWidth < 1180) {
+                navigate(`/job-listings/viewjob?currentJobId=${jobId}`)
+            } else {
+                navigate(`/job-listings?currentJobId=${jobId}`)
+            }
+        }
     }
 
     useEffect(() => {
@@ -101,10 +143,6 @@ const JobListing = () => {
 
         if (jobListings.length === 0) getJobListings();
 
-        if (currentJobIdFromSearch && !currentJobId) {
-            setCurrentJobIds(currentJobIdFromSearch);
-        }
-
         return () => {
             if (timeoutId) {
                 clearTimeout(timeoutId);
@@ -112,42 +150,30 @@ const JobListing = () => {
         }
     }, []);
 
-    const handleInputChange = (e, inputName) => {
-        setSearchInput({
-            ...searchInput,
-            [inputName]: e.target.value
-        });
-    }
-
-    const handleDeleteInput = (inputName) => {
-        setSearchInput({
-            ...searchInput,
-            [inputName]: ''
-        });
-    }
-
-    const handleCloseCurrentJobId = (e, jobId) => {
-        e.preventDefault();
-        if (jobId !== currentJobId) return;
-
-        if (currentJobIdFromSearch) {
-            navigate('/job-listings');
+    useEffect(() => {
+        if (currentJobIdFromSearch && !currentJobId) {
+            setCurrentJobIds(currentJobIdFromSearch);
         }
 
-        setCurrentJobIds(null);
-    }
-    
-    const handleCurrentJobId = (e, jobId) => {
-        e.preventDefault();
+        return () => {}
+    }, [jobListings]);
 
-        setCurrentJobIds(jobId);
+    useEffect(() => {
+        if (currentJobIdFromSearch && currentJobIdFromSearch !== currentJobId) {
+            const jobIndex = jobListings.findIndex((job) => job.id === currentJobIdFromSearch);
 
-        if (isMobile || window.innerWidth < 1180) {
-            navigate(`/job-listings/viewjob?currentJobId=${jobId}`)
-        } else {
-            navigate(`/job-listings?currentJobId=${jobId}`)
+            if (jobIndex !== -1) {
+                setCurrentJobIds(jobListings[jobIndex].id);
+                return;
+            }
+            
+            setCurrentJobIds(null);
+        } else if (currentJobId && !currentJobIdFromSearch) {
+            setCurrentJobIds(null);
         }
-    }
+
+        return () => {}
+    }, [currentJobIdFromSearch]);
 
     useEffect(() => {
         if (!currentJobId) return;
@@ -179,8 +205,6 @@ const JobListing = () => {
                 setWaitingForUser(false);
                 setUserFromJobId(data);
             }, 2500);
-
-            return;
         };
 
         getUserByIdFromJob(jobListings[jobListings.findIndex((job) => job.id === currentJobId)].user_id);
@@ -193,7 +217,7 @@ const JobListing = () => {
     }, [currentJobId]);
 
     const [newHeight, setNewHeight] = useState(930);
-    useEffect(() => {
+    useLayoutEffect(() => {
         const handleEvent = () => {
             const scrollPosition = window.pageYOffset;
             const windowHeight = window.innerHeight;
@@ -235,26 +259,34 @@ const JobListing = () => {
 
     const elementCurrentJobHeaderRef = useRef(null);
     const [elementCurrentJobHeaderHeight, setElementCurrentJobHeaderHeight] = useState(0);
-    
-    useEffect(() => {
+
+    useLayoutEffect(() => {
         if (elementCurrentJobHeaderRef.current) {
             setElementCurrentJobHeaderHeight(elementCurrentJobHeaderRef.current.getBoundingClientRect().height);
         }
 
-        if (currentJobIdFromSearch && currentJobIdFromSearch !== currentJobId) {
-            const jobIndex = jobListings.findIndex((job) => job.id === currentJobIdFromSearch);
+        return () => {}
+    }, [jobListings, userFromJobId, currentJobIdFromSearch]);
 
-            if (jobIndex !== -1) {
-                setCurrentJobIds(jobListings[jobIndex].id);
-                return;
+    const elementJobListingAdvertisementRef = useRef(null);
+
+    useLayoutEffect(() => {
+        const handleScroll = () => {
+            const scrollPosition = window.pageYOffset;
+            const windowHeight = window.innerHeight;
+
+            if (elementJobListingAdvertisementRef.current) {
+                const elementPosition = elementJobListingAdvertisementRef.current.getBoundingClientRect().top;
+
+                if (elementPosition < windowHeight) {
+
+                }
             }
-            
-            setCurrentJobIds(null);
-        } else if (currentJobId && !currentJobIdFromSearch) {
-            setCurrentJobIds(null);
         }
 
-        return () => {}
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        }
     }, [currentJobIdFromSearch]);
 
     return (
@@ -351,7 +383,7 @@ const JobListing = () => {
                 <hr className='w-full opacity-30 border-t border-slate-400' />
 
                 <div className='flex items-center justify-center w-full'>
-                    <div className={`flex justify-center my-5 w-[900px]`}>
+                    <div className='flex justify-center my-5 w-[900px]'>
                         <div className='flex items-center flex-col mt-5 w-full'>
                             {
                                 jobsDataIsLoading ?
@@ -392,13 +424,12 @@ const JobListing = () => {
                                 const newIndex = index + 1;
                                 const jobId = job.id;
 
-                                const indexBasedOnJobId = currentJobId ? jobListings.findIndex((job) => job.id === currentJobId) : null;
-
                                 return (
                                     <div
+                                        ref={elementJobListingAdvertisementRef}
                                         key={newIndex}
-                                        onClick={(e) => handleCurrentJobId(e, jobId)} 
-                                        className={`mx-5 group h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' } ${indexBasedOnJobId && indexBasedOnJobId === newIndex ? 'border-[#e8562d]' : 'border-black' }`}>
+                                        onClick={(e) => handleCurrentJobId(e, jobId)}
+                                        className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' } ${currentJobId && currentJobId === jobId ? 'border-[#e8562d]' : 'border-black' }`}>
 
                                         <div className='flex items-center justify-between m-5'>
                                             <div className='w-full'>
