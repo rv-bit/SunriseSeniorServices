@@ -1,29 +1,49 @@
 import { useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Get, Post, UserConnected, AuthContext } from '../../utils';
+import AuthContext from '@/app/context/AuthContext'
 
-export const Logout = () => {
-    const {setUserAuth} = useContext(AuthContext);
+import { Post, Get } from '@/app/lib/utils' // Common functions
+import { Alertbox } from '@/app/components/custom/Alertbox'; // Custom components
+
+const Logout = () => {
+    const {userAuthData, setUserAuth} = useContext(AuthContext);
     const navigate = useNavigate();
 
-    useEffect(() => {        
-        const UserLoggedOut = Get(`${import.meta.env.VITE_API_PREFIX}/logout`);
-        UserLoggedOut.then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                return response.json().then(data => {
-                    alert(data.Error)
-                    throw new Error(`Request failed with status code ${response.status}`);
-                });
-            }
-        })
-        .then(data => {
+    const onSubmit = async (e) => {
+        e.preventDefault();
+
+        const response = await Get(`${import.meta.env.VITE_API_PREFIX}/logout`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            return alert('You are not logged in');
+        }
+
+        if (response.ok) {
             setUserAuth(null);
-            return navigate('/');
-        });
+            navigate('/');
+        }
+    }
+
+    const onCancel = (e) => {
+        e.preventDefault();
+
+        navigate('/');
+    }
+
+    useEffect(() => {
+        if (userAuthData === null || userAuthData === undefined) {
+            navigate('/');
+            return;
+        }
+
+        return () => {};
     }, []);
 
-    return (<></>)
+    return (
+        <Alertbox Title="Logout" Description="Are you sure you want to logout?" onSubmit={onSubmit} onCancel={onCancel} />
+    )
 }
+
+export default Logout;

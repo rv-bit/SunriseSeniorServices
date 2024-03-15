@@ -2,11 +2,17 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
-import { Post, Get, AuthContext, useDocumentTitle} from '../../utils'
+import AuthContext from '@/app/context/AuthContext'
+import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
+
+import { Notification } from '@/app/components/custom/Notifications' // Custom components
+import { Post, Get, googleCheckAccount, userLogIn } from '@/app/lib/utils' // Common functions
+
+import FormCreateAccount from '../(get-started-form)/FormCreateAccount';
 
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/app/components/ui/button"
 import {
   Card,
   CardContent,
@@ -14,157 +20,142 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/app/components/ui/card"
+import { Input } from "@/app/components/ui/input"
+import { Label } from "@/app/components/ui/label"
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components/ui/tabs"
+} from "@/app/components/ui/tabs"
 
-export const Signup = () => {
-  useDocumentTitle('Sign Up');
-  
-  const [userIsLoading, setUserLoad] = useState(false);
+const Signup = () => {
+    useDocumentTitle('Sign Up');
+    const navigate = useNavigate();
 
-  const {setUserAuth} = useContext(AuthContext);
-  const navigate = useNavigate();
+    const {userAuthData, setUserAuth} = useContext(AuthContext);
+    useEffect(() => {
+        if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
+            navigate('/');
+            return;
+        }
+    }, []);
 
-  const onSubmit = (e) => {
-    e.preventDefault();
-    setUserLoad(true);
-
-    const formData = new FormData(e.target);
-    const username = formData.get('username');
-    const email = formData.get('email');
-    const password = formData.get('password');
-    const password2 = formData.get('password2');
-
-    // cspell:ignore signup
-    const UserCreated = Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {username, email, password, password2});
-    UserCreated.then(response => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        return response.json().then(data => {
-          alert(data.Error)
-          setUserLoad(false);
-          
-          throw new Error(`Request failed with status code ${response.status}`);
-        });
-      }
-    })
-    .then(data => {
-      data.user['isConnected'] = true;
-      setUserAuth(data.user);
-      setUserLoad(false);
-
-      return navigate('/');
+    const [userIsLoading, setUserLoad] = useState(false);
+    const [alertState, setAlertState] = useState({
+        open: false,
+        message: '',
     });
-  }
 
-  const onGoogleLoginOrCreate = useGoogleLogin({
-    onError: response => {
-      setUserLoad(false);
-    },
-    onNonOAuthError: response => {
-      setUserLoad(false);
-    },
-    onSuccess: response => {
-      const code = response.code;
-      const UserCreateUserBasedOnGoogle = Post(`${import.meta.env.VITE_API_PREFIX}/google/signup`, {code});
-
-      UserCreateUserBasedOnGoogle.then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          return response.json().then(data => {
-            alert(data.Error)
-
-            throw new Error(`Request failed with status code ${response.status}`);
-          });
+    const alertHandleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
         }
-      })
-      .then(data => {
-        if (data.accountExistsAlready) {
-          alert('Account already exists, please login')
-          return navigate('/login');
-        }
-      });
-    },
-    flow: 'auth-code',
-  });
 
-  return (
-    <div className="flex items-center justify-center min-h-5">
-      <div className="max-w-screen-sm mx-auto">
-        <h1 className="text-center mb-6">Sign Up</h1>
-        
-        <Tabs defaultValue="sign-up" className='w-[400px]'>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="sign-in" onClick = {() => { navigate('/login') }}>Login</TabsTrigger>
-            <TabsTrigger value="sign-up">Sign Up</TabsTrigger>
-          </TabsList>
+        setAlertState({ ...alertState, open: false });
+    }
 
-          <TabsContent value="sign-up">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sign Up</CardTitle>
-                <CardDescription>
-                  Create a new account using your email and password.
-                </CardDescription>
-              </CardHeader>
+    const onGoogleLoginOrCreate = useGoogleLogin({
+        onError: response => {
+            setAlertState({ ...alertState, open: true, message: response.message + ', please try again.' });
+            setUserLoad(false);
+        },
+        onNonOAuthError: response => {
+            setAlertState({ ...alertState, open: true, message: response.message + ', please try again.' });
+            setUserLoad(false);
+        },
+        onSuccess: response => {
+            setUserLoad(true);
 
-              <form onSubmit={onSubmit}>
-                <CardContent className="space-y-2">
-                  <div className="space-y-1">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" name="email" type="email" defaultValue='' />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="username">Username</Label>
-                    <Input id="username" name="username" type="text" defaultValue='' />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="password">Password</Label>
-                    <Input id="password" name="password" type="password" defaultValue='' />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="password2">Confirm password</Label>
-                    <Input id="password2" name="password2" type="password" defaultValue='' />
-                  </div>
-                  <div className="space-y-1">
-                    { 
-                      (userIsLoading) ? 
-                        <Button disabled className="w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button> 
-                      :
-                        <Button type="submit" className="w-full">Sign Up</Button>
+            const code = response.code;
+            const handleSuccess = async () => {
+                const [statusGoogle, promiseGoogleAccount] = await googleCheckAccount(code);
+
+                if (!statusGoogle) {
+                    setUserLoad(false);
+                    navigate('/');
+                    return;
+                };
+
+                if (promiseGoogleAccount.accountExistsAlready) {
+                    const User = promiseGoogleAccount.user;
+                    const formData = {email: User.email, password: User.password};
+                    const [status, promiseDataLogin] = await userLogIn(formData);
+
+                    if (!status) {
+                        setUserLoad(false);
+                        setAlertState({ ...alertState, open: true, message: promiseDataLogin.Error });
+                        return;
                     }
-                  </div>
-                </CardContent>
-              </form>
 
-              <CardContent className="space-y-2 text-center">
-                <Label className="text-center mb-6">or</Label>
-              </CardContent>
+                    promiseDataLogin.user['isConnected'] = true;
+                    setUserAuth(promiseDataLogin.user);
 
-              <CardFooter>
-                { 
-                  (userIsLoading) ? 
-                    <Button disabled className="w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button> 
-                  :
-                    <Button className="w-full" onClick={() => {
-                      setUserLoad(true);
-                      onGoogleLoginOrCreate()
-                    }}><AiOutlineGoogle className='mr-2'/>Join with Google</Button>
+                    setUserLoad(false);
+                    navigate('/');
+                    return;
                 }
-              </CardFooter>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
+
+                navigate('/signup/get-started', { state: { informationGiven: promiseGoogleAccount } });
+            };
+
+            handleSuccess();
+        },
+        flow: 'auth-code',
+    });
+
+    return (
+        <div className="flex items-center justify-center min-h-5">
+            {alertState.open && (
+                <Notification
+                open={alertState.open}
+                handleClose={alertHandleClose}
+                message={alertState.message}
+                />
+            )}
+
+            <div className="max-w-screen-sm mx-auto mb-10">
+                <Tabs defaultValue="sign-up" className='w-[400px] max-sm:w-[350px]'>
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="sign-in" onClick = {() => { navigate('/login') }}>Login</TabsTrigger>
+                        <TabsTrigger value="sign-up">Sign Up</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="sign-up">
+                        <Card>
+                        <CardHeader>
+                            <CardTitle>Sign Up</CardTitle>
+                            <CardDescription>
+                                Create a new account using your email and password.
+                            </CardDescription>
+                        </CardHeader>
+
+                        <CardContent className="space-y-2">
+                            <Button className="w-full" onClick={() => navigate('/signup/get-started')}>Continue with Email</Button>
+                        </CardContent>
+
+                        <CardContent>
+                            { 
+                            (userIsLoading) ? 
+                                <Button disabled className="w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Please wait</Button> 
+                            :
+                                <Button className="w-full" onClick={() => {
+                                    setUserLoad(true);
+                                    onGoogleLoginOrCreate()
+                                }}><AiOutlineGoogle className='mr-2'/>Continue with Google</Button>
+                            }
+                        </CardContent>
+
+                        <CardContent className="space-y-2 text-center">
+                            <Label onClick={(event) => {event.preventDefault(); navigate('/login');}} className="text-center mb-6">Have an account ? <Label className='underline text-cyan-600 hover:text-sky-400 cursor-pointer'>Sign In</Label></Label>
+                        </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+            </div>
+        </div>
+    );
 }
+
+export default Signup;
