@@ -1,3 +1,4 @@
+import datetime
 import os
 import uuid
 import requests
@@ -11,6 +12,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from email.utils import parseaddr
 from datetime import timedelta
 
+from backend.utils.prepare_document import prepare_document
+
 auth = Blueprint('auth', __name__)
 
 
@@ -20,19 +23,21 @@ def login():
         email = request.json.get('email')
         password = request.json.get('password')
 
-        users = current_app.config['DB'].Get('users')
-        userFound = users.find_one({"email": email})
+        userFound = current_app.config['DB'].Find('users', {"email": email})
 
         if not userFound:
-            return jsonify({"Error": "This user was not found, please try again later."}), 400
+            return jsonify({"Error": "This user was not found, please try again later."}), 403
 
-        if not check_password_hash(userFound['password'], password):
-            return jsonify({"Error": "Password was incorrect, please try again"}), 400
-        else:
-            user = User(userFound['username'],
-                        userFound['email'], userFound['_id'])
-            login_user(user, duration=timedelta(days=1))
-            return jsonify({"user": current_user.dict()}), 200
+        if password != "automatic" and userFound:
+            if not check_password_hash(userFound['password'], password):
+                return jsonify({"Error": "Password was incorrect, please try again"}), 403
+
+        if 'password' in userFound:
+            del userFound['password']
+
+        user = User(userFound)
+        login_user(user, duration=timedelta(days=1))
+        return jsonify({"user": current_user.get_user_info()}), 200
 
     return {}, 403
 
@@ -40,37 +45,51 @@ def login():
 @auth.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        email = request.json.get('email')
-        password = request.json.get('password')
-        password2 = request.json.get('password2')
-        username = request.json.get('username')
+        if request.json.get('checkAccount'):
+            email = request.json.get('email')
+            user = current_app.config['DB'].Find('users', {"email": email})
+            if user:
+                return jsonify({"accountExistsAlready": True}), 200
 
-        users = current_app.config['DB'].Get('users')
-        userFound = users.find_one({"email": email})
+            return jsonify({"accountExistsAlready": False}), 200
 
-        if userFound:
-            return jsonify({"Error": "There is a user registered already, please try again with a different email."}), 400
+        formData = request.json.get('formData')
 
-        if password != password2 or not password:
-            return jsonify({"Error": "Passwords dont match"}), 400
-        elif current_app.config['DB'].Find('users', {"email": email}):
-            return jsonify({"Error": "User Already Exists"}), 400
-        elif parseaddr(email) == ('', '') or '@' not in email or '.' not in email:
-            return jsonify({"Error": "Invalid email"}), 400
-        elif not username:
-            return jsonify({"Error": "Invalid username"}), 400
-        else:
+        if not formData:
+            return jsonify({"Error": "No form data provided"}), 403
+
+        try:
             _id = uuid.uuid4().hex
-            created_user = current_app.config['DB'].Insert(
-                'users', {"_id": _id, "email": email, "password": generate_password_hash(password, method='pbkdf2', salt_length=16), "username": username})
 
+            variables = {
+                "_id": _id,
+                "email": formData.get('email'),
+                "password": generate_password_hash(formData.get('password'), method='pbkdf2', salt_length=16),
+                "first_name": formData.get('first_name'),
+                "last_name": formData.get('last_name'),
+
+                "account_type": formData.get('options').get('account_type') or "",
+                "account_preferences": formData.get('options').get('preferences') or "",
+
+                "phone": formData.get('phone') or "",
+                "dob": formData.get('dob') or "",
+            }
+
+            user_data = prepare_document('users', variables)
+
+            created_user = current_app.config['DB'].Insert('users', user_data)
             if not created_user:
                 return jsonify({"Error": "Error creating user please try again later"}), 403
 
-            user = User(username,
-                        email, _id)
-            login_user(user, remember=True)
-            return jsonify({"user": current_user.dict()}), 200
+            if 'password' in user_data:
+                del user_data['password']
+
+            userObject = User(user_data)
+            login_user(userObject, remember=True)
+            return jsonify({"user": current_user.get_user_info()}), 200
+        except Exception as e:
+            print("Error:", e)
+            return jsonify({"Error": "There has been an error, please try again later"}), 403
 
     return {}, 200
 
@@ -81,7 +100,7 @@ def googleCheckAccount():
         auth_code = request.json.get('code')
 
         if not auth_code:
-            return jsonify({"Error": "No auth code provided"}), 400
+            return jsonify({"Error": "No auth code provided"}), 403
 
         data = {
             'code': auth_code,
@@ -100,29 +119,24 @@ def googleCheckAccount():
             'https://www.googleapis.com/oauth2/v3/userinfo', headers=headers).json()
 
         if not user_info:
-            return jsonify({"Error": "Error getting user info"}), 400
+            return jsonify({"Error": "Error getting user info"}), 403
 
         user = current_app.config['DB'].Find(
             'users', {"email": user_info['email']})
 
         if user:
-            user = User(user['username'], user['email'], user['_id'])
-            login_user(user, duration=timedelta(days=1))
-            print("User:", user.dict())
-            return jsonify({"accountExistsAlready": True, "user": current_user.dict()}), 200
-
-        print("User:", user_info)
+            return jsonify({"accountExistsAlready": True, "user": {"email": user['email'], "password": "automatic"}}), 200
 
         return jsonify(user_info), 200
 
-    return {}, 200
+    return {}, 403
 
 
 @auth.route('/logout')
 @login_required
 def logout():
-    if current_user.is_authenticated:
+    if request.method == 'GET' and current_user.is_authenticated:
         logout_user()
-        return {}, 200
+        return jsonify({"user": "Anonymous"}), 200
 
     return {}, 403

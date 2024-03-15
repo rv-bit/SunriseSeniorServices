@@ -2,21 +2,19 @@ import uuid
 
 
 class User():
-    def __init__(self, username, email, id):
-        self.username = username
-        self.email = email
-        self.id = uuid.uuid4().hex if not id else id
+    def __init__(self, userData):
+        if 'password' in userData:
+            del userData['password']
+
+        self.id = userData['_id']
+        self.userData = userData
 
     @classmethod
     def make_from_dict(cls, d):
-        return cls(d['username'], d['email'], d['id'])
+        return cls(d)
 
-    def dict(self):
-        return {
-            "id": self.id,
-            "username": self.username,
-            "email": self.email
-        }
+    def get_user_info(self):
+        return self.userData
 
     @property
     def is_authenticated(self):
@@ -31,7 +29,7 @@ class User():
         return False
 
     def get_id(self):
-        return self.id
+        return self.id or None
 
 
 # Anonymous user class

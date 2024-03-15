@@ -4,14 +4,6 @@ from pymongo import MongoClient
 class DB:
     def __init__(self, mongo_uri):
         self.client = MongoClient(mongo_uri)
-
-        try:
-            self.client.admin.command('ping')
-            print("Pinged your deployment. You successfully connected to MongoDB!")
-        except Exception as e:
-            print(f"Server not available: {e}")
-            raise e
-
         self.main_db = self.client.get_database('CareersForHelp')
 
     def Get(self, collection_name):
@@ -20,6 +12,10 @@ class DB:
     def Insert(self, collection_name, data):
         collection = self.Get(collection_name)
         return collection.insert_one(data)
+
+    def FindAll(self, collection_name, query):
+        collection = self.Get(collection_name)
+        return collection.find(query)
 
     def Find(self, collection_name, query):
         collection = self.Get(collection_name)
