@@ -12,7 +12,7 @@ def initializeApp():
         template_folder = '../frontend/dist'
 
     app = Flask(__name__, static_folder=static_folder,
-                template_folder=template_folder)
+                template_folder=template_folder, static_url_path='/')
 
     app.config["SECRET_KEY"] = os.urandom(24)
 
