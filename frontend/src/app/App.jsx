@@ -12,7 +12,7 @@ const NotFound = lazy(() => import('./pages/(home)/NotFound.jsx'))
 const Home = lazy(() => import('./pages/(home)/Home.jsx'))
 
 const Login = lazy(() => import('./pages/(login)/Login.jsx'))
-const Signup = lazy(() => import('./Signup.jsx'))
+const Signup = lazy(() => import('./pages/(signup)/Signup.jsx'))
 const Logout = lazy(() => import('./pages/(logout)/Logout.jsx'))
 const FormCreateAccount = lazy(() => import('./pages/(get-started-form)/FormCreateAccount.jsx'))
 
