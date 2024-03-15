@@ -14,12 +14,13 @@ export const Post = async (url, data) => {
     return response;
 }
 
-export const Get = async (url, headers) => {
+export const Get = async (url, body) => {
     const response = await fetch(url, {
         method: 'GET',
-        headers: headers ? headers : {
+        headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        body: body ? JSON.stringify(body) : null
     });
 
     return response;

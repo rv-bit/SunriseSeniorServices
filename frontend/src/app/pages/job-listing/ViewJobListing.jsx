@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Get } from '@/app/lib/utils';
 import { formatTags } from '@/app/lib/format';
 
@@ -11,12 +11,26 @@ import { BsChevronLeft } from "react-icons/bs";
 
 const ViewJobListing = () => {
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
 
-    const currentJobIdFromSearch = searchParams && searchParams.get('currentJobId') ? searchParams.get('currentJobId') : null;
+    const queryParams = new URLSearchParams(location.search);
+    const currentJobIdFromSearch = queryParams.get('currentJobId');
     
     const [jobListing, setJobListing] = useState({});
     const [jobsDataLoad, setJobsDataLoad] = useState(false);
+
+    const [alertState, setAlertState] = useState({
+        open: false,
+        message: '',
+    });
+
+    const alertHandleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setAlertState({ ...alertState, open: false });
+    }
 
     const getJobListings = async () => {
         setJobsDataLoad(true);
@@ -25,7 +39,14 @@ const ViewJobListing = () => {
         
         if (!response.ok) {
             const data = await response.json();
-            setAlertState({ ...alertState, open: true, message: data.Error });
+
+            if (data.Error) {
+                setAlertState({ ...alertState, open: true, message: data.Error });
+                navigate('/job-listings');
+                return;
+            }
+
+            setAlertState({ ...alertState, open: true, message: 'An error occurred while trying to fetch the job' });
             return;
         }
 
@@ -58,10 +79,7 @@ const ViewJobListing = () => {
     const handleCloseCurrentJobId = (e, currentJobId) => {
         e.preventDefault();
 
-        navigate({
-            pathname: '/job-listings',
-            search: `?currentJobId=${currentJobId}`
-        });
+        navigate(`/job-listings?currentJobId=${currentJobId}`);
     }
 
     return (

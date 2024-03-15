@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, Suspense, lazy } from 'react';
-import { useNavigate, createSearchParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 import { isMobile } from 'react-device-detect';
 
@@ -36,7 +36,7 @@ const JobListing = () => {
     useDocumentTitle('Job Listings');
 
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
 
     const [jobListings, setJobListings] = useState([]);
     const [jobsDataIsLoading, setJobsDataLoad] = useState(false);
@@ -45,7 +45,9 @@ const JobListing = () => {
     const [searchResults, setSearchResults] = useState([]);
     
     const [currentJobId, setCurrentJobIds] = useState(null);
-    const currentJobIdFromSearch = searchParams && searchParams.get('currentJobId') ? searchParams.get('currentJobId') : null;
+
+    const queryParams = new URLSearchParams(location.search);
+    const currentJobIdFromSearch = queryParams.get('currentJobId');
 
     const [userFromJobId, setUserFromJobId] = useState(null);
     const [waitingForUser, setWaitingForUser] = useState(false);
@@ -63,90 +65,52 @@ const JobListing = () => {
         setAlertState({ ...alertState, open: false });
     }
 
-    const getJobListings = async () => {
-        setJobsDataLoad(true);
-
-        const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getJobListings`);
-        
-        if (!response.ok) {
-            const data = await response.json();
-            setAlertState({ ...alertState, open: true, message: data.Error });
-            return;
-        }
-
-        const data = await response.json();
-
-        const newData = data.flat().map((job, index) => {
-            const newJobTags = formatTags(job.tags);
-            var dateParts = job.posted_at.split('-');
-            var formattedDate = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
-
-            return {
-                ...job,
-                tags: newJobTags,
-                posted_at: formattedDate
-            }
-        });
-
-        setJobsDataLoad(false);
-        setJobListings(newData);
-    }
-
-    const getUserByIdFromJob = async (userId) => {
-        setWaitingForUser(true);
-        setUserFromJobId(null);
-
-        const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getUserByIdForJobListing?user_id=${userId}`);
-
-        if (!response.ok) {
-            const data = await response.json();
-            setAlertState({ ...alertState, open: true, message: data.Error });
-            return;
-        }
-
-        const data = await response.json();
-
-        setTimeout(() => {
-            setWaitingForUser(false);
-            setUserFromJobId(data);
-        }, 2500);
-    };
-
     useEffect(() => {
+        let timeoutId = null;
+
+        const getJobListings = async () => {
+            setJobsDataLoad(true);
+
+            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getJobListings`);
+            
+            if (!response.ok) {
+                const data = await response.json();
+                setAlertState({ ...alertState, open: true, message: data.Error });
+                return;
+            }
+
+            const data = await response.json();
+
+            const newData = data.flat().map((job, index) => {
+                const newJobTags = formatTags(job.tags);
+                var dateParts = job.posted_at.split('-');
+                var formattedDate = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
+
+                return {
+                    ...job,
+                    tags: newJobTags,
+                    posted_at: formattedDate
+                }
+            });
+
+            timeoutId = setTimeout(() => {
+                setJobsDataLoad(false);
+                setJobListings(newData);
+            }, 2500);
+        }
+
         getJobListings();
 
-        if (searchParams.has('currentJobId') && !currentJobId) {
-            searchParams.delete('currentJobId');
-            setSearchParams(searchParams);
+        if (currentJobIdFromSearch && !currentJobId) {
+            setCurrentJobIds(currentJobIdFromSearch);
         }
 
-        return () => {}
+        return () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+        }
     }, []);
-    
-    const handleCurrentJobId = (e, index) => {
-        e.preventDefault();
-
-        setCurrentJobIds({index: index, id: jobListings[index-1].id});
-    }
-
-    useEffect(() => {
-        if (!currentJobId) return;
-        
-        setSearchParams({ 'currentJobId': currentJobId.id});
-        getUserByIdFromJob(jobListings[currentJobId.index-1].user_id);
-
-        if (isMobile || window.innerWidth < 1180) {
-            navigate({
-                pathname: '/job-listings/viewjob',
-                search: `?currentJobId=${currentJobId.id}`
-            })
-
-            return;
-        }
-
-        return () => {}
-    }, [currentJobId]);
-
 
     const handleInputChange = (e, inputName) => {
         setSearchInput({
@@ -162,23 +126,73 @@ const JobListing = () => {
         });
     }
 
-    const handleCloseCurrentJobId = (e, index) => {
+    const handleCloseCurrentJobId = (e, jobId) => {
         e.preventDefault();
-        if (index !== currentJobId.index) return;
+        if (jobId !== currentJobId) return;
 
-        if (searchParams.has('currentJobId')) {
-            searchParams.delete('currentJobId');
-            setSearchParams(searchParams);
+        if (currentJobIdFromSearch) {
+            navigate('/job-listings');
         }
 
         setCurrentJobIds(null);
     }
-
-    const handleCreateNewJobListing = (e) => {
+    
+    const handleCurrentJobId = (e, jobId) => {
         e.preventDefault();
 
-        navigate('/job-listings/new');
+        setCurrentJobIds(jobId);
+
+        if (isMobile || window.innerWidth < 1180) {
+            navigate(`/job-listings/viewjob?currentJobId=${jobId}`)
+        } else {
+            navigate(`/job-listings?currentJobId=${jobId}`)
+        }
     }
+
+    useEffect(() => {
+        if (!currentJobId) return;
+
+        let timeoutId = null;
+
+        const getUserByIdFromJob = async (userId) => {
+            setWaitingForUser(true);
+            setUserFromJobId(null);
+
+            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getUserByIdForJobListing?user_id=${userId}`);
+
+            if (!response.ok) {
+                const data = await response.json();
+
+                if (data.Error) {
+                    navigate('/job-listings');
+                    setAlertState({ ...alertState, open: true, message: data.Error });
+                    return;
+                }
+
+                setAlertState({ ...alertState, open: true, message: 'An error occurred while trying to fetch the user' });
+                return;
+            }
+
+            const data = await response.json();
+
+            timeoutId = setTimeout(() => {
+                setWaitingForUser(false);
+                setUserFromJobId(data);
+            }, 2500);
+
+            return;
+        };
+
+        getUserByIdFromJob(jobListings[jobListings.findIndex((job) => job.id === currentJobId)].user_id);
+
+        console.log('currentJobId', currentJobId);
+
+        return () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+        }
+    }, [currentJobId]);
 
     const [newHeight, setNewHeight] = useState(930);
     useEffect(() => {
@@ -229,19 +243,26 @@ const JobListing = () => {
             setElementCurrentJobHeaderHeight(elementCurrentJobHeaderRef.current.getBoundingClientRect().height);
         }
 
-        if ((currentJobIdFromSearch && currentJobId) && currentJobIdFromSearch !== currentJobId.id) {
-            jobListings.forEach((job, index) => {
-                if (job.id === currentJobIdFromSearch) {
-                    setCurrentJobIds({index: index+1, id: job.id});
-                }
-            });
-        } else if (currentJobIdFromSearch && !currentJobId) {
-            jobListings.forEach((job, index) => {
-                if (job.id === currentJobIdFromSearch) {
-                    setCurrentJobIds({index: index+1, id: job.id});
-                }
-            });
-        } else if (!currentJobIdFromSearch && currentJobId) {
+        console.log('elementCurrentJobHeaderHeight', currentJobIdFromSearch);
+
+        if (currentJobIdFromSearch && currentJobIdFromSearch !== currentJobId) {
+            const jobIndex = jobListings.findIndex((job) => job.id === currentJobIdFromSearch);
+
+            if (jobIndex !== -1) {
+                setCurrentJobIds(jobListings[jobIndex].id);
+                return;
+            }
+
+            if (currentJobIdFromSearch) {
+                navigate('/job-listings');
+            }
+            
+            setCurrentJobIds(null);
+        } else if (currentJobId && !currentJobIdFromSearch) {
+            if (currentJobIdFromSearch) {
+                navigate('/job-listings');
+            }
+
             setCurrentJobIds(null);
         }
 
@@ -334,7 +355,7 @@ const JobListing = () => {
                         </div>
 
                         <div className='flex items-center justify-center'>
-                            <h1 onClick={handleCreateNewJobListing} className='w-fit my-5 text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
+                            <h1 onClick={() => {navigate('/job-listings/new')}} className='w-fit my-5 text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
                         </div>
                     </div>
                 </div>
@@ -346,10 +367,23 @@ const JobListing = () => {
                         <div className='flex items-center flex-col mt-5 w-full'>
                             {
                                 jobsDataIsLoading ?
-                                    <div className='flex items-center justify-center h-screen'>
-                                        <div className='relative'>
-                                            <div className='h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200'></div>
-                                            <div className='absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin'></div>
+                                    <div className='mx-5 h-auto mb-2 bg-white border-2 border-black rounded-lg lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]'>
+                                        <div className='flex items-center justify-between m-5'>
+                                            <div className='w-full'>
+                                                <div className="space-y-2 p-5">
+                                                    <Skeleton className="h-4 w-[350px]" />
+                                                    <Skeleton className="h-4 w-[200px]" />
+
+                                                    <div className='flex flex-row items-center gap-2'>
+                                                        <Skeleton className="h-2 w-[50px]" />
+                                                        <Skeleton className="h-2 w-[50px]" />
+                                                        <Skeleton className="h-2 w-[50px]" />
+                                                        <Skeleton className="h-2 w-[50px]" />
+                                                    </div>
+
+                                                    <Skeleton className="h-4 w-[100px]" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 : 
@@ -368,12 +402,15 @@ const JobListing = () => {
 
                             {jobListings.length !== 0 && jobListings.map((job, index) => {
                                 const newIndex = index + 1;
+                                const jobId = job.id;
+
+                                const indexBasedOnJobId = currentJobId ? jobListings.findIndex((job) => job.id === currentJobId) : null;
 
                                 return (
                                     <div
                                         key={newIndex}
-                                        onClick={(e) => handleCurrentJobId(e, newIndex)} 
-                                        className={`mx-5 group h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' } ${currentJobId && currentJobId.index === newIndex ? 'border-[#e8562d]' : 'border-black' }`}>
+                                        onClick={(e) => handleCurrentJobId(e, jobId)} 
+                                        className={`mx-5 group h-auto mb-2 bg-white border-2 border-black rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' } ${indexBasedOnJobId && indexBasedOnJobId === newIndex ? 'border-[#e8562d]' : 'border-black' }`}>
 
                                         <div className='flex items-center justify-between m-5'>
                                             <div className='w-full'>
@@ -407,7 +444,7 @@ const JobListing = () => {
                             })}
 
                             {jobListings.length !== 0 && (
-                                <div className='flex items-center justify-center my-2'>
+                                <div className='flex items-center justify-center my-2 w-1/2'>
                                     <Button className='w-full'>Load More</Button>
                                 </div>
                             )}
@@ -442,18 +479,18 @@ const JobListing = () => {
                                             <div className='flex items-center'>
                                                 <div ref={elementCurrentJobHeaderRef} className='shadow-md w-full rounded-sm'>
                                                     <div className='p-5'>
-                                                        <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobId.index)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
+                                                        <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobId)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
                                                             <span className='text-black'>X</span>
                                                         </Button>
 
                                                         <div className='w-11/12 inline-block whitespace-normal break-words'>
-                                                            <h1 className='text-2xl font-bold text-slate-900'>{jobListings[currentJobId.index-1]?.title}</h1>
+                                                            <h1 className='text-2xl font-bold text-slate-900'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.title}</h1>
                                                             <h1 className='w-fit text-md text-slate-900 underline hover:cursor-pointer'>by {userFromJobId ? userFromJobId.name : ''}</h1>
-                                                            <p className='text-slate-600 text-opacity-75'>{jobListings[currentJobId.index-1]?.location}</p>
+                                                            <p className='text-slate-600 text-opacity-75'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.location}</p>
                                                         </div>
 
                                                         <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
-                                                            {Object.entries(jobListings[currentJobId.index-1]?.tags).filter(([key, value]) => value !== '' && key.startsWith('Tag_')).map(([key, value], index) => {
+                                                            {Object.entries(jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.tags).filter(([key, value]) => value !== '' && key.startsWith('Tag_')).map(([key, value], index) => {
                                                                 return (
                                                                     <div key={index} className='bg-slate-100 px-2 py-1 h-full rounded-md text-ellipsis overflow-hidden flex items-center justify-center'>
                                                                         <p className='text-xs'>{value}</p>

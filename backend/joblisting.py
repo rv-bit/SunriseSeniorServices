@@ -102,8 +102,6 @@ def getJobListingById():
 @jobListing.route("/getJobListings", methods=["GET"])
 def getJobListings():
     if request.method == 'GET':
-        print("current_user", current_user)
-
         jobListings = list(current_app.config['DB'].FindAll("jobListings", {}))
 
         if not jobListings:
@@ -146,8 +144,6 @@ def getJobListings():
 def getUserByIdForJobListing():
     if request.method == 'GET':
         user_id = request.args.get('user_id')
-
-        print("user_id", user_id)
 
         if not user_id:
             return jsonify({"Error": "No user id provided"}), 403
