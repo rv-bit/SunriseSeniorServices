@@ -4,7 +4,7 @@ import uuid
 import requests
 
 from flask import current_app, Blueprint, jsonify, request
-from flask_login import login_user, logout_user, login_required, current_user
+from flask_login import login_user, logout_user, current_user
 
 from backend.user import User
 
@@ -133,9 +133,11 @@ def googleCheckAccount():
 
 
 @auth.route('/logout')
-@login_required
 def logout():
-    if request.method == 'GET' and current_user.is_authenticated:
+    if not current_user.is_authenticated:
+        return jsonify({"Error": "User is not logged in"}), 403
+
+    if request.method == 'GET':
         logout_user()
         return jsonify({"user": "Anonymous"}), 200
 

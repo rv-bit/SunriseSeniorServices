@@ -1,7 +1,7 @@
 import uuid
 
 from flask import current_app, jsonify, Blueprint, render_template, request
-from flask_login import login_required, current_user
+from flask_login import current_user
 
 from backend.utils.prepare_document import prepare_document
 
@@ -9,7 +9,6 @@ jobListing = Blueprint('jobListing', __name__)
 
 
 @jobListing.route("/createJobListing", methods=["GET", "POST"])
-@login_required
 def createJobListing():
     if not current_user.is_authenticated:
         return jsonify({"Error": "You are not logged in"}), 403
