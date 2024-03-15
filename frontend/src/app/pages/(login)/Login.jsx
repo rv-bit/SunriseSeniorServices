@@ -8,7 +8,7 @@ import useDocumentTitle  from '@/app/hooks/UseDocumentTitle' // Custom hooks
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
 import { Post, Get, googleCheckAccount, userLogIn } from '@/app/lib/utils' // Common functions
 
-import FormCreateAccount from '../get-started-form/FormCreateAccount';
+import FormCreateAccount from '../(get-started-form)/FormCreateAccount';
 
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
