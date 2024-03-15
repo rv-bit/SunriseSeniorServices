@@ -6,6 +6,8 @@ from flask_login import login_required, current_user
 views = Blueprint('views', __name__)
 
 if os.environ.get("NODE_ENV") == "production":
+    print("NODE_ENV is production")
+
     @views.route('/', defaults={'path': ''})
     @views.route('/<path:path>')
     def catch_all(path):
