@@ -18,4 +18,4 @@ def home():
     if request.method == "GET":
         return jsonify({"user": current_user.get_user_info()}), 200
 
-    return {}, 200
+    return render_template('index.html'), 200
