@@ -27,7 +27,7 @@ export default function App () {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await Get(`${import.meta.env.VITE_API_PREFIX}/`);
+      const response = await Get(`${import.meta.env.VITE_API_PREFIX}/home`);
       const data = await response.json();
 
       if (data && data.user === 'Anonymous') {

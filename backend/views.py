@@ -10,7 +10,7 @@ def index_redir():
     return render_template('index.html')
 
 
-@views.route("/", methods=["GET"])
+@views.route("/home", methods=["GET"])
 def home():
     if not current_user.is_authenticated:
         return jsonify({"user": "Anonymous"}), 200
