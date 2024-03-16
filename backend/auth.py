@@ -3,7 +3,7 @@ import os
 import uuid
 import requests
 
-from flask import current_app, Blueprint, jsonify, request
+from flask import current_app, Blueprint, jsonify, render_template, request
 from flask_login import login_user, logout_user, current_user
 
 from backend.user import User
@@ -39,7 +39,7 @@ def login():
         login_user(user, duration=timedelta(days=1))
         return jsonify({"user": current_user.get_user_info()}), 200
 
-    return {}, 403
+    return render_template('index.html')
 
 
 @auth.route('/signup', methods=['GET', 'POST'])
