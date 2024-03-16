@@ -52,7 +52,7 @@ def createJobListing():
             print("Error:", e)
             return jsonify({"Error": "There has been an error, please try again later"}), 403
 
-    return {}, 200
+    return render_template('index.html'), 200
 
 
 @jobListing.route("/getJobListingById", methods=["GET"])
@@ -96,7 +96,7 @@ def getJobListingById():
 
         return jsonify(newJob), 200
 
-    return {}, 200
+    return render_template('index.html'), 200
 
 
 @jobListing.route("/getJobListings", methods=["GET"])
@@ -139,6 +139,8 @@ def getJobListings():
 
         return jsonify(newJobListings), 200
 
+    return render_template('index.html'), 200
+
 
 @jobListing.route("/getUserByIdForJobListing", methods=["GET"])
 def getUserByIdForJobListing():
@@ -161,4 +163,4 @@ def getUserByIdForJobListing():
 
         return jsonify(newUserData), 200
 
-    return {}, 200
+    return render_template('index.html'), 200
