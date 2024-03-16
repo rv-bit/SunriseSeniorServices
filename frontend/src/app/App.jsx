@@ -73,7 +73,7 @@ export default function App () {
                                 <Route path='/chat' element={<Chat />} />
 
                                 <Route path='/job-listings' element={<JobListing />} />
-                                <Route path='/job-listings/viewjob' element={<ViewJobListing />} />
+                                <Route path='/job-listings/viewjob/:currentJobId' element={<ViewJobListing />} />
                                 <Route path='/job-listings/new' element={<FormNewJobListing />} />
 
                                 {/* Create pages for not found then add a button for redirect */}
