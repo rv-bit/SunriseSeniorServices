@@ -11,4 +11,4 @@ def getChats():
 
         return jsonify({"chats": chats}), 200
 
-    return {}, 200
+    return render_template('index.html')
