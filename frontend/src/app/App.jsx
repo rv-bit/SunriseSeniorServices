@@ -62,9 +62,7 @@ export default function App () {
                     }>
                         <div className="flex-grow">
                             <Navbar />
-
-                            <Switch>                
-                                <Routes>
+                            <Routes>
                                 <Route path='/' element={<Home />} />
                                 <Route path='/login' element={<Login />} />
                                 <Route path='/signup' element={<Signup />} />
@@ -81,8 +79,7 @@ export default function App () {
                                 {/* Create pages for not found then add a button for redirect */}
                                 <Route path='/404' element={<NotFound />}/>
                                 <Route path='*' element={<NotFound />}  />
-                                </Routes>
-                            </Switch>
+                            </Routes>
                         </div>
                         
                         <Footer className="mt-auto"/>
