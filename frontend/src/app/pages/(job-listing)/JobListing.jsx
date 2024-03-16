@@ -90,7 +90,7 @@ const JobListing = () => {
         e.preventDefault();
 
         if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
-            const newWindow = windows.open(window.open(`${window.location.origin}/job-listings/viewjob?currentJobId=${jobId}`, '_blank', 'noopener,noreferrer'));
+            const newWindow = window.open(`${window.location.origin}/job-listings/viewjob?currentJobId=${jobId}`, '_blank', 'noopener,noreferrer');
 
             if (newWindow) {
                 newWindow.opener = null;
