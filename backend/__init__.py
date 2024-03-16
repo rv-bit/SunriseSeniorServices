@@ -8,11 +8,11 @@ def initializeApp():
     template_folder = 'templates'
 
     if os.environ.get("NODE_ENV") == "production":
-        static_folder = '../frontend/dist/static'
+        static_folder = '../frontend/dist'
         template_folder = '../frontend/dist'
 
     app = Flask(__name__, static_folder=static_folder,
-                template_folder=template_folder)
+                template_folder=template_folder, static_url_path="")
 
     app.config["SECRET_KEY"] = os.urandom(24)
 
@@ -24,10 +24,10 @@ def initializeApp():
 
     from backend.db import DB
 
-    app.register_blueprint(views, url_prefix="/")
     app.register_blueprint(auth, url_prefix="/")
     app.register_blueprint(chat, url_prefix="/")
     app.register_blueprint(jobListing, url_prefix="/")
+    app.register_blueprint(views, url_prefix="/")
 
     app.config["DB"] = DB(os.environ.get("MONGO_URI"))
 
