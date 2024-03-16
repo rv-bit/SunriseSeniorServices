@@ -91,7 +91,7 @@ def signup():
             print("Error:", e)
             return jsonify({"Error": "There has been an error, please try again later"}), 403
 
-    return {}, 200
+    return render_template('index.html')
 
 
 @auth.route('/google/checkAccount', methods=['GET', 'POST'])
@@ -129,7 +129,7 @@ def googleCheckAccount():
 
         return jsonify(user_info), 200
 
-    return {}, 403
+    return render_template('index.html')
 
 
 @auth.route('/logout')
@@ -141,4 +141,4 @@ def logout():
         logout_user()
         return jsonify({"user": "Anonymous"}), 200
 
-    return {}, 403
+    return render_template('index.html')
