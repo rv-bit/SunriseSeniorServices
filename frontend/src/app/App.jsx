@@ -25,6 +25,19 @@ export default function App () {
     const [userAuthData, setUserAuth] = useState(null);
 
     useEffect(() => {
+        socket = io("https://sunriseseniorsevices.onrender.com", {autoConnect: false});
+
+        // Manually connect
+        socket.connect();
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.log('Connection Error', error);
+        });
+        
         const fetchData = async () => {
             const response = await Get(`${import.meta.env.VITE_API_PREFIX}/home`);
             const data = await response.json();
