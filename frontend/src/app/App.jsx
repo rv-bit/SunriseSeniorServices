@@ -21,6 +21,10 @@ const ViewJobListing = lazy(() => import('./pages/(job-listing)/ViewJobListing.j
 const JobListing = lazy(() => import('./pages/(job-listing)/JobListing.jsx'))
 const FormNewJobListing = lazy(() => import('./pages/(job-listing)/FormNewJobListing.jsx'))
 
+import io from 'socket.io-client';
+
+let socket;
+
 export default function App () {
     const [userAuthData, setUserAuth] = useState(null);
 
