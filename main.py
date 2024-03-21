@@ -1,8 +1,7 @@
 import os
 
 from flask import render_template
-
-from backend import initializeApp
+from backend import initializeApp, socketio
 
 app = initializeApp()
 
@@ -16,6 +15,6 @@ if os.environ.get("NODE_ENV") == "production":
     def not_found(e):
         return app.send_static_file('index.html')
 
-
 if __name__ == "__main__":
-    app.run()
+    # app.run(debug=True, port=5000)
+    socketio.run(app, debug=True, port=5000)
