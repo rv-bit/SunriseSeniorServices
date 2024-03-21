@@ -3,10 +3,8 @@ import os
 from flask import render_template
 
 from backend import initializeApp
-from flask_restful import Api
 
 app = initializeApp()
-api = Api(app)
 
 if os.environ.get("NODE_ENV") == "production":
     @app.route('/', defaults={'path': ''})
