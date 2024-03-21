@@ -23,7 +23,7 @@ def USER_TABLE():
 def CHAT_TABLE():
     return {
         "_id": {"default_value": uuid.uuid4().hex, "type": str, "required": True},
-        "name": {"default_value": "", "type": str, "required": True},
+        "name": {"default_value": "", "type": str, "required": False},
         "members": {"default_value": [], "type": list, "required": True},
 
         "created_at": {"default_value": datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S'), "type": str},

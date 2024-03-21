@@ -10,8 +10,9 @@ import formSteps from '@/app/data/FormJobListing';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { Notification } from '@/app/components/custom/Notifications' // Custom components
+
 const MultiForm = lazy(() => import('@/app/components/custom/MultiForm'));
-const Notification = lazy(() => import('@/app/components/custom/Notifications'));
 
 const defaultValues = formSteps.reduce((values, step) => {
     step.fields.forEach(field => {
@@ -53,7 +54,7 @@ const FormNewJobListing = () => {
     const form = useForm({defaultValues});
 
     useEffect(() => {
-        if (userAuthData === null || userAuthData === undefined) {
+        if (userAuthData === null || userAuthData === undefined || (userAuthData && userAuthData.account_type[0] !== 'option_requester')) {
             navigate('/');
             return;
         }
@@ -66,14 +67,6 @@ const FormNewJobListing = () => {
         open: false,
         message: '',
     });
-
-    const alertHandleClose = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-
-        setAlertState({ ...alertState, open: false });
-    }
 
     useEffect(() => {
         const createJobListingAndNavigate = async () => {
@@ -256,21 +249,20 @@ const FormNewJobListing = () => {
         }>
             {alertState.open && (
                 <Notification
-                    open={alertState.open}
-                    handleClose={alertHandleClose}
-                    message={alertState.message}
+                    alertState={alertState}
+                    setAlertState={setAlertState}
                 />
             )}
 
             <MultiForm
                 onSubmit={onSubmit}
                 handleSetOptionClick={handleSetOptionClick}
-                alertHandleClose={alertHandleClose}
                 setCurrentStep={setCurrentStep}
                 setCurrentSubStep={setCurrentSubStep}
                 setHasUserNavigatedBack={setHasUserNavigatedBack}        
 
                 alertState={alertState}
+                setAlertState={setAlertState}
                 userIsLoading={userIsLoading}
 
                 currentStep={currentStep}

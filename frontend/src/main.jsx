@@ -8,11 +8,11 @@ import App from './app/App.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+  <>
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <Router>
         <App />
       </Router>
     </GoogleOAuthProvider>
-  </React.StrictMode>,
+  </>,
 )

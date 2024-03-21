@@ -1,7 +1,7 @@
 import os
 
 from flask import jsonify, Blueprint, render_template, request
-from flask_login import login_required, current_user
+from flask_login import current_user
 
 views = Blueprint('views', __name__)
 

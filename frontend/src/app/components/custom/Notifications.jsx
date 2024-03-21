@@ -1,14 +1,24 @@
 import { MdClose } from 'react-icons/md';
 import Snackbar from '@mui/material/Snackbar';
 
-export const Notification = ({ open, handleClose, message }) => {
+export const Notification = (props) => {
+    const alertState = props.alertState;
+
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setAlertState({ ...alertState, open: false });
+    }
+
     return (
         <Snackbar
             anchorOrigin={{ vertical: "top", horizontal: "center" }}
-            open={open}
+            open={alertState.open}
             onClose={handleClose}
             autoHideDuration={2000}
-            message={message}
+            message={alertState.message}
             action={
                 <MdClose className="cursor-pointer" onClick={handleClose} />
             }

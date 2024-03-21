@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
 import AuthContext from '@/app/context/AuthContext'
@@ -7,8 +7,6 @@ import useDocumentTitle  from '@/app/hooks/UseDocumentTitle' // Custom hooks
 
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
 import { Post, Get, googleCheckAccount, userLogIn } from '@/app/lib/utils' // Common functions
-
-import FormCreateAccount from '../(get-started-form)/FormCreateAccount';
 
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
@@ -32,7 +30,9 @@ import {
 
 const Login = () => {
     useDocumentTitle('Login')
+
     const navigate = useNavigate();
+    const location = useLocation();
     
     const {userAuthData, setUserAuth} = useContext(AuthContext);
 
@@ -41,6 +41,13 @@ const Login = () => {
             navigate('/');
             return;
         }
+
+        const infoFromPreviousPage = location.state?.info;
+        if (infoFromPreviousPage) {
+            setAlertState({ ...alertState, open: true, message: info });
+        }
+
+        return () => {};
     }, []);
 
     const [userIsLoading, setUserLoad] = useState(false);
@@ -48,15 +55,6 @@ const Login = () => {
         open: false,
         message: '',
     });
-
-
-    const alertHandleClose = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-
-        setAlertState({ ...alertState, open: false });
-    }
 
     const onSubmit = (e) => {
         e.preventDefault();    
@@ -137,9 +135,8 @@ const Login = () => {
         <div className="flex items-center justify-center min-h-5">
             {alertState.open && (
                 <Notification
-                open={alertState.open}
-                handleClose={alertHandleClose}
-                message={alertState.message}
+                    alertState={alertState}
+                    setAlertState={setAlertState}
                 />
             )}
 

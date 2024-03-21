@@ -6,7 +6,7 @@ export const Post = async (url, data) => {
     const response = await fetch(url, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
         body: JSON.stringify(data)
     });
@@ -18,7 +18,7 @@ export const Get = async (url, body) => {
     const response = await fetch(url, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
         body: body ? JSON.stringify(body) : null
     });

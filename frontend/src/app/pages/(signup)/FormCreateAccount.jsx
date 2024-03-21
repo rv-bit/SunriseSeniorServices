@@ -303,6 +303,7 @@ const FormCreateAccount = () => {
                 setHasUserNavigatedBack={setHasUserNavigatedBack}        
 
                 alertState={alertState}
+                setAlertState={setAlertState}
                 userIsLoading={userIsLoading}
 
                 currentStep={currentStep}

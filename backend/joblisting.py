@@ -110,6 +110,11 @@ def getJobListings():
         newJobListings = []
 
         for job in jobListings:
+            # This is to make sure that the user who created the job listing does not see it in the list
+            if current_user and current_user.is_authenticated:
+                if job['user_id'] == current_user.get_id():
+                    continue
+
             job['location'] = job.get(
                 'location', None) or "Remote"
             job['hours'] = job.get('hours', None) or 0

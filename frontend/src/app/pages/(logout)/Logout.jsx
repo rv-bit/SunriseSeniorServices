@@ -17,7 +17,8 @@ const Logout = () => {
         const data = await response.json();
 
         if (!response.ok) {
-            return alert('You are not logged in');
+            setUserAuth(null);
+            navigate('/');
         }
 
         if (response.ok) {

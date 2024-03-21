@@ -1,12 +1,21 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useContext } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Get, formatTags } from '@/app/lib/utils';
+import { Post, Get, formatTags } from '@/app/lib/utils';
+
+import AuthContext from '@/app/context/AuthContext';
 
 import { Button } from '@/app/components/ui/button';
 
 import { BsChevronLeft } from "react-icons/bs";
+import useDocumentTitle from '@/app/hooks/UseDocumentTitle';
+
+import { Notification } from '@/app/components/custom/Notifications';
 
 const ViewJobListing = () => {
+    useDocumentTitle('View Job Listing');
+
+    const {userAuthData} = useContext(AuthContext);
+
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -21,14 +30,72 @@ const ViewJobListing = () => {
         message: '',
     });
 
-    const alertHandleClose = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
+    const handleCloseCurrentJobId = (e, currentJobId) => {
+        e.preventDefault();
+
+        navigate(`/job-listings?currentJobId=${currentJobId}`);
+    }
+
+    const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
+
+    const createChats = useCallback(async (chatId) => {
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createChat`, {data: {
+            'id': chatId,
+            'members': [userAuthData._id, jobListing.user_id],
+            'name': jobListing.title,
+        }});
+
+        if (!response.ok) {
+            const data = await response.json();
+
+            setAlertState({ ...alertState, open: true, message: data.Error });
+            return false;
         }
 
-        setAlertState({ ...alertState, open: false });
+        const data = await response.json();
+        if (data.chatExists) {
+            setAlertState({ ...alertState, open: true, message: 'Chat already exists, moving to the chat' });
+            return true;
+        }
+
+        if (data.Success) {
+            return true;
+        }
+    });
+
+    const handleChat = async (e, jobId) => {
+        e.preventDefault();
+
+        if (userAuthData === null || userAuthData === undefined) {            
+            navigate('/login', { state: { info: 'You must be logged in to send a message!' } } );
+        } else {
+            setWaitForChatToCreate(true);
+
+            const chatId = jobId + userAuthData._id + jobListing.user_id;
+            const chatCreated = await createChats(chatId);
+            
+            if (!chatCreated) {
+                return setTimeout(() => {
+                    setWaitForChatToCreate(false);
+                }, 2500);
+            }
+
+            setTimeout(() => {
+                setWaitForChatToCreate(false);
+
+                if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
+                    handleOpenInNewTab(e, `/chat?currentJobId=${jobId}`);
+                } else {
+                    if (window.innerWidth < 1180) {
+                        navigate(`/chat?currentJobId=${jobId}`)
+                    } else {
+                        navigate(`/chat?currentJobId=${jobId}`)
+                    }
+                }
+            }, 2500);
+        }
     }
-    
+
     useEffect(() => {
         const getJobListing = async () => {
             setJobsDataLoad(true);
@@ -54,10 +121,28 @@ const ViewJobListing = () => {
             var dateParts = data.posted_at.split('-');
             var formattedDate = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
 
+            const responseUserBasedOfUserJobID = await Get(`${import.meta.env.VITE_API_PREFIX}/getUserByIdForJobListing?user_id=${data.user_id}`);
+
+            if (!responseUserBasedOfUserJobID.ok) {
+                const data = await responseUserBasedOfUserJobID.json();
+
+                if (data.Error) {
+                    navigate('/job-listings');
+                    setAlertState({ ...alertState, open: true, message: data.Error });
+                    return;
+                }
+
+                setAlertState({ ...alertState, open: true, message: 'An error occurred while trying to fetch the user' });
+                return;
+            }
+
+            const dataUserBasedOfUserJobID = await responseUserBasedOfUserJobID.json();
+
             const newData = {
                 ...data,
                 tags: newJobTags,
-                posted_at: formattedDate
+                posted_at: formattedDate,
+                person: dataUserBasedOfUserJobID.name,
             }
 
             setJobsDataLoad(false);
@@ -73,14 +158,15 @@ const ViewJobListing = () => {
         return () => {}
     }, []);
 
-    const handleCloseCurrentJobId = (e, currentJobId) => {
-        e.preventDefault();
-
-        navigate(`/job-listings?currentJobId=${currentJobId}`);
-    }
-
     return (
         <React.Fragment>
+            {alertState.open && (
+                <Notification
+                    alertState={alertState}
+                    setAlertState={setAlertState}
+                />
+            )}
+
             <hr className='w-full opacity-30 border-t border-slate-400' />
 
             <div className='flex items-center justify-center w-full h-full gap-2 my-10 px-10 max-extraSm:px-0'>                
@@ -102,7 +188,12 @@ const ViewJobListing = () => {
 
                                 <div className='lg:hidden md:block sm:block extraSm:block max-extraSm:block'>
                                     <div className='flex justify-start mt-5'>
-                                        <Button className='w-[300px] bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]' onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}>Message</Button>
+                                        <Button 
+                                            disabled={waitForChatToCreate}
+                                            onClick={(e) => handleChat(e, currentJobIdFromSearch)}
+                                            onAuxClick={(e) => handleChat(e, currentJobIdFromSearch)}
+                                            className='w-[300px] bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]'>Message
+                                        </Button>
                                     </div>
                                 </div>
 
@@ -148,7 +239,12 @@ const ViewJobListing = () => {
 
                         <div className='hidden lg:flex md:hidden sm:hidden extraSm:hidden max-extraSm:hidden'>
                             <div className='ml-32 w-[300px]'>
-                                <Button className='w-full mt-5 bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]' onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}>Message</Button>
+                                <Button 
+                                    disabled={waitForChatToCreate}
+                                    onClick={(e) => handleChat(e, currentJobIdFromSearch)}
+                                    onAuxClick={(e) => handleChat(e, currentJobIdFromSearch)}
+                                    className='w-full mt-5 bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]'>Message
+                                </Button>
 
                                 <div className='flex items-center justify-center mt-5'>
                                     <div role='tags' className='grid grid-flow-row-dense grid-cols-3 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>

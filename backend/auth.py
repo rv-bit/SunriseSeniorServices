@@ -4,7 +4,7 @@ import uuid
 import requests
 
 from flask import current_app, Blueprint, jsonify, render_template, request
-from flask_login import login_user, logout_user, login_required, current_user
+from flask_login import login_user, logout_user, current_user
 
 from backend.user import User
 
@@ -22,6 +22,8 @@ def login():
     if request.method == 'POST':
         email = request.json.get('email')
         password = request.json.get('password')
+
+        print("Email:", email)
 
         userFound = current_app.config['DB'].Find('users', {"email": email})
 
