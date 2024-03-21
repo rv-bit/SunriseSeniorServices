@@ -2,6 +2,8 @@ import os
 from flask import Flask
 from flask_login import LoginManager
 
+from backend.services import socketio
+
 
 def initializeApp():
     static_folder = 'static'
@@ -16,20 +18,22 @@ def initializeApp():
 
     app.config["SECRET_KEY"] = os.urandom(24)
 
+    from backend.db import DB
+
+    app.config["DB"] = DB(os.environ.get("MONGO_URI"))
+
+    socketio.init_app(app)
+
     from backend.views import views
     from backend.auth import auth
     from backend.chats import chat
 
     from backend.joblisting import jobListing
 
-    from backend.db import DB
-
     app.register_blueprint(auth, url_prefix="/")
     app.register_blueprint(chat, url_prefix="/")
     app.register_blueprint(jobListing, url_prefix="/")
     app.register_blueprint(views, url_prefix="/")
-
-    app.config["DB"] = DB(os.environ.get("MONGO_URI"))
 
     from backend.user import User, Anonymous
 
