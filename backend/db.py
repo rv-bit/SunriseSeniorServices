@@ -1,10 +1,24 @@
-from pymongo import MongoClient
+import os
+
+from pymongo.mongo_client import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv()
+
+mongo_uri = os.environ.get("MONGO_URI")
 
 
 class DB:
-    def __init__(self, mongo_uri):
+    def __init__(self):
         self.client = MongoClient(mongo_uri)
-        self.main_db = self.client.get_database('CareersForHelp')
+
+        try:
+            self.client.admin.command('ping')
+            print("Pinged your deployment. You successfully connected to MongoDB!")
+
+            self.main_db = self.client.get_database('CareersForHelp')
+        except Exception as e:
+            print(e)
 
     def Get(self, collection_name):
         return self.main_db.get_collection(collection_name)
@@ -13,9 +27,14 @@ class DB:
         collection = self.Get(collection_name)
         return collection.insert_one(data)
 
-    def FindAll(self, collection_name, query):
+    def FindAll(self, collection_name, query, sort=None, limit=None):
         collection = self.Get(collection_name)
-        return collection.find(query)
+        result = collection.find(query)
+        if sort:
+            result = result.sort(sort)
+        if limit is not None:
+            result = result.limit(limit)
+        return list(result) if result else []
 
     def Find(self, collection_name, query):
         collection = self.Get(collection_name)

@@ -3,7 +3,8 @@ import Snackbar from '@mui/material/Snackbar';
 
 export const Notification = (props) => {
     const alertState = props.alertState;
-
+    const setAlertState = props.setAlertState;
+    
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
             return;

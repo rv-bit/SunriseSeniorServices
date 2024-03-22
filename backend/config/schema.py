@@ -32,9 +32,10 @@ def CHAT_TABLE():
 
 def MESSAGE_TABLE():
     return {
-        "_id": {"default_value": uuid.uuid4().hex, "type": str, "required": True},
+        "_id": {"default_value": uuid.uuid4().hex, "type": str, "required": False},
         "chat_id": {"default_value": "", "type": str, "required": True},
         "message": {"default_value": "", "type": str, "required": True},
+        "sender_id": {"default_value": "", "type": str, "required": True},
 
         "created_at": {"default_value": datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S'), "type": str},
     }

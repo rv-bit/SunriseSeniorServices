@@ -1,4 +1,5 @@
 import os
+
 from flask import Flask
 from flask_login import LoginManager
 
@@ -20,9 +21,7 @@ def initializeApp():
 
     from backend.db import DB
 
-    app.config["DB"] = DB(os.environ.get("MONGO_URI"))
-
-    socketio.init_app(app)
+    app.config["DB"] = DB()
 
     from backend.views import views
     from backend.auth import auth
@@ -49,5 +48,7 @@ def initializeApp():
         if user:
             return User.make_from_dict(user)
         return None
+
+    socketio.init_app(app)
 
     return app

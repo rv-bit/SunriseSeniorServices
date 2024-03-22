@@ -1,7 +1,13 @@
+from backend.user import User, Anonymous
 import os
 
 from flask import render_template
-from backend import initializeApp, socketio
+from flask_login import LoginManager
+
+from backend import initializeApp
+
+from backend.db import DB
+from backend.services import socketio
 
 app = initializeApp()
 
@@ -16,5 +22,4 @@ if os.environ.get("NODE_ENV") == "production":
         return app.send_static_file('index.html')
 
 if __name__ == "__main__":
-    # app.run(debug=True, port=5000)
-    socketio.run(app, debug=True, port=5000)
+    socketio.run(app, debug=True)
