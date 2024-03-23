@@ -188,7 +188,7 @@ const Chat = () => {
         }
 
         if (selectedChatId) {
-            var urlSocket = undefined;
+            var urlSocket = 'https://sunriseseniorsevices.onrender.com';
 
             if (process.env.NODE_ENV === 'development') {
                 urlSocket = 'http://127.0.0.1:5000';
