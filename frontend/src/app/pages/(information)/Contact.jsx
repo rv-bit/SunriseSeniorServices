@@ -67,7 +67,7 @@ const Contact = () => {
         },
     });
 
-    const onSubmit = async (event, data) => {
+    const onSubmit = (event, data) => {
         event.preventDefault();
 
         let currentValidationSchema = z.object({
@@ -82,12 +82,21 @@ const Contact = () => {
         if (!validation.success) {
             const errorMessages = validation.error.formErrors.fieldErrors;
             setErrors(errorMessages);
-            return false;
+
+            return "Error";
+        }
+
+        if (data.emailFrom === data.emailTo) {
+            setErrors({
+                emailTo: ['Emails cannot be the same'],
+            });
+
+            return "Error";
         }
 
         setErrors(null);
 
-        return true
+        return "Success"
     }
 
     const handleEmailSend = (email) => {
@@ -102,65 +111,55 @@ const Contact = () => {
                     <h2 className='text-center font-extrabold underline mb-5 text-3xl'>Contact Us</h2>
                     <p className='text-center font-bold mb-5'>Our Managers Email is:A.Ciocan@wlv.ac.uk</p>
 
-                        <Form {...form}>
-                            <form onSubmit={(event) => {
-                                    const formSubmittedWithSuccess = onSubmit(event, form.getValues())
+                    <Form {...form}>
+                        <form onSubmit={(event) => {
+                                const formSubmittedWithSuccess = onSubmit(event, form.getValues())
 
-                                    if (formSubmittedWithSuccess) {
-                                        window.location.href = `mailto:${form.getValues()['emailTo']}?subject=${form.getValues()['subject']}&body=${JSON.stringify(form.getValues()['messageBody'])}`;
+                                console.log(formSubmittedWithSuccess);
 
-                                        form.reset();
+                                if (formSubmittedWithSuccess === "Success") {
+                                    const newWindow = window.open(`mailto:${form.getValues()['emailTo']}?subject=${form.getValues()['subject']}&body=${JSON.stringify(form.getValues()['messageBody'])}`);
+
+                                    if (newWindow) {
+                                        newWindow.opener = null;
                                     }
-                                    
-                                }} className="flex flex-col gap-5 items-center justify-center bg-slate-100 bg-opacity-55 rounded-2xl w-full mb-5 p-5">
-                                {formDataInputs.map((formDataInput, index) => {
-                                    return (
-                                        <FormField
-                                            key={`formField-${index}`}
-                                            control={form.control}
-                                            name={formDataInput.name}
-                                            render={({ field }) => (
-                                                <FormItem key={`formItem-input-${index}`} className='w-full'>
-                                                    <FormLabel>{formDataInput.label} {!formDataInput.optional ? <span className='text-red-500'>*</span> : ''}</FormLabel>
-                                                    
-                                                    <FormControl>
-                                                        {formDataInput.type === 'textarea' ? (
-                                                            <Textarea placeholder={formDataInput.placeholder} {...field} />
-                                                        ) : (
-                                                            <Input type={formDataInput.type || "text"} placeholder={formDataInput.placeholder} {...field} />
-                                                        )}                                                        
-                                                    </FormControl>
 
-                                                    {errors && errors[formDataInput.name] && errors[formDataInput.name].map((error, errorIndex) => (
-                                                        <FormMessage key={errorIndex}>
-                                                            {error}
-                                                        </FormMessage>
-                                                    ))}
-                                                </FormItem>
-                                            )}
-                                        />
-                                    )
-                                })}
-                                <Button type='submit' className='w-full bg-slate-600 hover:bg-slate-700 text-white'>Send</Button>
-                            </form>
+                                    form.reset();
+                                }
+                                
+                            }} className="flex flex-col gap-5 items-center justify-center bg-slate-100 bg-opacity-55 rounded-2xl w-full mb-5 p-5">
+                            {formDataInputs.map((formDataInput, index) => {
+                                return (
+                                    <FormField
+                                        key={`formField-${index}`}
+                                        control={form.control}
+                                        name={formDataInput.name}
+                                        render={({ field }) => (
+                                            <FormItem key={`formItem-input-${index}`} className='w-full'>
+                                                <FormLabel>{formDataInput.label} {!formDataInput.optional ? <span className='text-red-500'>*</span> : ''}</FormLabel>
+                                                
+                                                <FormControl>
+                                                    {formDataInput.type === 'textarea' ? (
+                                                        <Textarea placeholder={formDataInput.placeholder} {...field} />
+                                                    ) : (
+                                                        <Input type={formDataInput.type || "text"} placeholder={formDataInput.placeholder} {...field} />
+                                                    )}                                                        
+                                                </FormControl>
 
-                        </Form>
+                                                {errors && errors[formDataInput.name] && errors[formDataInput.name].map((error, errorIndex) => (
+                                                    <FormMessage key={errorIndex}>
+                                                        {error}
+                                                    </FormMessage>
+                                                ))}
+                                            </FormItem>
+                                        )}
+                                    />
+                                )
+                            })}
+                            <Button type='submit' className='w-full bg-slate-600 hover:bg-slate-700 text-white'>Send</Button>
+                        </form>
+                    </Form>
 
-                        {/* <div className='flex flex-col gap-2 items-center justify-center w-full'>
-                            <Label htmlFor='emailFrom'>Email</Label>
-                            <Input type='email' id='emailFrom' name='emailFrom' placeholder='Enter the email' />
-                        </div>
-
-                        <div className='flex flex-col gap-2 items-center justify-center w-full'>
-                            <Label htmlFor='emailTo'>Email</Label>
-                            <Input type='email' id='emailTo' name='emailTo' {...formData ? formData.emailTo : ''} />
-                        </div>
-
-                        <div className='flex flex-col gap-2 items-center justify-center w-full'>
-                            <Label htmlFor='messageBody'>Message</Label>
-                            <Textarea id='messageBody' name='messageBody' />
-                        </div> */}
-                    
                     <h2 className='text-center font-extrabold underline text-xl -mb-1'>Our Team</h2>
                     
                     <div className="mt-3 flex justify-center -space-x-2 overflow-hidden">
