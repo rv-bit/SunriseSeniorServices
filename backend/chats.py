@@ -124,6 +124,16 @@ def gatherMessagesByChat():
             "messages", {"chat_id": data})
 
         messages = [doc for doc in cursor]
+
+        senderInformation = current_app.config['DB'].Find(
+            "users", {"_id": messages[0]['sender_id']})
+
+        for message in messages:
+            message['sender'] = {
+                "first_name": senderInformation['first_name'],
+                "last_name": senderInformation['last_name']
+            }
+
         return jsonify({"messages": messages}), 200
 
     return render_template('index.html'), 200

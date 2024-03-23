@@ -28,11 +28,13 @@ def initializeApp():
     from backend.chats import chat
 
     from backend.joblisting import jobListing
+    from backend.geolocation import geoLocation
 
     app.register_blueprint(auth, url_prefix="/")
     app.register_blueprint(chat, url_prefix="/")
     app.register_blueprint(jobListing, url_prefix="/")
     app.register_blueprint(views, url_prefix="/")
+    app.register_blueprint(geoLocation, url_prefix="/")
 
     from backend.user import User, Anonymous
 

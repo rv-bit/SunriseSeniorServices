@@ -154,12 +154,12 @@ const JobListing = () => {
                 setWaitForChatToCreate(false);
 
                 if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
-                    handleOpenInNewTab(e, `/chat?currentJobId=${jobId}`);
+                    handleOpenInNewTab(e, `/chat?currentChatId=${chatId}`);
                 } else {
                     if (window.innerWidth < 1180) {
-                        navigate(`/chat?currentJobId=${jobId}`)
+                        navigate(`/chat?currentChatId=${chatId}`)
                     } else {
-                        navigate(`/chat?currentJobId=${jobId}`)
+                        navigate(`/chat?currentChatId=${chatId}`)
                     }
                 }
             }, 2500);
@@ -590,59 +590,28 @@ const JobListing = () => {
                                             </div>
 
                                             <ScrollArea className='w-full' style={{ height: `calc(100% - ${elementCurrentJobHeaderHeight}px)` }}>
-                                                <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
+                                                <div className='w-[55%] inline-block whitespace-normal break-words'>
+                                                    <div className='p-5'>
+                                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                        <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.location}</p>
+                                                    </div>
 
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
+                                                    <div className='p-5'>
+                                                        <h1 className='text-xl font-bold text-slate-900'>Job Full Description</h1>
 
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                        <p className='text-slate-600 line-clamp-2'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.description}</p>
+                                                    </div>
+
+                                                    {jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.additional_information && (
+                                                        <React.Fragment>
+                                                            <hr className='w-full opacity-30 border-t border-slate-400' />
+
+                                                            <div className='p-5'>
+                                                                <h1 className='text-xl font-bold text-slate-900'>Job Additional Details</h1>
+                                                                <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.additional_information}</p>
+                                                            </div>
+                                                        </React.Fragment>
+                                                    )}
                                                 </div>
 
                                                 <ScrollBar orientation="vertical" />

@@ -84,12 +84,12 @@ const ViewJobListing = () => {
                 setWaitForChatToCreate(false);
 
                 if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
-                    handleOpenInNewTab(e, `/chat?currentJobId=${jobId}`);
+                    handleOpenInNewTab(e, `/chat?currentChatId=${chatId}`);
                 } else {
                     if (window.innerWidth < 1180) {
-                        navigate(`/chat?currentJobId=${jobId}`)
+                        navigate(`/chat?currentChatId=${chatId}`)
                     } else {
-                        navigate(`/chat?currentJobId=${jobId}`)
+                        navigate(`/chat?currentChatId=${chatId}`)
                     }
                 }
             }, 2500);
@@ -220,7 +220,7 @@ const ViewJobListing = () => {
                                     </div>
                                 </div>
 
-                                <p className='text-slate-600 text-opacity-75'>Posted by <span className='text-slate-900 underline'>{jobListing?.person}</span></p>
+                                <p className='my-5 text-slate-600 text-opacity-75'>Posted by <span className='text-slate-900 underline'>{jobListing?.person}</span></p>
 
                                 <div className='mt-5'>
                                     <p className='text-slate-600 text-opacity-75'>Posted on <span className='text-slate-900'>{jobListing?.posted_at}</span></p>

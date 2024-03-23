@@ -9,7 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/app/components/ui/alert-dialog"
 
-export const Alertbox = ({ Title, Description, onSubmit, onCancel }) => {
+const Alertbox = ({ Title, Description, onSubmit, onCancel, button }) => {
     return (
         <AlertDialog defaultOpen={true}>
             <AlertDialogContent className="w-[400px] max-sm:w-[330px]">
@@ -18,10 +18,12 @@ export const Alertbox = ({ Title, Description, onSubmit, onCancel }) => {
                     <AlertDialogDescription>{Description}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={(e) => { onCancel(e)}}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={(e) => { onSubmit(e)}} >Continue</AlertDialogAction>
+                    <AlertDialogCancel onClick={(e) => { onCancel(e)}}>{button.second}</AlertDialogCancel>
+                    <AlertDialogAction onClick={(e) => { onSubmit(e)}}>{button.main}</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     )
 }
+
+export default Alertbox;

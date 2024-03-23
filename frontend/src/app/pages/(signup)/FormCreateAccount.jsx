@@ -76,6 +76,11 @@ const FormCreateAccount = () => {
             return;
         }
 
+        const informationFromHome = location.state?.stateOptionsFromHome;
+        if (informationFromHome) {
+            console.log(informationFromHome);
+        }
+
         const informationGiven = location.state?.informationGiven;
         if (informationGiven) {
             const formDataTemp = {
@@ -104,14 +109,6 @@ const FormCreateAccount = () => {
         open: false,
         message: '',
     });
-
-    const alertHandleClose = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-
-        setAlertState({ ...alertState, open: false });
-    }
 
     useEffect(() => {
         const createUserAndNavigate = async () => {
@@ -297,7 +294,6 @@ const FormCreateAccount = () => {
             <MultiForm
                 onSubmit={onSubmit}
                 handleSetOptionClick={handleSetOptionClick}
-                alertHandleClose={alertHandleClose}
                 setCurrentStep={setCurrentStep}
                 setCurrentSubStep={setCurrentSubStep}
                 setHasUserNavigatedBack={setHasUserNavigatedBack}        

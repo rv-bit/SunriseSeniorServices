@@ -404,7 +404,7 @@ const Chat = () => {
 
                                                     <div className='flex flex-col w-full gap-1'>
                                                         <div className='align-top'>
-                                                            <h1>{chatMessage.sender_id} <span className='text-xs'>{dateFormated}</span></h1>
+                                                            <h1>{chatMessage.sender.first_name + " " + chatMessage.sender.last_name} <span className='text-xs'>{dateFormated}</span></h1>
                                                         </div>
 
                                                         <div className='align-bottom bg-slate-200 rounded-md p-5 overflow-hidden'>
@@ -422,7 +422,10 @@ const Chat = () => {
 
                                 <div className='px-5'>
                                     <div className='flex items-center justify-center w-full border border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200'>
-                                        <label className='flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[#ed6c39de] focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text'>
+                                        <label
+                                            onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage(e, selectedChatId)} 
+                                            className='flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[#ed6c39de] focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text'>
+                                            
                                             <input type='text' ref={chatBoxRef} className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a message...'/>
                                         </label>
                                         <hr className='border border-slate-300 h-[90%] mr-5'/>
