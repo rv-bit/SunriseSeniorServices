@@ -49,7 +49,7 @@ export default function App () {
         }
         fetchData();
 
-        var urlSocket = undefined;
+        var urlSocket = import.meta.env.VITE_SOCKET_URL;
 
         if (process.env.NODE_ENV === 'development') {
             urlSocket = 'http://127.0.0.1:5000';
@@ -72,7 +72,9 @@ export default function App () {
         });
 
         return () => {
-            console.log('Disconnecting from the server');
+            socket.off('connect');
+            socket.off('disconnect');
+            socket.off('connect_error');
             socket.disconnect();
 
             setSocket(null);

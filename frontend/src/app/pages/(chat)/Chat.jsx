@@ -215,7 +215,9 @@ const Chat = () => {
         messageBoxValue.value = '';
         messageBoxValue.focus();
 
-        return () => {}
+        return () => {
+            socket.off('connectChat', () => {});
+        };
     }, [selectedChatId])
 
     useEffect(() => {

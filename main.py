@@ -23,6 +23,6 @@ if os.environ.get("NODE_ENV") == "production":
 
 if __name__ == "__main__":
     if os.environ.get("NODE_ENV") == "production":
-        socketio.run(app)
+        socketio.run(app, port=os.environ.get("PORT"))
     else:
         socketio.run(app, debug=True)
