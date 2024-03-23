@@ -1,16 +1,14 @@
 import { Suspense, useContext, useState, useEffect, lazy } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 import AuthContext from '@/app/context/AuthContext'
 
 import { Post, Get } from '@/app/lib/utils' // Common functions 
 
-import formSteps from '@/app/data/FormJobListing';
+import formSteps from '@/app/data/FormSignUp';
 
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-
-import { Notification } from '@/app/components/custom/Notifications' // Custom components
 
 const MultiForm = lazy(() => import('@/app/components/custom/MultiForm'));
 
@@ -21,10 +19,30 @@ const defaultValues = formSteps.reduce((values, step) => {
     return values;
 }, {});
 
-async function createJobListing(formData, alertState, setAlertState) {
+async function checkAccountUsingEmail(email, alertState, setAlertState) {
+    if (!email) return;
+
+    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {"checkAccount": true, "email": email});
+
+    if (!response.ok) {
+        const data = await response.json();
+        setAlertState({ ...alertState, open: true, message: data.Error });
+        return false;
+    }
+
+    const data = await response.json();
+    if (data.accountExistsAlready) {
+        setAlertState({ ...alertState, open: true, message: 'An account with this email already exists.' });
+        return false;
+    }
+
+    return true;
+}
+
+async function createUser(formData, alertState, setAlertState) {
     if (!formData) return;
 
-    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createJobListing`, {formData});
+    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/signup`, {formData});
     if (!response.ok) {
         const data = await response.json();
         setAlertState({ ...alertState, open: true, message: data.Error });
@@ -35,8 +53,9 @@ async function createJobListing(formData, alertState, setAlertState) {
     return true;
 }
 
-const FormNewJobListing = () => {
+const FormCreateAccount = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const {userAuthData, setUserAuth} = useContext(AuthContext);
 
@@ -44,9 +63,7 @@ const FormNewJobListing = () => {
     const [currentSubStep, setCurrentSubStep] = useState(1);
     
     const [formData, setFormData] = useState({});
-    
-    const [formDataOptions, setFormDataOptions] = useState([]);
-    const [daysWeek, setDaysWeek] = useState([]);
+    const [formDataOptions, setFormDataOptions] = useState({});
 
     const [hasUserNavigatedBack, setHasUserNavigatedBack] = useState(false);
     const [errors, setErrors] = useState(null);
@@ -54,9 +71,34 @@ const FormNewJobListing = () => {
     const form = useForm({defaultValues});
 
     useEffect(() => {
-        if (userAuthData === null || userAuthData === undefined || (userAuthData && userAuthData.account_type[0] !== 'option_requester')) {
+        if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
             navigate('/');
             return;
+        }
+
+        const informationFromHome = location.state?.stateOptionsFromHome;
+        if (informationFromHome) {
+            console.log(informationFromHome);
+        }
+
+        const informationGiven = location.state?.informationGiven;
+        if (informationGiven) {
+            const formDataTemp = {
+                email: informationGiven.email,
+                first_name: informationGiven.given_name,
+                last_name: informationGiven.family_name,
+            }
+
+            Object.entries(formDataTemp).forEach(([key, value]) => {
+                form.setValue(key, value);
+
+                setFormData(prevData => {
+                    const updatedData = { ...prevData, [key]: value };
+                    return updatedData;
+                });
+            });
+
+            setCurrentStep(1);
         }
 
         return () => {};
@@ -69,16 +111,15 @@ const FormNewJobListing = () => {
     });
 
     useEffect(() => {
-        const createJobListingAndNavigate = async () => {
+        const createUserAndNavigate = async () => {
             if (currentStep === formSteps.length) {
                 setUserLoad(true);
-
-                const JobListingCreated = await createJobListing(formData, alertState, setAlertState);
+                const userCreated = await createUser(formData, alertState, setAlertState);
 
                 setTimeout(() => {
-                    if (JobListingCreated) {
+                    if (userCreated) {
                         setUserLoad(false);
-                        navigate('/job-listings');
+                        navigate('/login');
                     } else {
                         setUserLoad(false);
                         navigate('/');
@@ -96,10 +137,10 @@ const FormNewJobListing = () => {
             }
         };
 
-        createJobListingAndNavigate();
+        createUserAndNavigate();
     }, [formData]);
 
-    const handleSetOptionClick = (optionName) => {
+    const handleSetOptionClick = (optionName, subStep) => {    
         setFormDataOptions(prevState => {
             const currentStepOptions = formSteps
                 .filter(stepObj => stepObj.fields.some(field => field.step === currentStep))
@@ -108,24 +149,15 @@ const FormNewJobListing = () => {
 
             const sameStepKeys = currentStepOptions.map(option => option.name);
 
-            const currentStepBasedOnSubStep = formSteps[currentStep];
-            const stepName = currentStepBasedOnSubStep?.stepsNames?.[currentSubStep];
+            const currentStepBasedOnSubStep = formSteps.find(stepObj => stepObj.fields.some(field => field.step === subStep));
+            const stepName = currentStepBasedOnSubStep?.stepsNames?.[subStep];
 
             if (!stepName) return prevState;
 
             const newState = { ...prevState };
             if (!newState[stepName]) newState[stepName] = [];
 
-            if (newState[stepName].length === 0) {
-                newState[stepName].push(optionName);
-
-                return newState;
-            }
-
-            newState[stepName] = newState[stepName].filter(option => {
-                return option !== optionName;
-            });            
-
+            newState[stepName] = newState[stepName].filter(option => option !== optionName);
             sameStepKeys.forEach(key => {
                 newState[stepName].splice(key, 1);
             });
@@ -136,19 +168,7 @@ const FormNewJobListing = () => {
         });
     };
 
-    const handleSetDays = (optionName) => {
-        setDaysWeek(prevState => {
-            const newState = [...prevState];
-            if (newState.includes(optionName)) {
-                newState.splice(newState.indexOf(optionName), 1);
-            } else {
-                newState.push(optionName);
-            }
-            return newState;
-        });
-    };
-
-    const onSubmit = (data) => {
+    const moveToNextStep = (data) => {
         const dataWithoutOptionKeys = Object.keys(data)
             .filter(key => !key.includes('option_'))
             .reduce((result, key) => {
@@ -156,7 +176,7 @@ const FormNewJobListing = () => {
                 return result;
             }, {});
 
-        const formDataWithOptions = { ...dataWithoutOptionKeys, options: formDataOptions};
+        const formDataWithOptions = { ...dataWithoutOptionKeys, options: formDataOptions };
 
         const currentFields = formSteps[currentStep].fields.filter(field => field.step ? field.step === currentSubStep : true);
         let currentValidationSchema = z.object(currentFields.reduce((schema, field) => {
@@ -195,11 +215,10 @@ const FormNewJobListing = () => {
             setErrors(errorMessages);
             return;
         }
-
+        
         const allFieldsFilled = formSteps[currentStep].fields
             .filter(field => field.step ? field.step === currentSubStep : true)
-            .every(field => field.optional || data[field.name]);
-
+            .every(field => data[field.name]);
         const hasButton = formSteps[currentStep].fields
             .filter(field => field.step ? field.step === currentSubStep : true)
             .some(field => field.type === "button");
@@ -216,6 +235,31 @@ const FormNewJobListing = () => {
                 setCurrentStep(currentStep + 1);
                 setCurrentSubStep(1);
             }
+        }
+    }
+
+    const onSubmit = async (data) => {
+        if (formData.email && !data.email) {
+            data.email = formData.email;
+        }
+
+        const email = data.email || formData.email;
+        if (email && currentStep === 0 && currentSubStep === 1) {
+            setUserLoad(true);
+
+            const accountDoesNotExist = await checkAccountUsingEmail(email, alertState, setAlertState);
+            if (!accountDoesNotExist) {
+                setTimeout(() => {
+                    setUserLoad(false);
+                    navigate('/login'); 
+                }, 2000);
+                return;
+            }
+
+            setUserLoad(false);
+            moveToNextStep(data);
+        } else {
+            moveToNextStep(data);
         }
     }
 
@@ -247,13 +291,6 @@ const FormNewJobListing = () => {
                 </div>
             </div>
         }>
-            {alertState.open && (
-                <Notification
-                    alertState={alertState}
-                    setAlertState={setAlertState}
-                />
-            )}
-
             <MultiForm
                 onSubmit={onSubmit}
                 handleSetOptionClick={handleSetOptionClick}
@@ -272,11 +309,9 @@ const FormNewJobListing = () => {
                 form={form}
                 formData={formData}
                 errors={errors}
-
-                handleSetCheckboxValues={handleSetDays}
             />
         </Suspense>
     )
-}
+};
 
-export default FormNewJobListing
+export default FormCreateAccount;

@@ -1,10 +1,11 @@
-import { useEffect, useContext } from 'react';
+import { useEffect, useContext, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import AuthContext from '@/app/context/AuthContext'
 
 import { Post, Get } from '@/app/lib/utils' // Common functions
-import { Alertbox } from '@/app/components/custom/Alertbox'; // Custom components
+
+const Alertbox = lazy(() => import('@/app/components/custom/Alertbox'));
 
 const Logout = () => {
     const {userAuthData, setUserAuth} = useContext(AuthContext);
@@ -17,7 +18,8 @@ const Logout = () => {
         const data = await response.json();
 
         if (!response.ok) {
-            return alert('You are not logged in');
+            setUserAuth(null);
+            navigate('/');
         }
 
         if (response.ok) {
@@ -42,7 +44,22 @@ const Logout = () => {
     }, []);
 
     return (
-        <Alertbox Title="Logout" Description="Are you sure you want to logout?" onSubmit={onSubmit} onCancel={onCancel} />
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-screen">
+                <div className="relative">
+                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    </div>
+                </div>
+            </div>
+        }>
+            <Alertbox 
+                Title="Logout" 
+                Description="Are you sure you want to logout?" 
+                onSubmit={onSubmit} 
+                onCancel={onCancel} 
+                button={{ second: "Cancel", main: "Submit" }} />
+        </Suspense>
     )
 }
 

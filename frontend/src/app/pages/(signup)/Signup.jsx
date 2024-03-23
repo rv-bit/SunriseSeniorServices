@@ -8,8 +8,6 @@ import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
 import { Post, Get, googleCheckAccount, userLogIn } from '@/app/lib/utils' // Common functions
 
-import FormCreateAccount from '../(get-started-form)/FormCreateAccount';
-
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
 import { Button } from "@/app/components/ui/button"
@@ -47,14 +45,6 @@ const Signup = () => {
         open: false,
         message: '',
     });
-
-    const alertHandleClose = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-
-        setAlertState({ ...alertState, open: false });
-    }
 
     const onGoogleLoginOrCreate = useGoogleLogin({
         onError: response => {
@@ -109,9 +99,8 @@ const Signup = () => {
         <div className="flex items-center justify-center min-h-5">
             {alertState.open && (
                 <Notification
-                open={alertState.open}
-                handleClose={alertHandleClose}
-                message={alertState.message}
+                    alertState={alertState}
+                    setAlertState={setAlertState}
                 />
             )}
 

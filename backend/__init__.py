@@ -1,4 +1,5 @@
 import os
+
 from flask import Flask
 from flask_login import LoginManager
 
@@ -20,20 +21,20 @@ def initializeApp():
 
     from backend.db import DB
 
-    app.config["DB"] = DB(os.environ.get("MONGO_URI"))
-
-    socketio.init_app(app)
+    app.config["DB"] = DB()
 
     from backend.views import views
     from backend.auth import auth
     from backend.chats import chat
 
     from backend.joblisting import jobListing
+    from backend.geolocation import geoLocation
 
     app.register_blueprint(auth, url_prefix="/")
     app.register_blueprint(chat, url_prefix="/")
     app.register_blueprint(jobListing, url_prefix="/")
     app.register_blueprint(views, url_prefix="/")
+    app.register_blueprint(geoLocation, url_prefix="/")
 
     from backend.user import User, Anonymous
 
@@ -49,5 +50,7 @@ def initializeApp():
         if user:
             return User.make_from_dict(user)
         return None
+
+    socketio.init_app(app)
 
     return app

@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect, useLayoutEffect, Suspense, lazy } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useContext, Suspense, lazy } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
-import { isMobile } from 'react-device-detect';
+import AuthContext from '@/app/context/AuthContext'
 
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -12,24 +12,26 @@ import { ScrollArea, ScrollBar } from '@/app/components/ui/scroll-area';
 
 const inputFields = [
     { name: 'jobTitle', placeholder: 'Job Title', icon: <BsSearch className='mx-3 size-5'/>, styleProps: `
-        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-violet-700 
+        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[#ed6c39de]
         focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text
     `},
     { name: 'location', placeholder: 'Location', icon: <BsFillGeoAltFill className='mx-3 size-5'/>, styleProps: `
-        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-r-2 focus-within:border-violet-700 
+        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-r-2 focus-within:border-[#ed6c39de] 
         focus-within:rounded-br-lg focus-within:rounded-tr-lg focus-within:rounded-bl-sm focus-within:rounded-tl-sm focus-within:border-b-4 hover:cursor-text
     `}
 ]
 
 import useDocumentTitle from '@/app/hooks/UseDocumentTitle';
 
-import { Get, formatTags } from '@/app/lib/utils';
+import { Get, Post, formatTags } from '@/app/lib/utils';
 import { Skeleton } from '@/app/components/ui/skeleton';
 
-const Notification = lazy(() => import('@/app/components/custom/Notifications'));
+import { Notification } from '@/app/components/custom/Notifications' // Custom components
 
 const JobListing = () => {
     useDocumentTitle('Job Listings');
+
+    const {userAuthData} = useContext(AuthContext);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -52,14 +54,6 @@ const JobListing = () => {
         open: false,
         message: '',
     });
-
-    const alertHandleClose = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-
-        setAlertState({ ...alertState, open: false });
-    }
 
     const handleInputChange = (e, inputName) => {
         setSearchInput({
@@ -86,23 +80,89 @@ const JobListing = () => {
         setCurrentJobIds(null);
     }
     
-    const handleCurrentJobId = (e, jobId, middle) => {
+    const handleOpenInNewTab = useCallback((e, locationTab) => {
         e.preventDefault();
 
-        if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
-            const newWindow = window.open(`${window.location.origin}/#/job-listings/viewjob?currentJobId=${jobId}`, '_blank', 'noopener,noreferrer');
+        const newWindow = window.open(`${window.location.origin}/#${locationTab}`, '_blank', 'noopener,noreferrer');
 
-            if (newWindow) {
-                newWindow.opener = null;
-            }
+        if (newWindow) {
+            newWindow.opener = null;
+        }
+    })
+    
+    const handleCurrentJobId = (e, jobId) => {
+        e.preventDefault();
+
+        if (e.altKey === true && e.type === 'click' || e.type === 'auxclick') {
+            handleOpenInNewTab(e, `/job-listings/viewjob?currentJobId=${jobId}`);
         } else {
             setCurrentJobIds(jobId);
 
-            if (isMobile || window.innerWidth < 1180) {
+            if (window.innerWidth < 1180) {
                 navigate(`/job-listings/viewjob?currentJobId=${jobId}`)
             } else {
                 navigate(`/job-listings?currentJobId=${jobId}`)
             }
+        }
+    }
+
+    const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
+
+    const createChats = useCallback(async (chatId) => {
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createChat`, {data: {
+            'id': chatId,
+            'members': [userAuthData._id, userFromJobId.id],
+            'name': jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.title,
+        }});
+
+        if (!response.ok) {
+            const data = await response.json();
+
+            setAlertState({ ...alertState, open: true, message: data.Error });
+            return false;
+        }
+
+        const data = await response.json();
+        if (data.chatExists) {
+            setAlertState({ ...alertState, open: true, message: 'Chat already exists, moving to the chat' });
+            return true;
+        }
+
+        if (data.Success) {
+            return true;
+        }
+    });
+
+    const handleChat = async (e, jobId) => {
+        e.preventDefault();
+
+        if (userAuthData === null || userAuthData === undefined) {            
+            navigate('/login', { state: { info: 'You must be logged in to send a message!' } } );
+        } else {
+            setWaitForChatToCreate(true);
+
+            const chatId = jobId + userAuthData._id + userFromJobId.id;
+            const chatCreated = await createChats(chatId);
+            
+            if (!chatCreated) {
+                return setTimeout(() => {
+                    setWaitForChatToCreate(false);
+                }, 2500);
+            }
+            
+            setTimeout(() => {
+                setWaitForChatToCreate(false);
+
+                if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
+                    handleOpenInNewTab(e, `/chat?currentChatId=${chatId}`);
+                } else {
+                    if (window.innerWidth < 1180) {
+                        navigate(`/chat?currentChatId=${chatId}`)
+                    } else {
+                        navigate(`/chat?currentChatId=${chatId}`)
+                    }
+                }
+            }, 2500);
         }
     }
 
@@ -300,9 +360,7 @@ const JobListing = () => {
         }>
             {alertState.open && (
                 <Notification
-                    open={alertState.open}
-                    handleClose={alertHandleClose}
-                    message={alertState.message}
+                    alertState={alertState}
                 />
             )}
             
@@ -373,8 +431,12 @@ const JobListing = () => {
                             </div>
                         </div>
 
-                        <div className='flex items-center justify-center'>
-                            <h1 onClick={() => {navigate('/job-listings/new')}} className='w-fit my-5 text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
+                        <div className='my-5'>
+                            {userAuthData && userAuthData.account_type[0] === 'option_requester' && (
+                                <div className='flex items-center justify-center'>
+                                    <h1 onClick={() => {navigate('/job-listings/new')}} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -390,7 +452,7 @@ const JobListing = () => {
                                         <div className='flex items-center justify-between m-5'>
                                             <div className='w-full'>
                                                 <div className="space-y-2 p-5">
-                                                    <Skeleton className="h-4 w-[350px]" />
+                                                    <Skeleton className="h-4 w-[250px] md:w-[350px] lg:w-[350px]" />
                                                     <Skeleton className="h-4 w-[200px]" />
 
                                                     <div className='flex flex-row items-center gap-2'>
@@ -428,7 +490,7 @@ const JobListing = () => {
                                         ref={elementJobListingAdvertisementRef}
                                         key={newIndex}
                                         onClick={(e) => handleCurrentJobId(e, jobId)}
-                                        onAuxClick={(e) => handleCurrentJobId(e, jobId, 'middle')}
+                                        onAuxClick={(e) => handleCurrentJobId(e, jobId)}
                                         className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' } ${currentJobId && currentJobId === jobId ? 'border-[#e8562d]' : 'border-black' }`}>
 
                                         <div className='flex items-center justify-between m-5'>
@@ -472,11 +534,11 @@ const JobListing = () => {
                         {currentJobId && (
                             <div className='w-[600px] h-dvh md:min-h-svh max-md:min-h-svh sticky top-2 z-50 lg:block md:hidden sm:hidden extraSm:hidden max-extraSm:hidden mr-5'>
                                 <div 
-                                    className={`bg-white border-2 border-black rounded-lg box-border`}
+                                    className={`bg-white border-2 border-black rounded-lg box-border w-[600px]`}
                                     style={{ height: `${newHeight + 2}px`  }}
                                 >
                                     {waitingForUser ? 
-                                        <div className='w-[600px]'>
+                                        <React.Fragment>
                                             <div className='flex items-center'>
                                                 <div className="space-y-2 p-5">
                                                     <Skeleton className="h-4 w-[350px]" />
@@ -492,7 +554,7 @@ const JobListing = () => {
                                                 <Skeleton className="h-4 w-full" />
                                                 <Skeleton className="h-4 w-full" />
                                             </div>
-                                        </div>
+                                        </React.Fragment>
                                     :
                                         <React.Fragment>
                                             <div className='flex items-center'>
@@ -518,65 +580,38 @@ const JobListing = () => {
                                                             })}
                                                         </div>
 
-                                                        <Button className='mt-5 bg-[#dd673cfd] bg-opacity-90 hover:bg-[#e8432dea] hover:bg-opacity-100'>Message</Button>
+                                                        <Button 
+                                                            disabled={waitForChatToCreate}
+                                                            onClick={(e) => handleChat(e, currentJobId)}
+                                                            onAuxClick={(e) => handleChat(e, currentJobId)}
+                                                            className='mt-5 bg-[#dd673cfd] bg-opacity-90 hover:bg-[#e8432dea] hover:bg-opacity-100'>Message</Button>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <ScrollArea className='w-full' style={{ height: `calc(100% - ${elementCurrentJobHeaderHeight}px)` }}>
-                                                <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
+                                                <div className='w-[55%] inline-block whitespace-normal break-words'>
+                                                    <div className='p-5'>
+                                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                        <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.location}</p>
+                                                    </div>
 
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
+                                                    <div className='p-5'>
+                                                        <h1 className='text-xl font-bold text-slate-900'>Job Full Description</h1>
 
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
-                                                </div>
-                                                                                        <div className='p-5'>
-                                                    <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                    <p className='text-slate-600'>Location: London, UK, WV10 9QL</p>
+                                                        <p className='text-slate-600 line-clamp-2'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.description}</p>
+                                                    </div>
+
+                                                    {jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.additional_information && (
+                                                        <React.Fragment>
+                                                            <hr className='w-full opacity-30 border-t border-slate-400' />
+
+                                                            <div className='p-5'>
+                                                                <h1 className='text-xl font-bold text-slate-900'>Job Additional Details</h1>
+                                                                <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.additional_information}</p>
+                                                            </div>
+                                                        </React.Fragment>
+                                                    )}
                                                 </div>
 
                                                 <ScrollBar orientation="vertical" />

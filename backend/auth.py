@@ -1,18 +1,21 @@
+from backend.utils.prepare_document import prepare_document
+from backend.user import User
+
+from datetime import timedelta
+from email.utils import parseaddr
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from flask_login import login_user, logout_user, current_user
+from flask import current_app, Blueprint, jsonify, render_template, request, session
+
 import datetime
 import os
 import uuid
 import requests
 
-from flask import current_app, Blueprint, jsonify, render_template, request
-from flask_login import login_user, logout_user, current_user
+from dotenv import load_dotenv
 
-from backend.user import User
-
-from werkzeug.security import generate_password_hash, check_password_hash
-from email.utils import parseaddr
-from datetime import timedelta
-
-from backend.utils.prepare_document import prepare_document
+load_dotenv()
 
 auth = Blueprint('auth', __name__)
 
@@ -37,9 +40,10 @@ def login():
 
         user = User(userFound)
         login_user(user, duration=timedelta(days=1))
+
         return jsonify({"user": current_user.get_user_info()}), 200
 
-    return render_template('index.html')
+    return render_template('index.html'), 200
 
 
 @auth.route('/signup', methods=['GET', 'POST'])
@@ -91,7 +95,7 @@ def signup():
             print("Error:", e)
             return jsonify({"Error": "There has been an error, please try again later"}), 403
 
-    return render_template('index.html')
+    return render_template('index.html'), 200
 
 
 @auth.route('/google/checkAccount', methods=['GET', 'POST'])
@@ -129,16 +133,16 @@ def googleCheckAccount():
 
         return jsonify(user_info), 200
 
-    return render_template('index.html')
+    return render_template('index.html'), 200
 
 
 @auth.route('/logout')
 def logout():
     if not current_user.is_authenticated:
-        return jsonify({"Error": "User is not logged in"}), 403
+        return jsonify({"Error": "You are not logged in"}), 403
 
     if request.method == 'GET':
         logout_user()
         return jsonify({"user": "Anonymous"}), 200
 
-    return render_template('index.html')
+    return render_template('index.html'), 200

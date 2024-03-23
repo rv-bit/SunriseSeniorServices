@@ -6,7 +6,7 @@ export const Post = async (url, data) => {
     const response = await fetch(url, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
         body: JSON.stringify(data)
     });
@@ -18,7 +18,7 @@ export const Get = async (url, body) => {
     const response = await fetch(url, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
         body: body ? JSON.stringify(body) : null
     });
@@ -101,6 +101,39 @@ export const formatTags = (tags) => {
     }
 
     return returnTags;
+}
+
+export const formatDate = (date) => {
+    const dateParts = date.split('-');
+    const formattedDate = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}T${dateParts[3]}:${dateParts[4]}:${dateParts[5]}`;
+
+    const newDate = new Date(formattedDate);
+    const currentDate = new Date();
+
+    const newDateDay = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
+    const currentDateDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+
+    const diffTime = Math.abs(newDateDay - currentDateDay);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    var returnDate = "";
+
+    const hours = newDate.getHours() === 0 ? "00" : newDate.getHours().toString().toLocaleString('en-GB', { minimumIntegerDigits: 2, useGrouping: false });
+    const minutes = newDate.getMinutes() === 0 ? "00" : newDate.getMinutes().toLocaleString('en-GB', { minimumIntegerDigits: 2, useGrouping: false });
+
+    switch (diffDays) {
+        case 0:
+            returnDate = "Today at " + hours + ":" + minutes;
+            break
+        case 1:
+            returnDate = "Yesterday at " + hours + ":" + minutes;
+            break
+        default:
+            returnDate = newDate.toDateString();
+            break;
+    }
+
+    return returnDate;
 }
 
 export function cn(...inputs) {

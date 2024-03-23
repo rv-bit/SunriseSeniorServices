@@ -70,7 +70,25 @@
 	* {
 		@apply border-border;
 	}
+
 	body {
 		@apply bg-background text-foreground;
+
+		-webkit-font-smoothing: auto;
+		-moz-osx-font-smoothing: auto;
+
+		scroll-behavior: smooth;
 	}
+}
+
+.input-with-symbol::before {
+	content: '£';
+	position: absolute;
+	margin-left: 0.7rem;
+	margin-top: 0.51rem;
+	opacity: 0.5;
+}
+
+.input-with-symbol input {
+	padding-left: 1.5rem;
 }

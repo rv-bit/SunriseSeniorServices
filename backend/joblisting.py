@@ -1,7 +1,7 @@
 import uuid
 
 from flask import current_app, jsonify, Blueprint, render_template, request
-from flask_login import current_user
+from flask_login import login_required, current_user
 
 from backend.utils.prepare_document import prepare_document
 
@@ -9,6 +9,7 @@ jobListing = Blueprint('jobListing', __name__)
 
 
 @jobListing.route("/createJobListing", methods=["GET", "POST"])
+@login_required
 def createJobListing():
     if not current_user.is_authenticated:
         return jsonify({"Error": "You are not logged in"}), 403
@@ -51,7 +52,7 @@ def createJobListing():
             print("Error:", e)
             return jsonify({"Error": "There has been an error, please try again later"}), 403
 
-    return render_template('index.html')
+    return render_template('index.html'), 200
 
 
 @jobListing.route("/getJobListingById", methods=["GET"])
@@ -95,7 +96,7 @@ def getJobListingById():
 
         return jsonify(newJob), 200
 
-    return render_template('index.html')
+    return render_template('index.html'), 200
 
 
 @jobListing.route("/getJobListings", methods=["GET"])
@@ -109,6 +110,11 @@ def getJobListings():
         newJobListings = []
 
         for job in jobListings:
+            # This is to make sure that the user who created the job listing does not see it in the list
+            if current_user and current_user.is_authenticated:
+                if job['user_id'] == current_user.get_id():
+                    continue
+
             job['location'] = job.get(
                 'location', None) or "Remote"
             job['hours'] = job.get('hours', None) or 0
@@ -138,7 +144,7 @@ def getJobListings():
 
         return jsonify(newJobListings), 200
 
-    return render_template('index.html')
+    return render_template('index.html'), 200
 
 
 @jobListing.route("/getUserByIdForJobListing", methods=["GET"])
@@ -162,4 +168,4 @@ def getUserByIdForJobListing():
 
         return jsonify(newUserData), 200
 
-    return render_template('index.html')
+    return render_template('index.html'), 200

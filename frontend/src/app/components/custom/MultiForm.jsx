@@ -24,8 +24,25 @@ import dayjs from "dayjs"
 
 import { Stepper, Step } from 'react-form-stepper';
 
-const MultiForm = ({ onSubmit, handleSetOptionClick, alertHandleClose, setCurrentStep, setCurrentSubStep, setHasUserNavigatedBack, alertState, userIsLoading, currentStep, currentSubStep, formSteps, form, formData, errors, handleSetCheckboxValues }) => {
+const MultiForm = (props) => {
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    const onSubmit = props.onSubmit;
+    const handleSetOptionClick = props.handleSetOptionClick;
+    const setCurrentStep = props.setCurrentStep;
+    const setCurrentSubStep = props.setCurrentSubStep;
+    const setHasUserNavigatedBack = props.setHasUserNavigatedBack;
+    const userIsLoading = props.userIsLoading;
+
+    const formSteps = props.formSteps;
+    const form = props.form;
+    const formData = props.formData;
+
+    const errors = props.errors;
+    const handleSetCheckboxValues = props.handleSetCheckboxValues;
+    const alertState = props.alertState;
+    const currentStep = props.currentStep;
+    const currentSubStep = props.currentSubStep;
 
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
@@ -38,9 +55,8 @@ const MultiForm = ({ onSubmit, handleSetOptionClick, alertHandleClose, setCurren
         <div className="max-w-screen-sm mx-auto">
             {alertState.open && (
                 <Notification
-                    open={alertState.open}
-                    handleClose={alertHandleClose}
-                    message={alertState.message}
+                    alertState={alertState}
+                    setAlertState={props.setAlertState}
                 />
             )}
 
