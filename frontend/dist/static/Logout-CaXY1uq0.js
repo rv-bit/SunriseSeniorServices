@@ -1,7 +1,0 @@
-import{r as s,_ as i,A as c,u as d,j as e,G as b}from"./index-BkQICH-X.js";const f=s.lazy(()=>i(()=>import("./Alertbox-BH7F12w1.js"),__vite__mapDeps([0,1,2,3,4,5,6,7,8,9]),import.meta.url)),x=()=>{const{userAuthData:a,setUserAuth:n}=s.useContext(c),t=d(),u=async o=>{o.preventDefault();const r=await b("/logout");await r.json(),r.ok||(n(null),t("/")),r.ok&&(n(null),t("/"))},l=o=>{o.preventDefault(),t("/")};return s.useEffect(()=>{if(a==null){t("/");return}return()=>{}},[]),e.jsx(s.Suspense,{fallback:e.jsx("div",{className:"flex items-center justify-center h-screen",children:e.jsxs("div",{className:"relative",children:[e.jsx("div",{className:"h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"}),e.jsx("div",{className:"absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin"})]})}),children:e.jsx(f,{Title:"Logout",Description:"Are you sure you want to logout?",onSubmit:u,onCancel:l,button:{second:"Cancel",main:"Submit"}})})};export{x as default};
-function __vite__mapDeps(indexes) {
-  if (!__vite__mapDeps.viteFileDeps) {
-    __vite__mapDeps.viteFileDeps = ["./Alertbox-BH7F12w1.js","./index-BkQICH-X.js","./index-BjR-M_RL.css","./extends-CCbyfPlC.js","./index-CTZesL8v.js","./index-BDpOC3Tw.js","./index-Bo7cNx1T.js","./index-BBjFYfzN.js","./Combination-hGSD0l9f.js","./button-DZFmWa-B.js"]
-  }
-  return indexes.map((i) => __vite__mapDeps.viteFileDeps[i])
-}
