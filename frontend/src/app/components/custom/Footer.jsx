@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
+import PagesData from "@/app/data/PagesData";
+
 const Footer = () => {
     return (
         <section className="mt-auto bg-[#f8f8f9] border-t-[1px] border-[#49494920]">
@@ -14,8 +16,11 @@ const Footer = () => {
                     </div>
                 </div>
 
-                <div className="opacity-50"><hr className="border-[#4949499e]"/></div>
-                    <div className="flex align-middle justify-center mt-4 mb-[-10px]">
+                <hr className="border-[#4949499e] opacity-50"/>
+
+                <div className="flex flex-col align-middle justify-center mt-4 mb-[-10px] gap-5">
+                    <h1 className="text-center text-sm">{PagesData.About.what_we_do_all}</h1>
+
                     <p className="text-base font-medium text-center underline">
                         <Link to="https://www.wlv.ac.uk/">
                             © 2024 Company, Inc.
