@@ -13,6 +13,9 @@ const Footer = lazy(() => import('./components/custom/Footer.jsx'))
 const NotFound = lazy(() => import('./pages/(home)/NotFound.jsx'))
 const Home = lazy(() => import('./pages/(home)/Home.jsx'))
 
+const About = lazy(() => import('./pages/(information)/About.jsx'))
+const Contact = lazy(() => import('./pages/(information)/Contact.jsx'))
+
 const Login = lazy(() => import('./pages/(login)/Login.jsx'))
 const Signup = lazy(() => import('./pages/(signup)/Signup.jsx'))
 const FormCreateAccount = lazy(() => import('./pages/(signup)/FormCreateAccount.jsx'))
@@ -113,7 +116,10 @@ export default function App () {
                                     <Route path='/job-listings/viewjob' element={<ViewJobListing />} />
                                     <Route path='job-listings/viewjob' element={<ViewJobListing />} />
                                     <Route path='/job-listings/new' element={<FormNewJobListing />} />
-
+                                    
+                                    <Route path='/about' element={<About />} />
+                                    <Route path='/contact' element={<Contact />} />
+                                    
                                     {/* Create pages for not found then add a button for redirect */}
                                     <Route path='/404' element={<NotFound />}/>
                                     <Route path='*' element={<NotFound />}  />

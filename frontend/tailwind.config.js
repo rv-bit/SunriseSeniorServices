@@ -39,6 +39,9 @@ module.exports = {
 
         'lg': '1180px',
         // => @media (min-width: 1180px) { ... }
+
+        '3xl': '1920px',
+        // => @media (min-width: 1920px) { ...
       },
       textDecoration: ['group-hover'],
       colors: {

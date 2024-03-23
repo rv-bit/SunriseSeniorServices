@@ -37,12 +37,7 @@ const buttons = [
     { name: "Pet Care", icon: PetCareSvg, option:"option_petcare" }
 ]
 
-const teamMembers = [
-    { name: "John Doe", role: "CEO", message: "I am the CeoDWADWADAWDAWDDAWDAWDA", from: "Wolverhampton" },
-    { name: "Jane Doe", role: "CTO", message: "I am the CTO", from: "Wolverhampton" },
-    { name: "John Smith", role: "COO", message: "I am the COO", from: "Wolverhampton" },
-    { name: "Jane Smith", role: "CFO", message: "I am the CFO", from: "Wolverhampton" },
-]
+import PagesData from "@/app/data/PagesData";
 
 const Home = () => {
     useDocumentTitle('Home');
@@ -59,6 +54,17 @@ const Home = () => {
         open: false,
         message: '',
     });
+
+    const handlePostCodeSearch = async (e) => {
+        e.preventDefault();
+
+        if (userAuthData && userAuthData.isConnected) {
+            navigate('/job-listings');
+            return
+        }
+
+        setAlertState({ ...alertState, open: true, message: `This function doesn't work just yet` });
+    }
 
     // const handlePostCodeSearch = async (e) => {
     //     e.preventDefault();
@@ -200,7 +206,50 @@ const Home = () => {
                 <div className='flex flex-col items-center justify-center w-full'>
                     <div className='flex items-center justify-center w-full'>
 
-                        <div className="w-[1200px] max-w-[1200px] h-[350px] rounded-2xl bg-[#eeb89c] shadow-xl drop-shadow-2xl overflow-hidden">
+                        <div className="w-auto h-auto hidden max-md:flex flex-col col-span-2 items-center justify-center">
+                            <div className='flex items-center justify-center w-full relative'>
+                                <img src={heroPhotoOfWoman} alt='Home' className="object-cover max-lg:h-[400px] w-full rounded-3xl"/>
+
+                                <div className="absolute w-full h-full shadow-2xl"></div>                   
+                            </div>
+
+                            <div className="w-full h-[350px] -mt-20 rounded-2xl bg-[#eeb89c] shadow-xl drop-shadow-2xl">
+                                <div className='flex items-center justify-center h-full w-full'>
+                                    
+                                    <div className='flex flex-col items-start justify-center w-full h-full py-20 px-10 gap-5'>
+                                        <h1 className='text-start text-xl font-bold'>Find trusted locals for your every need</h1>
+
+                                        <div className="flex flex-col items-start justify-center gap-2">
+                                            <div className='flex items-center justify-center w-full border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200 mb-2'>
+                                                <label
+                                                    onChange={(e) => {
+                                                        // setSearchingPostCode(true);
+                                                        setTimeout(() => handlePostCodeSearch(e), 1000)
+                                                    }}
+                                                    onKeyDown={(e) => e.key === 'Enter' && handlePostCodeSearch(e)} 
+                                                    className='flex items-center text-slate-600 w-full h-full focus-within:outline-none hover:cursor-text'>
+
+                                                    <input type='text' ref={searchPostCodeRef} className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a post code'/>
+                                                
+                                                    <Button
+                                                        onClick={(e) => {
+                                                            // setSearchingPostCode(true);
+                                                            handlePostCodeSearch(e)
+                                                        }} 
+                                                        disabled={searchingPostCode}
+                                                        className='mr-5 bg-inherit hover:bg-inherit'> <BsSearch size={20} color="black"/>
+                                                    </Button>
+
+                                                </label>
+                                            </div>
+                                            <h1 className='text-xs'>This is a simple page with a hero image</h1>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="w-[1200px] h-[350px] max-md:hidden block max-md:bottom-16 rounded-2xl bg-[#eeb89c] shadow-xl drop-shadow-2xl overflow-hidden">
                             <div className='flex items-center justify-center h-full w-full'>
                                 
                                 <div className='flex flex-col items-start justify-center w-1/2 h-full py-20 px-10 gap-5'>
@@ -210,7 +259,7 @@ const Home = () => {
                                         <div className='flex items-center justify-center w-full border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200 mb-2'>
                                             <label
                                                 onChange={(e) => {
-                                                    setSearchingPostCode(true);
+                                                    // setSearchingPostCode(true);
                                                     setTimeout(() => handlePostCodeSearch(e), 1000)
                                                 }}
                                                 onKeyDown={(e) => e.key === 'Enter' && handlePostCodeSearch(e)} 
@@ -220,7 +269,7 @@ const Home = () => {
                                             
                                                 <Button
                                                     onClick={(e) => {
-                                                        setSearchingPostCode(true);
+                                                        // setSearchingPostCode(true);
                                                         handlePostCodeSearch(e)
                                                     }} 
                                                     disabled={searchingPostCode}
@@ -231,10 +280,9 @@ const Home = () => {
                                         </div>
                                         <h1 className='text-xs'>This is a simple page with a hero image</h1>
                                     </div>
-
                                 </div>
 
-                                <div className='flex flex-col items-center justify-end w-1/2 gap-1 relative'>
+                                <div className='max-md:hidden flex flex-col items-center justify-end w-1/2 gap-1 relative'>
                                     <img src={heroPhotoOfWoman} alt='Home' className="object-cover max-lg:h-[400px]"/>
 
                                     {/* Looks like a separator, cuts the image ina diagonal way */}
@@ -308,7 +356,7 @@ const Home = () => {
                         className="flex items-center justify-center my-5"
                     >
                         <CarouselContent>
-                            {teamMembers.map((button, index) => {
+                            {PagesData.Team.map((button, index) => {
                                 const { name, from, role, message } = button;
                                 const nameInitials = name.split(' ').map((n) => n[0]).join(''); 
                                 
