@@ -1,0 +1,1 @@
+import{r as e}from"./index-BkQICH-X.js";const s=(t,u=!1)=>{const c=e.useRef(document.title);e.useEffect(()=>{document.title=t},[t]),e.useEffect(()=>()=>{u||(document.title=c.current)},[])};export{s as u};
