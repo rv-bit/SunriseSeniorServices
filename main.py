@@ -22,4 +22,7 @@ if os.environ.get("NODE_ENV") == "production":
         return app.send_static_file('index.html')
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    if os.environ.get("NODE_ENV") == "production":
+        socketio.run(app)
+    else:
+        socketio.run(app, debug=True)
