@@ -3,7 +3,7 @@ from flask_socketio import SocketIO
 
 if os.environ.get("NODE_ENV") == "production":
     origins = [
-        "https://sunriseseniorsevices.onrender.com"
+        "http://actual-app-url.herokuapp.com"
     ]
 else:
     origins = "*"

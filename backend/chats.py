@@ -13,15 +13,19 @@ chat = Blueprint('chat', __name__)
 @socketio.on('connectChat')
 def connectChat(data):
     join_room(data['chat_id'])
+    emit('connectedToChat', data, room=data['chat_id'], broadcast=True)
 
 
 @socketio.on('disconnectChat')
 def disconnectChat(data):
     leave_room(data['chat_id'])
+    emit('disconnectedFromChat', data, room=data['chat_id'], broadcast=True)
 
 
 @socketio.on('sendMessage')
 def sendMessage(data):
+    print("Data:", data)
+
     try:
         variables = {
             "chat_id": data['chat_id'],
