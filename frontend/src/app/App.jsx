@@ -55,7 +55,7 @@ export default function App () {
             urlSocket = 'http://127.0.0.1:5000';
         }
 
-        const socket = io(urlSocket, { transports: ['websocket', 'polling'] });
+        const socket = io(urlSocket, { transports: ['polling'] });
 
         socket.on('connect', () => {
             console.log('Connected to the server');
@@ -69,7 +69,6 @@ export default function App () {
 
         socket.on('connect_error', (error) => {
             console.log('Connection Error', error);
-            navigate('/');
         });
 
         return () => {
