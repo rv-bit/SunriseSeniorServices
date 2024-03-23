@@ -33,6 +33,14 @@ def sendMessage(data):
 
         current_app.config['DB'].Insert("messages", document)
 
+        senderInformation = current_app.config['DB'].Find(
+            "users", {"_id": data['sender_id']})
+
+        data["sender"] = {
+            "first_name": senderInformation["first_name"],
+            "last_name": senderInformation["last_name"]
+        }
+
         data["created_at"] = document["created_at"]
         emit('receiveMessage', data, room=data['chat_id'], broadcast=True)
     except Exception as e:
