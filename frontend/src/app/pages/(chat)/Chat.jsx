@@ -55,6 +55,19 @@ const Chat = () => {
     const handleChatOpen = (e, chatId) => {
         e.preventDefault();
 
+        if (selectedChatId !== chatId && selectedChatId !== null && selectedChatId.length > 0) {
+            socket.on('disconnect', () => {
+                socket.emit('disconnectChat', { 
+                    chat_id: selectedChatId,
+                    memberDisconnect: userAuthData._id,
+                }, (error) => {
+                    if (error) {
+                        console.log('Error', error);
+                    }
+                });
+            });
+        }
+
         if (e.altKey === true && e.type === 'click' || e.type === 'auxclick') {
             handleOpenInNewTab(e, `/chat?currentChatId=${chatId}`);
         } else {
@@ -167,6 +180,7 @@ const Chat = () => {
                     }
                 });
             });
+
             return;
         }
 
@@ -226,6 +240,19 @@ const Chat = () => {
                 console.log('Received message', data);
 
                 setChatMessages((chatMessages) => [...chatMessages, data]);
+
+                setChats((chats) => {
+                    const chatIndex = chats.findIndex((chat) => chat._id === data.chat_id);
+                    const chat = chats[chatIndex];
+
+                    chat.last_message = data.message;
+                    chat.last_message_date = data.created_at;
+
+                    chats.splice(chatIndex, 1);
+                    chats.unshift(chat);
+
+                    return chats;
+                });
             };
 
             socket.on('receiveMessage', receiveMessageHandler);
