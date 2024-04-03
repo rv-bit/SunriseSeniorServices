@@ -32,7 +32,7 @@ module.exports = {
     extend: {
       screens: {
         'extraSm': '400px',
-        // => @media (min-width: 400px) { ... } WHO TF STILL USES PHONES WITH 400PX WIDTH?
+        // => @media (min-width: 400px) { ... }
 
         'tablet': '1000px',
         // => @media (min-width: 1040px) { ... }
