@@ -1,8 +1,8 @@
 import React, { useCallback, useRef, useContext, useEffect, useState, useLayoutEffect, lazy, Suspense } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-import AuthContext from '@/app/context/AuthContext'
-import SocketioContext from '@/app/context/SocketioContext'
+import AuthProvider from '@/app/providers/AuthProvider'
+import SocketioProvider from '@/app/providers/SocketioProvider'
 
 import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
 
@@ -17,8 +17,8 @@ const Notification = lazy(() => import('@/app/components/custom/Notifications'))
 const Chat = () => {
     useDocumentTitle('Chat')
 
-    const {userAuthData, setUserAuth} = useContext(AuthContext);
-    const {socket} = useContext(SocketioContext);
+    const {userAuthData, setUserAuth} = useContext(AuthProvider);
+    const {socket} = useContext(SocketioProvider);
 
     const navigate = useNavigate();
     const location = useLocation();

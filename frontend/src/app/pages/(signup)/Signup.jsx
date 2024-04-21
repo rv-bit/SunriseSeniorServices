@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 
-import AuthContext from '@/app/context/AuthContext'
+import AuthProvider from '@/app/providers/AuthProvider'
 import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
 
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
@@ -32,7 +32,7 @@ const Signup = () => {
     useDocumentTitle('Sign Up');
     const navigate = useNavigate();
 
-    const {userAuthData, setUserAuth} = useContext(AuthContext);
+    const {userAuthData, setUserAuth} = useContext(AuthProvider);
     useEffect(() => {
         if (userAuthData && userAuthData.length > 0 || userAuthData && userAuthData.isConnected) {
             navigate('/');

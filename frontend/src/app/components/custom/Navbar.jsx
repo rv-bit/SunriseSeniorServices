@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-import AuthContext from '@/app/context/AuthContext'
+import AuthProvider from '@/app/providers/AuthProvider'
 
 import {
     DropdownMenu,
@@ -32,7 +32,7 @@ const LinksConnectedWithLogo = [
 ]
 
 const Navbar = () => {
-    const {userAuthData} = useContext(AuthContext);    
+    const {userAuthData} = useContext(AuthProvider);    
 
     return (
         <section className="max-w-screen-lg px-2 md:px-8 mx-auto backdrop-blur-xl bg-[#ffffff90] mb-10 mt-12">

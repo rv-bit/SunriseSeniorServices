@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useContext, Suspense, lazy } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
-import AuthContext from '@/app/context/AuthContext'
+import AuthProvider from '@/app/providers/AuthProvider'
 
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -31,7 +31,7 @@ import { Notification } from '@/app/components/custom/Notifications' // Custom c
 const JobListing = () => {
     useDocumentTitle('Job Listings');
 
-    const {userAuthData} = useContext(AuthContext);
+    const {userAuthData} = useContext(AuthProvider);
 
     const navigate = useNavigate();
     const location = useLocation();

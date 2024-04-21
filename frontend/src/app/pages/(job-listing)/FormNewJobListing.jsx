@@ -1,7 +1,7 @@
 import { Suspense, useContext, useState, useEffect, lazy } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import AuthContext from '@/app/context/AuthContext'
+import AuthProvider from '@/app/providers/AuthProvider'
 
 import { Post, Get } from '@/app/lib/utils' // Common functions 
 
@@ -38,7 +38,7 @@ async function createJobListing(formData, alertState, setAlertState) {
 const FormNewJobListing = () => {
     const navigate = useNavigate();
 
-    const {userAuthData, setUserAuth} = useContext(AuthContext);
+    const {userAuthData, setUserAuth} = useContext(AuthProvider);
 
     const [currentStep, setCurrentStep] = useState(0);
     const [currentSubStep, setCurrentSubStep] = useState(1);

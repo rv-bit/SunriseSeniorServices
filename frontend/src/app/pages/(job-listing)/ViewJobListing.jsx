@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState, useContext } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Post, Get, formatTags } from '@/app/lib/utils';
 
-import AuthContext from '@/app/context/AuthContext';
+import AuthProvider from '@/app/providers/AuthProvider';
 
 import { Button } from '@/app/components/ui/button';
 
@@ -14,7 +14,7 @@ import { Notification } from '@/app/components/custom/Notifications';
 const ViewJobListing = () => {
     useDocumentTitle('View Job Listing');
 
-    const {userAuthData} = useContext(AuthContext);
+    const {userAuthData} = useContext(AuthProvider);
 
     const navigate = useNavigate();
     const location = useLocation();

@@ -1,8 +1,8 @@
 import { Suspense, lazy, useState, useEffect, useMemo } from 'react'
 import { Routes, Route } from 'react-router-dom'
 
-import AuthContext from '@/app/context/AuthContext'
-import SocketioContext from '@/app/context/SocketioContext'
+import AuthProvider from '@/app/providers/AuthProvider'
+import SocketioProvider from '@/app/providers/SocketioProvider'
 
 import { Get } from '@/app/lib/utils.js' // Common functions
 import { io } from 'socket.io-client';
@@ -89,8 +89,8 @@ export default function App () {
 
     return (
         <>
-            <AuthContext.Provider value={value}>
-                <SocketioContext.Provider value={valueSocket}>
+            <AuthProvider.Provider value={value}>
+                <SocketioProvider.Provider value={valueSocket}>
                     <div className="flex flex-col min-h-screen">
                         <Suspense fallback={
                             <div className="flex items-center justify-center h-screen">
@@ -129,8 +129,8 @@ export default function App () {
                             <Footer className="mt-auto"/>
                         </Suspense>
                     </div>
-                </SocketioContext.Provider>
-            </AuthContext.Provider>
+                </SocketioProvider.Provider>
+            </AuthProvider.Provider>
         </>
     ) 
 }
