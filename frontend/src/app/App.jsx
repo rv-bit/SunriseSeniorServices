@@ -52,36 +52,36 @@ export default function App () {
         }
         fetchData();
 
-        var urlSocket = import.meta.env.VITE_SOCKET_URL;
+        // var urlSocket = import.meta.env.VITE_SOCKET_URL;
 
-        if (process.env.NODE_ENV === 'development') {
-            urlSocket = 'http://127.0.0.1:5000';
-        }
+        // if (process.env.NODE_ENV === 'development') {
+        //     urlSocket = 'http://127.0.0.1:5000';
+        // }
 
-        const socket = io(urlSocket, { transports: ['polling'] });
+        // const socket = io(urlSocket, { transports: ['polling'] });
 
-        socket.on('connect', () => {
-            console.log('Connected to the server');
-            setSocket(socket);
-        });
+        // socket.on('connect', () => {
+        //     console.log('Connected to the server');
+        //     setSocket(socket);
+        // });
 
-        socket.on('disconnect', () => {
-            console.log('Disconnected from the server');
-            setSocket(null);
-        });
+        // socket.on('disconnect', () => {
+        //     console.log('Disconnected from the server');
+        //     setSocket(null);
+        // });
 
-        socket.on('connect_error', (error) => {
-            console.log('Connection Error', error);
-        });
+        // socket.on('connect_error', (error) => {
+        //     console.log('Connection Error', error);
+        // });
 
-        return () => {
-            socket.off('connect');
-            socket.off('disconnect');
-            socket.off('connect_error');
-            socket.disconnect();
+        // return () => {
+        //     socket.off('connect');
+        //     socket.off('disconnect');
+        //     socket.off('connect_error');
+        //     socket.disconnect();
 
-            setSocket(null);
-        }
+        //     setSocket(null);
+        // }
     }, [])
 
     const value = useMemo(() => ({ userAuthData, setUserAuth }), [userAuthData, setUserAuth]);
