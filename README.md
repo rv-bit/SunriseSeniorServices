@@ -4,15 +4,14 @@
 > This Application was strictly made with the purpose to finish and assingmnet, any issues with any copyright's im sorry in advance.
 
 # Tech Stack
-# Frontend
+### Frontend
 * **Language:** Java Script
 * **Framework:** React
 * **Build Tools:** Vite
  
-# Backend
+### Backend
 * **Language:** Java Script
 * **Framework:** Express
 * **Build Tools:** Node
-##
 
 <ins>https://sunriseseniorservices.fun</ins>
