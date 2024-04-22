@@ -15,3 +15,6 @@
 * **Build Tools:** Node
 
 <ins>https://sunriseseniorservices.fun</ins>
+
+# License
+This project is licensed under the MIT License.
