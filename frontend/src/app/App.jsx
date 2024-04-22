@@ -29,6 +29,7 @@ const ViewJobListing = lazy(() => import('./pages/(job-listing)/ViewJobListing.j
 const JobListing = lazy(() => import('./pages/(job-listing)/JobListing.jsx'))
 const FormNewJobListing = lazy(() => import('./pages/(job-listing)/FormNewJobListing.jsx'))
 
+const socketIo = io.connect('http://localhost:3000/', { transports: ["websocket"] });
 export default function App () {
     const { isSignedIn, user, isLoaded } = useUser();
     
@@ -43,19 +44,21 @@ export default function App () {
         // var urlSocket = import.meta.env.VITE_SOCKET_URL;
 
         // if (process.env.NODE_ENV === 'development') {
-        //     urlSocket = 'http://127.0.0.1:5000';
+        //     urlSocket = 'http://localhost:3000';
         // }
 
-        // const socket = io(urlSocket, { transports: ['polling'] });
+        // const socket = io.connect(urlSocket);
 
-        // socket.on('connect', () => {
-        //     console.log('Connected to the server');
-        //     setSocket(socket);
-        // });
+        console.log('Connected to the server', socketIo.connected);
 
-        // socket.on('disconnect', () => {
+        socketIo.on('connect', () => {
+            console.log('Connected to the server');
+            // setSocket(socket);
+        });
+
+        // socketIo.on('disconnect', () => {
         //     console.log('Disconnected from the server');
-        //     setSocket(null);
+        //     // setSocket(null);
         // });
 
         // socket.on('connect_error', (error) => {
@@ -63,12 +66,12 @@ export default function App () {
         // });
 
         return () => {
-        //     socket.off('connect');
-        //     socket.off('disconnect');
-        //     socket.off('connect_error');
-        //     socket.disconnect();
+            // socketIo.off('connect');
+            // socketIo.off('disconnect');
+            // socketIo.off('connect_error');
+            // socketIo.disconnect();
 
-        //     setSocket(null);
+            // setSocket(null);
         }
     }, [])
 
