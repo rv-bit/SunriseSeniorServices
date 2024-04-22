@@ -8,7 +8,7 @@ const devConfig = {
     cors: true,
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:5000/",
+        target: "http://localhost:3000/",
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ""),
@@ -22,8 +22,8 @@ const config = process.env.NODE_ENV === 'development' ? devConfig : prodConfig;
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: './',
-  envDir: '../',
+  base: './', // This is the equivalent of the publicPath
+  envDir: '../', // This is the equivalent of the path to the .env file in the root directory
 
   // For the build, we want to put the assets in the static directory
   build: {

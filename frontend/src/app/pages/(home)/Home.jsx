@@ -1,7 +1,7 @@
 import { Suspense, useState, useContext, useEffect, useRef, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 
-import AuthContext from '@/app/context/AuthContext'
+import AuthProvider from '@/app/providers/AuthProvider'
 import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
 
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
@@ -43,7 +43,7 @@ const Home = () => {
     useDocumentTitle('Home');
     const navigate = useNavigate();
 
-    const {userAuthData} = useContext(AuthContext);
+    const {userAuthData} = useContext(AuthProvider);
 
     const searchPostCodeRef = useRef(null);
 

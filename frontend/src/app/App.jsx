@@ -1,8 +1,9 @@
 import { Suspense, lazy, useState, useEffect, useMemo } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { useUser } from "@clerk/clerk-react";
 
-import AuthContext from '@/app/context/AuthContext'
-import SocketioContext from '@/app/context/SocketioContext'
+import AuthProvider from '@/app/providers/AuthProvider'
+import SocketioProvider from '@/app/providers/SocketioProvider'
 
 import { Get } from '@/app/lib/utils.js' // Common functions
 import { io } from 'socket.io-client';
@@ -29,58 +30,45 @@ const JobListing = lazy(() => import('./pages/(job-listing)/JobListing.jsx'))
 const FormNewJobListing = lazy(() => import('./pages/(job-listing)/FormNewJobListing.jsx'))
 
 export default function App () {
+    const { isSignedIn, user, isLoaded } = useUser();
+    
     const [socket, setSocket] = useState(null);
     const [userAuthData, setUserAuth] = useState(null);
 
     useEffect(() => {
-        const fetchData = async () => {
-            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/home`);
-            const data = await response.json();
-
-            if (data && data.user === 'Anonymous') {
-                setUserAuth(null);
-            }
-
-            if (data && data.user !== 'Anonymous') {
-                data.user['isConnected'] = true;
-                setUserAuth(data.user);
-            }
-
-            if (!data) {
-                setUserAuth(null);
-            }
+        if (isSignedIn && isLoaded) {
+            setUserAuth(user);
         }
-        fetchData();
 
         var urlSocket = import.meta.env.VITE_SOCKET_URL;
-
         if (process.env.NODE_ENV === 'development') {
-            urlSocket = 'http://127.0.0.1:5000';
+            urlSocket = 'http://localhost:3000';
         }
+        const socketIo = io.connect(urlSocket, { transports: ["websocket"] });
 
-        const socket = io(urlSocket, { transports: ['polling'] });
+        console.log('Connected to the server', socketIo.connected);
 
-        socket.on('connect', () => {
+        socketIo.on('connect', () => {
             console.log('Connected to the server');
-            setSocket(socket);
+            // setSocket(socket);
         });
 
-        socket.on('disconnect', () => {
-            console.log('Disconnected from the server');
-            setSocket(null);
-        });
+        // socketIo.on('disconnect', () => {
+        //     console.log('Disconnected from the server');
+        //     // setSocket(null);
+        // });
 
-        socket.on('connect_error', (error) => {
-            console.log('Connection Error', error);
-        });
+        // socket.on('connect_error', (error) => {
+        //     console.log('Connection Error', error);
+        // });
 
         return () => {
-            socket.off('connect');
-            socket.off('disconnect');
-            socket.off('connect_error');
-            socket.disconnect();
+            // socketIo.off('connect');
+            // socketIo.off('disconnect');
+            // socketIo.off('connect_error');
+            // socketIo.disconnect();
 
-            setSocket(null);
+            // setSocket(null);
         }
     }, [])
 
@@ -89,8 +77,8 @@ export default function App () {
 
     return (
         <>
-            <AuthContext.Provider value={value}>
-                <SocketioContext.Provider value={valueSocket}>
+            <AuthProvider.Provider value={value}>
+                <SocketioProvider.Provider value={valueSocket}>
                     <div className="flex flex-col min-h-screen">
                         <Suspense fallback={
                             <div className="flex items-center justify-center h-screen">
@@ -129,8 +117,8 @@ export default function App () {
                             <Footer className="mt-auto"/>
                         </Suspense>
                     </div>
-                </SocketioContext.Provider>
-            </AuthContext.Provider>
+                </SocketioProvider.Provider>
+            </AuthProvider.Provider>
         </>
     ) 
 }

@@ -1,7 +1,9 @@
 import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-import AuthContext from '@/app/context/AuthContext'
+import AuthProvider from '@/app/providers/AuthProvider'
+
+import { SignedIn, SignedOut, SignInButton, UserButton, SignUpButton, useUser } from "@clerk/clerk-react";
 
 import {
     DropdownMenu,
@@ -15,15 +17,16 @@ import {
 
 import { Divide as Hamburger } from 'hamburger-react'
 import { BsSearch, BsChat } from "react-icons/bs";
+import { Button } from "antd";
 
 const Links = [
     { name: "Login", path: "/login", auth: false},
-    { name: "Join Now", path: "/signup", auth: false, styleProps: "bg-[#ed7839] hover:bg-[#ed6218] text-white font-medium rounded-lg px-5 py-4"},
+    { name: "Join Now", path: "/signup", auth: false, styleProps: "bg-[#ed7839] hover:bg-[#ed6218] hover:cursor-pointer text-white font-medium rounded-lg px-5 py-4"},
 
     { icon: <BsSearch size={22} color="black" />, name: "Search", path: "/job-listings", auth: true },
     { icon: <BsChat size={22} color="black"/>, name: "Inbox", path: "/chat", auth: true },
 
-    { name: "Log Out", path: "/logout", auth: true, styleProps: "bg-[#ed7839] hover:bg-[#ed6218] text-white font-medium rounded-lg px-5 py-4" },
+    { name: "Log Out", path: "/logout", auth: true, component: UserButton},
 ]
 
 const LinksConnectedWithLogo = [
@@ -32,7 +35,16 @@ const LinksConnectedWithLogo = [
 ]
 
 const Navbar = () => {
-    const {userAuthData} = useContext(AuthContext);    
+    const { isSignedIn, user, isLoaded } = useUser();
+    const {userAuthData, setUserAuth} = useContext(AuthProvider);
+
+    useEffect(() => {
+        if (isSignedIn && isLoaded) {
+            setUserAuth(user);
+        }
+
+        return () => {};
+    });
 
     return (
         <section className="max-w-screen-lg px-2 md:px-8 mx-auto backdrop-blur-xl bg-[#ffffff90] mb-10 mt-12">
@@ -56,8 +68,8 @@ const Navbar = () => {
                         {LinksConnectedWithLogo.map((link, index) => {
                             return (
                                 <li key={link.path}>
-                                    {link.styleProps ?  
-                                        <Link className={link.styleProps} to={link.path}>{link.name}</Link> 
+                                    {link.styleProps ?
+                                        <Link className={link.styleProps} to={link.path}>{link.name}</Link>
                                     :
                                         <Link className="leading-normal tracking-tight transition-all text-[16px] text-[#434958] cursor-pointer font-medium text-opacity-60 hover:text-opacity-90 hover:bg-[#ff846575] hover:backdrop-blur-[40px] hover:rounded-lg px-6 py-3" to={link.path}>{link.name}</Link>
                                     }
@@ -69,7 +81,7 @@ const Navbar = () => {
 
                 <ul className="flex-1 md:flex justify-end items-center gap-6 hidden">
                     {Links.map((link, index) => {
-                        const showLink = (link.auth && userAuthData && userAuthData.isConnected) || (!link.auth && (!userAuthData || !userAuthData.isConnected));
+                        const showLink = (link.auth && userAuthData) || (!link.auth && !userAuthData);
 
                         return showLink ? (
                             <li key={link.path}>
@@ -79,6 +91,14 @@ const Navbar = () => {
                                         <span className="text-sm">{link.name}</span>
                                     </Link>
                                 :
+
+                                link.component ? 
+                                    link.styleProps && link.component ?
+                                        <div className={link.styleProps}><link.component /></div>
+                                    :
+                                        <div className="leading-normal tracking-tight transition-all text-[16px] text-[#434958] cursor-pointer font-medium text-opacity-60 hover:text-opacity-90 hover:bg-[#ff846575] hover:backdrop-blur-[40px] hover:rounded-lg px-6 py-3"><link.component /></div>
+                                    :
+
                                     link.styleProps ?
                                         <Link className={link.styleProps} to={link.path}>{link.name}</Link>
                                     :
@@ -109,8 +129,8 @@ const Navbar = () => {
                         })}
 
                         {Links.filter(link => 
-                            (link.auth && userAuthData && userAuthData.isConnected) || 
-                            (!link.auth && (!userAuthData || !userAuthData.isConnected))
+                            (link.auth && userAuthData) || 
+                            (!link.auth && !userAuthData)
                         ).map((link, index, filteredLinks) => {
                             return (
                                 <DropdownMenuGroup key={link.path}>
