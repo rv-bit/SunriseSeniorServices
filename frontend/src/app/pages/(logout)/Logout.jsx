@@ -1,5 +1,6 @@
 import { useEffect, useContext, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useClerk } from "@clerk/clerk-react";
 
 import AuthProvider from '@/app/providers/AuthProvider'
 
@@ -8,8 +9,10 @@ import { Post, Get } from '@/app/lib/utils' // Common functions
 const Alertbox = lazy(() => import('@/app/components/custom/Alertbox'));
 
 const Logout = () => {
-    const {userAuthData, setUserAuth} = useContext(AuthProvider);
     const navigate = useNavigate();
+
+    const { signOut } = useClerk();
+    const {userAuthData, setUserAuth} = useContext(AuthProvider);
 
     const onSubmit = async (e) => {
         e.preventDefault();
@@ -31,7 +34,9 @@ const Logout = () => {
     const onCancel = (e) => {
         e.preventDefault();
 
-        navigate('/');
+        signOut(() => {
+            navigate('/');
+        });
     }
 
     useEffect(() => {

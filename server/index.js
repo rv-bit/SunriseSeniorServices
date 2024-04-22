@@ -14,7 +14,7 @@ const cors = require('cors');
 app.use(cors())
 
 app.get('/', (req, res) => {
-    // res.send('Hello World');
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 const socketIO = require('socket.io')(http, {

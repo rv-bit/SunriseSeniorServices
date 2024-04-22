@@ -20,8 +20,8 @@ import { BsSearch, BsChat } from "react-icons/bs";
 import { Button } from "antd";
 
 const Links = [
-    { name: "Login", path: "/login", auth: false, styleProps:"hover:cursor-pointer", component: SignInButton },
-    { name: "Join Now", path: "/signup", auth: false, styleProps: "bg-[#ed7839] hover:bg-[#ed6218] hover:cursor-pointer text-white font-medium rounded-lg px-5 py-4", component: SignUpButton},
+    { name: "Login", path: "/login", auth: false},
+    { name: "Join Now", path: "/signup", auth: false, styleProps: "bg-[#ed7839] hover:bg-[#ed6218] hover:cursor-pointer text-white font-medium rounded-lg px-5 py-4"},
 
     { icon: <BsSearch size={22} color="black" />, name: "Search", path: "/job-listings", auth: true },
     { icon: <BsChat size={22} color="black"/>, name: "Inbox", path: "/chat", auth: true },
