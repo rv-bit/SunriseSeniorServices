@@ -3,6 +3,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SOCKET_URL = process.env.VITE_SOCKET_URL || 'http://localhost:3000';
 
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static('frontend/dist'));
@@ -18,7 +19,7 @@ app.get('/', (req, res) => {
 
 const socketIO = require('socket.io')(http, {
     cors: {
-        origin: "http://localhost:3000"
+        origin: SOCKET_URL
     }
 });
 

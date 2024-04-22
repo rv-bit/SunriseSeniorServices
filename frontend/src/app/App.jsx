@@ -29,7 +29,6 @@ const ViewJobListing = lazy(() => import('./pages/(job-listing)/ViewJobListing.j
 const JobListing = lazy(() => import('./pages/(job-listing)/JobListing.jsx'))
 const FormNewJobListing = lazy(() => import('./pages/(job-listing)/FormNewJobListing.jsx'))
 
-const socketIo = io.connect('http://localhost:3000/', { transports: ["websocket"] });
 export default function App () {
     const { isSignedIn, user, isLoaded } = useUser();
     
@@ -41,13 +40,11 @@ export default function App () {
             setUserAuth(user);
         }
 
-        // var urlSocket = import.meta.env.VITE_SOCKET_URL;
-
-        // if (process.env.NODE_ENV === 'development') {
-        //     urlSocket = 'http://localhost:3000';
-        // }
-
-        // const socket = io.connect(urlSocket);
+        var urlSocket = import.meta.env.VITE_SOCKET_URL;
+        if (process.env.NODE_ENV === 'development') {
+            urlSocket = 'http://localhost:3000';
+        }
+        const socketIo = io.connect(urlSocket, { transports: ["websocket"] });
 
         console.log('Connected to the server', socketIo.connected);
 
