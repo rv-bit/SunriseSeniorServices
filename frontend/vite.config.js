@@ -22,8 +22,8 @@ const config = process.env.NODE_ENV === 'development' ? devConfig : prodConfig;
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: './',
-  envDir: '../',
+  base: './', // This is the equivalent of the publicPath
+  envDir: '../', // This is the equivalent of the path to the .env file in the root directory
 
   // For the build, we want to put the assets in the static directory
   build: {

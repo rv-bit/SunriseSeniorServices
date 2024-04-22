@@ -1,5 +1,6 @@
 import { Suspense, lazy, useState, useEffect, useMemo } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { useUser } from "@clerk/clerk-react";
 
 import AuthProvider from '@/app/providers/AuthProvider'
 import SocketioProvider from '@/app/providers/SocketioProvider'
@@ -29,28 +30,15 @@ const JobListing = lazy(() => import('./pages/(job-listing)/JobListing.jsx'))
 const FormNewJobListing = lazy(() => import('./pages/(job-listing)/FormNewJobListing.jsx'))
 
 export default function App () {
+    const { isSignedIn, user, isLoaded } = useUser();
+    
     const [socket, setSocket] = useState(null);
     const [userAuthData, setUserAuth] = useState(null);
 
     useEffect(() => {
-        const fetchData = async () => {
-            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/home`);
-            const data = await response.json();
-
-            if (data && data.user === 'Anonymous') {
-                setUserAuth(null);
-            }
-
-            if (data && data.user !== 'Anonymous') {
-                data.user['isConnected'] = true;
-                setUserAuth(data.user);
-            }
-
-            if (!data) {
-                setUserAuth(null);
-            }
+        if (isSignedIn && isLoaded) {
+            setUserAuth(user);
         }
-        fetchData();
 
         // var urlSocket = import.meta.env.VITE_SOCKET_URL;
 
@@ -74,14 +62,14 @@ export default function App () {
         //     console.log('Connection Error', error);
         // });
 
-        // return () => {
+        return () => {
         //     socket.off('connect');
         //     socket.off('disconnect');
         //     socket.off('connect_error');
         //     socket.disconnect();
 
         //     setSocket(null);
-        // }
+        }
     }, [])
 
     const value = useMemo(() => ({ userAuthData, setUserAuth }), [userAuthData, setUserAuth]);

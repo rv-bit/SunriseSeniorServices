@@ -8,6 +8,8 @@ import useDocumentTitle  from '@/app/hooks/UseDocumentTitle' // Custom hooks
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
 import { Post, Get, googleCheckAccount, userLogIn } from '@/app/lib/utils' // Common functions
 
+import { SignedIn, SignedOut, SignInButton, UserButton, SignUp } from "@clerk/clerk-react";
+
 import { Loader2 } from "lucide-react"
 import { AiOutlineGoogle } from "react-icons/ai";
 import { Button } from "@/app/components/ui/button"
@@ -156,7 +158,11 @@ const Login = () => {
                                 </CardDescription>
                             </CardHeader>
 
-                            <form onSubmit={onSubmit}>
+                            <SignedIn>
+                                <UserButton />
+                            </SignedIn>
+
+                            {/* <form onSubmit={onSubmit}>
                                 <CardContent className="space-y-2">
                                     <div className="space-y-1">
                                         <Label htmlFor="email">Email</Label>
@@ -195,7 +201,7 @@ const Login = () => {
                             
                             <CardContent className="space-y-2 text-center">
                                 <Label onClick={(event) => {event.preventDefault(); navigate('/signup');}} className="text-center mb-6">Don't have an account, <Label className='underline text-cyan-600 hover:text-sky-400 cursor-pointer'>Join</Label></Label>
-                            </CardContent>
+                            </CardContent> */}
                         </Card>
                     </TabsContent>
                 </Tabs>
