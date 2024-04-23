@@ -36,41 +36,37 @@ export default function App () {
     const [userAuthData, setUserAuth] = useState(null);
 
     useEffect(() => {
-        if (isSignedIn && isLoaded) {
-            setUserAuth(user);
-        }
-
         var urlSocket = import.meta.env.VITE_SOCKET_URL;
         if (process.env.NODE_ENV === 'development') {
             urlSocket = 'http://localhost:3000';
         }
         const socketIo = io.connect(urlSocket, { transports: ["websocket"] });
 
-        console.log('Connected to the server', socketIo.connected);
-
         socketIo.on('connect', () => {
             console.log('Connected to the server');
-            // setSocket(socket);
+            setSocket(socketIo);
         });
 
-        // socketIo.on('disconnect', () => {
-        //     console.log('Disconnected from the server');
-        //     // setSocket(null);
-        // });
+        socketIo.on('disconnect', () => {
+            console.log('Disconnected from the server');
+            setSocket(null);
+        });
 
-        // socket.on('connect_error', (error) => {
-        //     console.log('Connection Error', error);
-        // });
+        socketIo.on('connect_error', (error) => {
+            console.log('Connection Error', error);
+            setSocket(null);
+        });
+
+        if (isSignedIn && isLoaded) {
+            setUserAuth(user);
+        }
 
         return () => {
-            // socketIo.off('connect');
-            // socketIo.off('disconnect');
-            // socketIo.off('connect_error');
-            // socketIo.disconnect();
-
-            // setSocket(null);
+            socketIo.off('connect');
+            socketIo.off('disconnect');
+            socketIo.off('connect_error');
         }
-    }, [])
+    }, [isLoaded])
 
     const value = useMemo(() => ({ userAuthData, setUserAuth }), [userAuthData, setUserAuth]);
     const valueSocket = useMemo(() => ({ socket }), [socket]);
