@@ -365,7 +365,8 @@ const JobListing = () => {
             )}
             
             <section className='mx-auto min-h-5'>
-                <div className='flex items-center justify-center'>
+                <h1>Yes</h1>
+                {/* <div className='flex items-center justify-center'>
                     <div className='mx-5'>
                         <h1 className='mb-10 text-3xl text-center font-bold text-slate-900'>Find your next job</h1>
 
@@ -622,7 +623,7 @@ const JobListing = () => {
                             </div>
                         )}
                     </div>
-                </div>
+                </div> */}
 
             </section>
         </Suspense>

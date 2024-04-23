@@ -5,8 +5,8 @@ const db = require('./services/db');
 const cors = require('cors');
 const path = require('path');
 
-const PORT = process.env.PORT || 3000;
-const SOCKET_URL = 'http://localhost:3000';
+const PORT = process.env.PORT || 5001;
+const SOCKET_URL = 'http://localhost:5001';
 
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static('frontend/dist'));
@@ -18,7 +18,14 @@ if (process.env.NODE_ENV === 'production') {
     app.use(cors())
 }
 
-app.get('/', (req, res) => {
+const jobListingRouter = require('./routes/joblisting');
+app.use('/api/job-listings', jobListingRouter);
+
+app.get('/api', (req, res) => {
+    console.log('GET /');
+    res.json({
+        message: 'GET /'
+    });
     // res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 

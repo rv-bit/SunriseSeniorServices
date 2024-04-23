@@ -38,7 +38,7 @@ export default function App () {
     useEffect(() => {
         var urlSocket = import.meta.env.VITE_SOCKET_URL;
         if (process.env.NODE_ENV === 'development') {
-            urlSocket = 'http://localhost:3000';
+            urlSocket = 'http://localhost:5001';
         }
         const socketIo = io.connect(urlSocket, { transports: ["websocket"] });
 
@@ -98,7 +98,7 @@ export default function App () {
 
                                     <Route path='/job-listings' element={<JobListing />} />
                                     <Route path='/job-listings/viewjob' element={<ViewJobListing />} />
-                                    <Route path='job-listings/viewjob' element={<ViewJobListing />} />
+                                    {/* <Route path='job-listings/viewjob' element={<ViewJobListing />} /> */}
                                     <Route path='/job-listings/new' element={<FormNewJobListing />} />
                                     
                                     <Route path='/about' element={<About />} />

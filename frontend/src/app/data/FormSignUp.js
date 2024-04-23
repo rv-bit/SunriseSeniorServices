@@ -2,24 +2,6 @@ import { z } from 'zod';
 
 const formSteps = [
     {
-        name: "Account Information",
-        fields: [
-            {
-                name: 'email',
-                label: 'Email',
-                placeholder: 'email@gmail.com',
-                description: 'Your email',
-                type: 'email',
-            },
-        ],
-
-        validationSchema: z.object({
-            email: z.string().email({
-                message: "Must be a valid email address.",
-            }),
-        }),
-    },
-    {
         options: true,
         name: "Welcome, tell us about yourself",
         fields: [
@@ -150,46 +132,6 @@ const formSteps = [
                     return { valid: true, message: "" }
                 },
                 path: ["dob"],
-            }
-        ],
-    },
-    {
-        name: "Security Information",
-        fields: [
-            {
-                name: 'password',
-                label: 'Password',
-                placeholder: 'password',
-                description: 'Your password',
-                step: 1,
-                type: 'password',
-            },
-            {
-                name: 'password2',
-                label: 'Password Confirmation',
-                placeholder: 'password confirmation',
-                description: 'Your password Confirmation',
-                step: 1,
-                type: 'password',
-            },
-        ],
-
-        validationSchema: z.object({
-            password: z.string().min(6, {
-                message: "Password must be at least 6 characters.",
-            }),
-            password2: z.string().min(6, {
-                message: "Password must be at least 6 characters.",
-            })
-        }),
-
-        refineData: [
-            {
-                key: "password2",
-
-                func: (data) => data.password === data.password2,
-                message: "Passwords must match.",
-                path: ["password2"],
             }
         ],
     }

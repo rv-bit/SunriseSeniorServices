@@ -4,6 +4,7 @@ const router = express.Router();
 const joblistingController = require('../controllers/joblisting');
 
 router.get('/', joblistingController.getJobListings);
-router.post('/', joblistingController.createJobListing);
+router.get('/viewjob', joblistingController.getJobListings);
+router.post('/new', joblistingController.createJobListing);
 
 module.exports = router;
