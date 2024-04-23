@@ -1,5 +1,6 @@
 const express = require('express');
 const { app, server, socketIO } = require('./services/socket');
+const db = require('./services/db');
 
 const cors = require('cors');
 const path = require('path');
