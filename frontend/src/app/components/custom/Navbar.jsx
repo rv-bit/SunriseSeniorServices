@@ -1,9 +1,6 @@
 import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
-
-import AuthProvider from '@/app/providers/AuthProvider'
-
-import { SignedIn, SignedOut, SignInButton, UserButton, SignUpButton, useUser } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 
 import {
     DropdownMenu,
@@ -26,7 +23,7 @@ const Links = [
     { icon: <BsSearch size={22} color="black" />, name: "Search", path: "/job-listings", auth: true },
     { icon: <BsChat size={22} color="black"/>, name: "Inbox", path: "/chat", auth: true },
 
-    { name: "Log Out", path: "/logout", auth: true, component: UserButton},
+    { name: "Account", path: "/account", auth: true},
 ]
 
 const LinksConnectedWithLogo = [
@@ -35,16 +32,20 @@ const LinksConnectedWithLogo = [
 ]
 
 const Navbar = () => {
-    const { isSignedIn, user, isLoaded } = useUser();
-    const {userAuthData, setUserAuth} = useContext(AuthProvider);
+    const { isLoaded, isSignedIn } = useAuth();
+    const { user } = useUser();
 
-    useEffect(() => {
-        if (isSignedIn && isLoaded) {
-            setUserAuth(user);
-        }
-
-        return () => {};
-    });
+    if (!isLoaded) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="relative">
+                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <section className="max-w-screen-lg px-2 md:px-8 mx-auto backdrop-blur-xl bg-[#ffffff90] mb-10 mt-12">
@@ -81,7 +82,7 @@ const Navbar = () => {
 
                 <ul className="flex-1 md:flex justify-end items-center gap-6 hidden">
                     {Links.map((link, index) => {
-                        const showLink = (link.auth && userAuthData) || (!link.auth && !userAuthData);
+                        const showLink = (link.auth && isSignedIn) || (!link.auth && !isSignedIn);
 
                         return showLink ? (
                             <li key={link.path}>
@@ -129,15 +130,15 @@ const Navbar = () => {
                         })}
 
                         {Links.filter(link => 
-                            (link.auth && userAuthData) || 
-                            (!link.auth && !userAuthData)
+                            (link.auth && isSignedIn) || 
+                            (!link.auth && !isSignedIn)
                         ).map((link, index, filteredLinks) => {
                             return (
                                 <DropdownMenuGroup key={link.path}>
                                     <DropdownMenuItem key={link.path} asChild>
                                         <Link to={link.path} className="w-full h-full">
                                             <DropdownMenuLabel className="w-full h-full text-left">
-                                                {link.name}
+                                                {link.component ? <link.component /> : link.name}
                                             </DropdownMenuLabel>
                                         </Link>
                                     </DropdownMenuItem>

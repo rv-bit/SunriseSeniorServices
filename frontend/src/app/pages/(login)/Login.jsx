@@ -1,17 +1,13 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useGoogleLogin } from '@react-oauth/google';
+import { SignIn, useAuth, useUser } from '@clerk/clerk-react'
 
-import AuthProvider from '@/app/providers/AuthProvider'
 import useDocumentTitle  from '@/app/hooks/UseDocumentTitle' // Custom hooks
 
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
-import { Post, Get, userLogIn } from '@/app/lib/utils' // Common functions
-
-import { useUser, SignIn } from "@clerk/clerk-react";
+import { Post, Get } from '@/app/lib/utils' // Common functions
 
 import { Loader2 } from "lucide-react"
-import { AiOutlineGoogle } from "react-icons/ai";
 import { Button } from "@/app/components/ui/button"
 import {
   Card,
@@ -36,12 +32,17 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const { isSignedIn, user, isLoaded } = useUser();
-    const {userAuthData, setUserAuth} = useContext(AuthProvider);
+    const { isLoaded, isSignedIn } = useAuth();
+    const { user } = useUser();
+
+    const [alertState, setAlertState] = useState({
+        open: false,
+        message: '',
+    });
 
     useEffect(() => {
-        if (userAuthData && userAuthData.length > 0) {
-            navigate('/');
+        if (isLoaded && isSignedIn) {
+            navigate('/account');
             return;
         }
 
@@ -51,13 +52,20 @@ const Login = () => {
         }
 
         return () => {};
-    }, []);
+    }, [isLoaded, isSignedIn]);
 
-    const [userIsLoading, setUserLoad] = useState(false);
-    const [alertState, setAlertState] = useState({
-        open: false,
-        message: '',
-    });
+    if (!isLoaded) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="relative">
+                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    </div>
+                </div>
+            </div>
+        )
+    }
+    }, []);
 
     // const onSubmit = (e) => {
     //     e.preventDefault();    
@@ -134,8 +142,6 @@ const Login = () => {
     //     flow: 'auth-code',
     // });
 
-    console.log(isSignedIn, isLoaded, userAuthData, user, userIsLoading, alertState)
-
     return (
         <div className="flex items-center justify-center min-h-5">
             {alertState.open && (
@@ -146,6 +152,7 @@ const Login = () => {
             )}
 
             <div className="max-w-screen-sm mx-auto mb-10">
+                <SignIn />
                 {/* <Tabs defaultValue="sign-in" className='w-[400px] max-sm:w-[350px]'>
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="sign-in">Login</TabsTrigger>
@@ -167,10 +174,6 @@ const Login = () => {
                         </Card>
                     </TabsContent>
                 </Tabs> */}
-
-                {(!isSignedIn && isLoaded) && (
-                    <SignIn />
-                )}
             </div>
         </div>
     )

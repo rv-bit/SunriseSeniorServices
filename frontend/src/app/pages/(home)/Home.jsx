@@ -1,7 +1,6 @@
 import { Suspense, useState, useContext, useEffect, useRef, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 
-import AuthProvider from '@/app/providers/AuthProvider'
 import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
 
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
@@ -39,11 +38,14 @@ const buttons = [
 
 import PagesData from "@/app/data/PagesData";
 
+import { useUser, useAuth } from "@clerk/clerk-react";
+
 const Home = () => {
     useDocumentTitle('Home');
     const navigate = useNavigate();
 
-    const {userAuthData} = useContext(AuthProvider);
+    const { isLoaded, isSignedIn } = useAuth();
+    const { user } = useUser();
 
     const searchPostCodeRef = useRef(null);
 
@@ -58,7 +60,7 @@ const Home = () => {
     const handlePostCodeSearch = async (e) => {
         e.preventDefault();
 
-        if (userAuthData && userAuthData.isConnected) {
+        if (user && isSignedIn) {
             navigate('/job-listings');
             return
         }
@@ -69,7 +71,7 @@ const Home = () => {
     // const handlePostCodeSearch = async (e) => {
     //     e.preventDefault();
 
-    //     if (userAuthData && userAuthData.isConnected) {
+    //     if (user && isSignedIn) {
     //         navigate('/job-listings');
     //         return
     //     }
@@ -116,7 +118,7 @@ const Home = () => {
     }
 
     const handleCarouselClick = (option) => {
-        if (userAuthData && userAuthData.isConnected) {
+        if (user && isSignedIn) {
             navigate('/job-listings');
             return
         }
@@ -135,7 +137,7 @@ const Home = () => {
     }
     
     const handleJoinAsCarer = () => {
-        if (userAuthData && userAuthData.isConnected) {
+        if (user && isSignedIn) {
             navigate('/job-listings');
             return
         }
@@ -149,21 +151,32 @@ const Home = () => {
         options.preferences = 'option_helper';
 
         setFormData(options);
-
-        navigate('/signup/get-started', { state: { stateOptionsFromHome: formData }});
+        navigate('/signup')
     }
 
     useEffect(() => {
         if (!alertDialog.open) {
             if (formData === undefined || formData === null || Object.keys(formData).length === 0) return;
 
-            navigate('/signup/get-started', { state: { stateOptionsFromHome: formData }});
+            navigate('/signup')
         }
 
         return () => {
             setFormData({});
         }
-    }, [alertDialog.open]);
+    }, [isLoaded, isSignedIn, alertDialog.open]);
+
+    if (!isLoaded) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="relative">
+                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <Suspense fallback={
@@ -192,17 +205,7 @@ const Home = () => {
                         setAlertState={setAlertState}
                     />
                 )}
-
-                {/* <h1 className='text-center'>Home</h1>
                 
-                <h1 className='text-center'>
-                    {userAuthData && Object.entries(userAuthData).map(([key, value], index) => (
-                        <div key={index}>
-                        {key} : {typeof value === 'object' ? JSON.stringify(value) : value}
-                        </div>
-                    ))}
-                </h1> */}
-
                 <div className='flex flex-col items-center justify-center w-full'>
                     <div className='flex items-center justify-center w-full'>
 
