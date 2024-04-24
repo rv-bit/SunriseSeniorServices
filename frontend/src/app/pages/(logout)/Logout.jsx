@@ -1,37 +1,15 @@
 import { useEffect, useContext, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useClerk } from "@clerk/clerk-react";
-
-import AuthProvider from '@/app/providers/AuthProvider'
-
-import { Post, Get } from '@/app/lib/utils' // Common functions
+import { useAuth } from "@clerk/clerk-react";
 
 const Alertbox = lazy(() => import('@/app/components/custom/Alertbox'));
 
 const Logout = () => {
     const navigate = useNavigate();
-
-    const { signOut } = useClerk();
-    const {userAuthData, setUserAuth} = useContext(AuthProvider);
+    
+    const { signOut, isLoaded, isSignedIn } = useAuth();
 
     const onSubmit = async (e) => {
-        e.preventDefault();
-
-        const response = await Get(`${import.meta.env.VITE_API_PREFIX}/logout`);
-        const data = await response.json();
-
-        if (!response.ok) {
-            setUserAuth(null);
-            navigate('/');
-        }
-
-        if (response.ok) {
-            setUserAuth(null);
-            navigate('/');
-        }
-    }
-
-    const onCancel = (e) => {
         e.preventDefault();
 
         signOut(() => {
@@ -39,14 +17,29 @@ const Logout = () => {
         });
     }
 
-    useEffect(() => {
-        if (userAuthData === null || userAuthData === undefined) {
-            navigate('/');
-            return;
-        }
+    const onCancel = (e) => {
+        e.preventDefault();
 
-        return () => {};
-    }, []);
+        navigate('/');
+    }
+        
+    useEffect(() => {
+        if (isLoaded && !isSignedIn) {
+            navigate('/');
+        }
+    }, [isLoaded, isSignedIn, navigate]);
+
+    if (!isLoaded) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="relative">
+                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <Suspense fallback={
@@ -66,6 +59,7 @@ const Logout = () => {
                 button={{ second: "Cancel", main: "Submit" }} />
         </Suspense>
     )
+    
 }
 
 export default Logout;
