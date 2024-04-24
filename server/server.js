@@ -11,8 +11,13 @@ const SOCKET_URL = 'http://localhost:5001';
 
 app.use(bodyParser.json());
 
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static('frontend/dist'));
+if ( process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker" ) {
+  // Set static folder
+  app.use(express.static(path.join(__dirname, '../dist')));
+
+  app.get('/*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist', 'index.html'));
+  });
 }
 
 if (process.env.NODE_ENV === 'production') {
@@ -30,10 +35,6 @@ app.get('/', (req, res) => {
     res.json({
         message: 'GET /'
     });
-
-    if (process.env.NODE_ENV === 'production') {
-        res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
-    }
 });
 
 app.post('/saveUser', (req, res) => {
