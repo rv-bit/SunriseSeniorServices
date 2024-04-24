@@ -19,7 +19,6 @@ const Contact = lazy(() => import('./pages/(information)/Contact.jsx'))
 
 const Login = lazy(() => import('./pages/(login)/Login.jsx'))
 const Signup = lazy(() => import('./pages/(signup)/Signup.jsx'))
-const FormCreateAccount = lazy(() => import('./pages/(signup)/FormCreateAccount.jsx'))
 
 const Account = lazy(() => import('./pages/(account)/Account.jsx'))
 const Logout = lazy(() => import('./pages/(logout)/Logout.jsx'))
@@ -31,7 +30,6 @@ const JobListing = lazy(() => import('./pages/(job-listing)/JobListing.jsx'))
 const FormNewJobListing = lazy(() => import('./pages/(job-listing)/FormNewJobListing.jsx'))
 
 export default function App () {
-    const [socket, setSocket] = useState(null);
     const [socket, setSocket] = useState(null);
 
     useEffect(() => {
@@ -86,14 +84,11 @@ export default function App () {
                             <Route path='/signup' element={<Signup />} />
                             <Route path='/account' element={<Account />} />
                             <Route path='/logout' element={<Logout />} />
-
-                            <Route path='/signup/get-started' element={<FormCreateAccount />} />
                             
                             <Route path='/chat' element={<Chat />} />
 
                             <Route path='/job-listings' element={<JobListing />} />
                             <Route path='/job-listings/viewjob' element={<ViewJobListing />} />
-                            {/* <Route path='job-listings/viewjob' element={<ViewJobListing />} /> */}
                             <Route path='/job-listings/new' element={<FormNewJobListing />} />
                             
                             <Route path='/about' element={<About />} />

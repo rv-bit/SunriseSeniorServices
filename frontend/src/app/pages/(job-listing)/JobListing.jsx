@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useContext, Suspense, lazy } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-
-import AuthProvider from '@/app/providers/AuthProvider'
+import { useAuth, useUser } from '@clerk/clerk-react';
 
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -30,8 +29,6 @@ import { Notification } from '@/app/components/custom/Notifications' // Custom c
 
 const JobListing = () => {
     useDocumentTitle('Job Listings');
-
-    const {userAuthData} = useContext(AuthProvider);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -365,7 +362,7 @@ const JobListing = () => {
             )}
             
             <section className='mx-auto min-h-5'>
-                {<div className='flex items-center justify-center'>
+                <div className='flex items-center justify-center'>
                     <div className='mx-5'>
                         <h1 className='mb-10 text-3xl text-center font-bold text-slate-900'>Find your next job</h1>
 
@@ -622,7 +619,7 @@ const JobListing = () => {
                             </div>
                         )}
                     </div>
-                </div>}
+                </div>
 
             </section>
         </Suspense>
