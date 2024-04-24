@@ -67,19 +67,10 @@ const Account = () => {
                         }
                     />
 
-                    <UserProfile.Page
+                    <UserProfile.Link
                         label="Logout"
                         labelIcon={ <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg> }
                         url='/logout'
-
-                        children={
-                            <div className="flex items-center justify-center h-screen">
-                                <div className="relative">
-                                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
-                                    <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin"></div>
-                                </div>
-                            </div>
-                        }
                     />
                 </UserProfile>
             </SignedIn>
