@@ -30,7 +30,10 @@ app.get('/', (req, res) => {
     res.json({
         message: 'GET /'
     });
-    // res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+
+    if (process.env.NODE_ENV === 'production') {
+        res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+    }
 });
 
 app.post('/saveUser', (req, res) => {
