@@ -1,6 +1,8 @@
 import { Suspense, lazy, useState, useEffect, useMemo } from 'react'
 import { Routes, Route } from 'react-router-dom'
 
+import { useUser } from "@clerk/clerk-react";
+
 import SocketioProvider from '@/app/providers/SocketioProvider'
 
 import { Get } from '@/app/lib/utils.js' // Common functions
@@ -29,6 +31,7 @@ const JobListing = lazy(() => import('./pages/(job-listing)/JobListing.jsx'))
 const FormNewJobListing = lazy(() => import('./pages/(job-listing)/FormNewJobListing.jsx'))
 
 export default function App () {
+    const [socket, setSocket] = useState(null);
     const [socket, setSocket] = useState(null);
 
     useEffect(() => {
@@ -107,4 +110,5 @@ export default function App () {
             </Suspense>
         </div>
     )
+
 }

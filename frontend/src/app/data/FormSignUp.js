@@ -1,4 +1,3 @@
-
 const formSteps = {
     'Type Of Job / Help': [
         {

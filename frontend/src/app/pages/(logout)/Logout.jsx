@@ -1,12 +1,13 @@
 import { useEffect, useContext, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useClerk } from "@clerk/clerk-react";
+
+import { Post, Get } from '@/app/lib/utils' // Common functions
 
 const Alertbox = lazy(() => import('@/app/components/custom/Alertbox'));
 
 const Logout = () => {
-    const navigate = useNavigate();
-    
+    const navigate = useNavigate();    
     const { signOut, isLoaded, isSignedIn } = useAuth();
 
     const onSubmit = async (e) => {
@@ -19,7 +20,6 @@ const Logout = () => {
 
     const onCancel = (e) => {
         e.preventDefault();
-
         navigate('/');
     }
         
@@ -59,7 +59,6 @@ const Logout = () => {
                 button={{ second: "Cancel", main: "Submit" }} />
         </Suspense>
     )
-    
 }
 
 export default Logout;

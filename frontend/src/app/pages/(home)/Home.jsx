@@ -151,8 +151,6 @@ const Home = () => {
         options.preferences = 'option_helper';
 
         setFormData(options);
-        // navigate('/signup/get-started', { state: { stateOptionsFromHome: formData }});
-
         navigate('/signup')
     }
 
@@ -160,7 +158,6 @@ const Home = () => {
         if (!alertDialog.open) {
             if (formData === undefined || formData === null || Object.keys(formData).length === 0) return;
 
-            // navigate('/signup/get-started', { state: { stateOptionsFromHome: formData }});
             navigate('/signup')
         }
 
@@ -208,7 +205,7 @@ const Home = () => {
                         setAlertState={setAlertState}
                     />
                 )}
-
+                
                 <div className='flex flex-col items-center justify-center w-full'>
                     <div className='flex items-center justify-center w-full'>
 

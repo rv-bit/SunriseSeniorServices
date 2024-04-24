@@ -138,7 +138,6 @@ const Navbar = () => {
                                     <DropdownMenuItem key={link.path} asChild>
                                         <Link to={link.path} className="w-full h-full">
                                             <DropdownMenuLabel className="w-full h-full text-left">
-                                                {/* {link.name} */}
                                                 {link.component ? <link.component /> : link.name}
                                             </DropdownMenuLabel>
                                         </Link>
