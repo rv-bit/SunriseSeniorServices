@@ -35,6 +35,26 @@ const JobListing = () => {
     const location = useLocation();
 
     const { isLoaded, isSignedIn, user } = useUserAuth();
+    const [userDetails, setUserDetails] = useState(null);
+
+    useEffect(() => {
+        if (isLoaded && isSignedIn) {
+            const fetchData = async () => {
+                const response = await Get(`${import.meta.env.VITE_API_PREFIX}/user/${user.id}`);
+                if (!response.ok) {
+                    const data = await response.json();
+                    return;
+                }
+
+                const data = await response.json();
+                setUserDetails(data.data);
+            }
+            fetchData();
+        }
+
+        return () => {};
+    }, [isSignedIn, isLoaded]);
+
 
     const queryParams = new URLSearchParams(location.search);
     const currentJobIdFromSearch = queryParams.get('currentJobId');
@@ -432,11 +452,11 @@ const JobListing = () => {
                         </div>
 
                         <div className='my-5'>
-                            {/* {user && userAuthData.account_type[0] === 'option_requester' && ( */}
+                            {user && (userDetails && userDetails.account_type === 'option_requester') && (
                                 <div className='flex items-center justify-center'>
                                     <h1 onClick={() => {navigate('/job-listings/new')}} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
                                 </div>
-                            {/* )} */}
+                            )}
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 const formSteps = {
-    'Type Of Job / Help': [
+    'Account Type': [
         {
             name: 'option_helper',
             label: 'Find Job',
@@ -12,23 +12,13 @@ const formSteps = {
         },
     ],
 
-    'Category Of Jobs / Help': [
+    'Age': [
         {
-            name: 'option_childcare',
-            label: 'Child Care',
-            type: 'selector',
-        },
-        {
-            name: 'option_seniorcare',
-            label: 'Senior Care',
-            type: 'selector',
-        },
-        {
-            name: 'option_petcare',
-            label: 'Pet Care',
-            type: 'selector',
-        },
-    ],
+            name: 'option_age_user',
+            label: 'Birth date',
+            type: 'date',
+        }
+    ]
 }
 
 export default formSteps;

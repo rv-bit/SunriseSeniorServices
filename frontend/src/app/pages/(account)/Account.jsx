@@ -1,9 +1,13 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { SignedIn, UserProfile, useAuth, useUser } from '@clerk/clerk-react'
+import { SignedIn, UserProfile, useAuth } from '@clerk/clerk-react'
+
+import { Post, Get } from '@/app/lib/utils' // Common functions
+
+import { DatePicker } from "antd"
+import dayjs from "dayjs"
 
 import useUserAuth from '@/app/hooks/useUserAuth'
-
 import formSteps from "@/app/data/FormSignUp";
 
 const Alertbox = lazy(() => import('@/app/components/custom/Alertbox'));
@@ -49,58 +53,77 @@ const Logout = () => {
 
 const Account = () => {
     const navigate = useNavigate();
-    
-    // const { isLoaded, isSignedIn } = useAuth();
-    // const { user } = useUser();
+    const {isLoaded, isSignedIn, user} = useUserAuth();
+    const [userDetails, setUserDetails] = useState(null);
 
-    // useEffect(() => {
-    //     if (isLoaded && !isSignedIn) {
-    //         navigate('/');
-    //         return;
-    //     }
-
-    //     return () => {};
-    // }, [isSignedIn, isLoaded]);
-
-    // if (!isLoaded) {
-    //     return (
-    //         <div className="flex items-center justify-center h-screen">
-    //             <div className="relative">
-    //                 <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
-    //                     <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     )
-    // }
-
-    const [selectedOptions, setSelectedOptions] = useState([]);
-
-    const selectOptions = (e, index) => {
+    const selectOption = async (e, index) => {
         e.preventDefault();
 
         if (!isSignedIn) return;
 
         const option = e.target.value;
-        const userData = user.unsafeMetadata.data;
 
-        const newSelectedOptions = [...userData];
-        newSelectedOptions[index] = option;
-        setSelectedOptions(newSelectedOptions);
-
-        user.update({
-            unsafeMetadata: {
-                data: newSelectedOptions
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/user/update`, {
+            user: user.id,
+            data: {
+                account_type: option
             }
         });
+
+         if (!response.ok) {
+            const data = await response.json();
+            return;
+        }
+
+        const data = await response.json();
+        setUserDetails(data.data);
     }
 
-    const { isLoaded, isSignedIn, user } = useUserAuth();
+    const choseDate = async (date, dateString, option) => {
+        if (!isSignedIn) return;
+
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/user/update`, {
+            user: user.id,
+            data: {
+                [option]: dateString
+            }
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            return;
+        }
+
+        const data = await response.json();
+        setUserDetails(data.data);
+    }
+
+    const calculateAge = (birthday) => {
+        birthday = new Date(birthday);
+
+        const ageDifMs = Date.now() - birthday.getTime();
+        const ageDate = new Date(ageDifMs);
+        return Math.abs(ageDate.getUTCFullYear() - 1970);
+    }
 
     useEffect(() => {        
         if (isLoaded && !isSignedIn) {
             navigate('/');
             return;
+        }
+
+        if (isLoaded && isSignedIn) {
+            const fetchData = async () => {
+                const response = await Get(`${import.meta.env.VITE_API_PREFIX}/user/${user.id}`);
+                if (!response.ok) {
+                    const data = await response.json();
+                    return;
+                }
+
+                const data = await response.json();
+                setUserDetails(data.data);
+            }
+            fetchData();
         }
 
         return () => {};
@@ -133,17 +156,17 @@ const Account = () => {
                                 {Object.keys(formSteps).map((step, index) => {
                                     return (
                                         <div key={index} className="w-full flex justify-between items-center mx-5 gap-5">
-                                            <div className="flex justify-start items-center text-sm font-medium text-center">
-                                                <span className="text-xs text-gray-500">{step} - <span className='text-gray-400'>Current: {user.unsafeMetadata.data[index] ?  formSteps[step].find(form => form.name === user.unsafeMetadata.data[index])?.label : 'Not Found'}</span> </span>
+                                            <div className="flex flex-col justify-start items-start text-sm font-medium text-center">
+                                                <span className="text-xs text-gray-500">{step}</span>
+                                                <span>{formSteps[step].find(form => form.type === 'selector')?.label || formSteps[step].find(form => form.type === 'date') && (userDetails && userDetails.option_age_user ? calculateAge(userDetails.option_age_user) : '')}</span>
                                             </div>
 
                                             <div className="flex justify-end items-center">
-                                                {formSteps[step][index].type === 'selector' ?
+                                                {formSteps[step].find(form => form.type === 'selector')?.type === 'selector' ?
                                                     <select
                                                         key={index}
-                                                        value={user.unsafeMetadata.data[index] ? user.unsafeMetadata.data[index] : ''}
                                                         className="p-2 border border-gray-300 rounded-md"
-                                                        onChange={(e) => selectOptions(e, index)}    
+                                                        onChange={(e) => selectOption(e)}    
                                                     >
                                                         {formSteps[step].map((form, indexForm) => {
                                                             return (
@@ -151,12 +174,14 @@ const Account = () => {
                                                             )
                                                         })}
                                                     </select>
-                                                : 
-                                                    <input
-                                                        key={index}
-                                                        value={user.unsafeMetadata.data[index] ? user.unsafeMetadata.data[index] : ''}
-                                                        className="p-2 border border-gray-300 rounded-md"
-                                                        onChange={(e) => selectOptions(e, index)}></input>
+                                                :
+                                                    <DatePicker 
+                                                        value={(userDetails && userDetails.age) ? dayjs(userDetails.age).format('YYYY-MM-DD') : ''}
+                                                        onChange={
+                                                            (date, dateString) => {                                                            
+                                                                choseDate(date, dateString, formSteps[step].find(form => form.type === 'date')?.name)
+                                                            }
+                                                    } />
                                                 }
                                             </div>
                                         </div>

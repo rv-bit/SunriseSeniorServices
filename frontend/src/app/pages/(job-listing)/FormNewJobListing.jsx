@@ -37,11 +37,26 @@ const FormNewJobListing = () => {
     const navigate = useNavigate();
 
     const { isLoaded, isSignedIn, user } = useUserAuth();
+    const [userDetails, setUserDetails] = useState(null);
 
     useEffect(() => {        
         if (isLoaded && !isSignedIn) {
             navigate('/');
             return;
+        }
+
+        if (isLoaded && isSignedIn) {
+            const fetchData = async () => {
+                const response = await Get(`${import.meta.env.VITE_API_PREFIX}/user/${user.id}`);
+                if (!response.ok) {
+                    const data = await response.json();
+                    return;
+                }
+
+                const data = await response.json();
+                setUserDetails(data.data);
+            }
+            fetchData();
         }
 
         return () => {};
@@ -61,7 +76,7 @@ const FormNewJobListing = () => {
     const form = useForm({defaultValues});
 
     useEffect(() => {
-        if (!user || (user && user.account_type[0] !== 'option_requester')) {
+        if (!user || (userDetails && userDetails.account_type !== 'option_requester')) {
             navigate('/');
             return;
         }

@@ -6,28 +6,28 @@ const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
 
+const pkg = require('@clerk/clerk-sdk-node');
+const clerkClient = pkg.default;
+
 const PORT = process.env.PORT || 5001;
 const SOCKET_URL = 'http://localhost:5001';
 
 app.use(bodyParser.json());
 
 if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") {
-    // Set static folder
     app.use(express.static(path.join(__dirname, '../frontend/dist')));
-
     app.get('/*', (req, res) => {
         res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
     });
-}
-
-if (process.env.NODE_ENV === 'production') {
     app.use(cors({ origin: 'https://sunriseseniorservices.fun' }));
 } else {
     app.use(cors())
 }
 
 const jobListingRouter = require('./routes/joblisting');
+const userRouter = require('./routes/user');
 app.use('/job-listings', jobListingRouter);
+app.use('/user', userRouter);
 
 app.get('/', (req, res) => {
     console.log('GET /');
@@ -36,17 +36,6 @@ app.get('/', (req, res) => {
         message: 'GET /'
     });
 });
-
-app.post('/saveUser', (req, res) => {
-    console.log('GET /saveUser');
-    const formData = req.body.formData;
-
-    // Now you can use formData
-    console.log(formData);
-
-    // Send a response back to the client
-    res.send('User data received');
-})
 
 socketIO.on('connection', (socket) => {
     console.log(`⚡: ${socket.id} user just connected!`);
