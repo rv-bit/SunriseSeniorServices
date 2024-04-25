@@ -74,6 +74,27 @@ const Account = () => {
     //     )
     // }
 
+    const [selectedOptions, setSelectedOptions] = useState([]);
+
+    const selectOptions = (e, index) => {
+        e.preventDefault();
+
+        if (!isSignedIn) return;
+
+        const option = e.target.value;
+        const userData = user.unsafeMetadata.data;
+
+        const newSelectedOptions = [...userData];
+        newSelectedOptions[index] = option;
+        setSelectedOptions(newSelectedOptions);
+
+        user.update({
+            unsafeMetadata: {
+                data: newSelectedOptions
+            }
+        });
+    }
+
     const { isLoaded, isSignedIn, user } = useUserAuth();
 
     useEffect(() => {        
@@ -84,6 +105,18 @@ const Account = () => {
 
         return () => {};
     }, [isSignedIn, isLoaded]);
+
+    if (!isLoaded) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="relative">
+                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="flex items-center justify-center">
@@ -101,18 +134,30 @@ const Account = () => {
                                     return (
                                         <div key={index} className="w-full flex justify-between items-center mx-5 gap-5">
                                             <div className="flex justify-start items-center text-sm font-medium text-center">
-                                                <span className="text-xs text-gray-500">{step} - <span className='text-gray-400'>Current: Da</span> </span>
+                                                <span className="text-xs text-gray-500">{step} - <span className='text-gray-400'>Current: {user.unsafeMetadata.data[index] ?  formSteps[step].find(form => form.name === user.unsafeMetadata.data[index])?.label : 'Not Found'}</span> </span>
                                             </div>
 
                                             <div className="flex justify-end items-center">
-                                                <select key={index} className="p-2 border border-gray-300 rounded-md">
-
-                                                {formSteps[step].map((form, indexForm) => {
-                                                    return (
-                                                        <option key={indexForm} value={form.name}>{form.label}</option>
-                                                    )
-                                                })}
-                                                </select>
+                                                {formSteps[step][index].type === 'selector' ?
+                                                    <select
+                                                        key={index}
+                                                        value={user.unsafeMetadata.data[index] ? user.unsafeMetadata.data[index] : ''}
+                                                        className="p-2 border border-gray-300 rounded-md"
+                                                        onChange={(e) => selectOptions(e, index)}    
+                                                    >
+                                                        {formSteps[step].map((form, indexForm) => {
+                                                            return (
+                                                                <option key={indexForm} value={form.name}>{form.label}</option>
+                                                            )
+                                                        })}
+                                                    </select>
+                                                : 
+                                                    <input
+                                                        key={index}
+                                                        value={user.unsafeMetadata.data[index] ? user.unsafeMetadata.data[index] : ''}
+                                                        className="p-2 border border-gray-300 rounded-md"
+                                                        onChange={(e) => selectOptions(e, index)}></input>
+                                                }
                                             </div>
                                         </div>
                                     )
