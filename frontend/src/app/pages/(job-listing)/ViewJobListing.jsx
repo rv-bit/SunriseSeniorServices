@@ -1,19 +1,22 @@
 import React, { useCallback, useEffect, useState, useContext } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
+
+import useUserAuth from '@/app/hooks/useUserAuth';
+import useDocumentTitle from '@/app/hooks/useDocumentTitle';
+
 import { Post, Get, formatTags } from '@/app/lib/utils';
-
-import { Button } from '@/app/components/ui/button';
-
 import { BsChevronLeft } from "react-icons/bs";
-import useDocumentTitle from '@/app/hooks/UseDocumentTitle';
 
 import { Notification } from '@/app/components/custom/Notifications';
+import { Button } from '@/app/components/ui/button';
 
 const ViewJobListing = () => {
     useDocumentTitle('View Job Listing');
 
     const navigate = useNavigate();
     const location = useLocation();
+
+    const { isLoaded, isSignedIn, user } = useUserAuth();
 
     const queryParams = new URLSearchParams(location.search);
     const currentJobIdFromSearch = queryParams.get('currentJobId');
@@ -37,7 +40,7 @@ const ViewJobListing = () => {
     const createChats = useCallback(async (chatId) => {
         const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createChat`, {data: {
             'id': chatId,
-            'members': [userAuthData._id, jobListing.user_id],
+            'members': [user.id, jobListing.user_id],
             'name': jobListing.title,
         }});
 
@@ -62,12 +65,12 @@ const ViewJobListing = () => {
     const handleChat = async (e, jobId) => {
         e.preventDefault();
 
-        if (userAuthData === null || userAuthData === undefined) {            
+        if (!user) {            
             navigate('/login', { state: { info: 'You must be logged in to send a message!' } } );
         } else {
             setWaitForChatToCreate(true);
 
-            const chatId = jobId + userAuthData._id + jobListing.user_id;
+            const chatId = jobId + user.id + jobListing.user_id;
             const chatCreated = await createChats(chatId);
             
             if (!chatCreated) {

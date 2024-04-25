@@ -36,6 +36,17 @@ async function createJobListing(formData, alertState, setAlertState) {
 const FormNewJobListing = () => {
     const navigate = useNavigate();
 
+    const { isLoaded, isSignedIn, user } = useUserAuth();
+
+    useEffect(() => {        
+        if (isLoaded && !isSignedIn) {
+            navigate('/');
+            return;
+        }
+
+        return () => {};
+    }, [isSignedIn, isLoaded]);
+
     const [currentStep, setCurrentStep] = useState(0);
     const [currentSubStep, setCurrentSubStep] = useState(1);
     
@@ -50,7 +61,7 @@ const FormNewJobListing = () => {
     const form = useForm({defaultValues});
 
     useEffect(() => {
-        if (userAuthData === null || userAuthData === undefined || (userAuthData && userAuthData.account_type[0] !== 'option_requester')) {
+        if (!user || (user && user.account_type[0] !== 'option_requester')) {
             navigate('/');
             return;
         }

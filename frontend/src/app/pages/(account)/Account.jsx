@@ -1,16 +1,82 @@
-import { useEffect, useContext } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { SignedIn, UserProfile, useAuth, useUser } from '@clerk/clerk-react'
 
+import useUserAuth from '@/app/hooks/useUserAuth'
+
 import formSteps from "@/app/data/FormSignUp";
+
+const Alertbox = lazy(() => import('@/app/components/custom/Alertbox'));
+
+const Logout = () => {
+    const navigate = useNavigate();
+    const { signOut } = useAuth();
+
+    const onSubmit = async (e) => {
+        e.preventDefault();
+
+        signOut(() => {
+            navigate('/');
+        });
+    }   
+
+    const onCancel = (e) => {
+        e.preventDefault();
+
+        navigate('/');
+    }
+
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-screen">
+                <div className="relative">
+                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    </div>
+                </div>
+            </div>
+        }>
+            <Alertbox
+                Title="Logout"
+                Description="Are you sure you want to logout?"
+                onSubmit={onSubmit}
+                onCancel={onCancel}
+                button={{ second: "Cancel", main: "Submit" }}
+            />
+        </Suspense>
+    )
+}
 
 const Account = () => {
     const navigate = useNavigate();
     
-    const { isLoaded, isSignedIn } = useAuth();
-    const { user } = useUser();
+    // const { isLoaded, isSignedIn } = useAuth();
+    // const { user } = useUser();
 
-    useEffect(() => {
+    // useEffect(() => {
+    //     if (isLoaded && !isSignedIn) {
+    //         navigate('/');
+    //         return;
+    //     }
+
+    //     return () => {};
+    // }, [isSignedIn, isLoaded]);
+
+    // if (!isLoaded) {
+    //     return (
+    //         <div className="flex items-center justify-center h-screen">
+    //             <div className="relative">
+    //                 <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+    //                     <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     )
+    // }
+
+    const { isLoaded, isSignedIn, user } = useUserAuth();
+
+    useEffect(() => {        
         if (isLoaded && !isSignedIn) {
             navigate('/');
             return;
@@ -19,22 +85,10 @@ const Account = () => {
         return () => {};
     }, [isSignedIn, isLoaded]);
 
-    if (!isLoaded) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="relative">
-                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
-                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     return (
         <div className="flex items-center justify-center">
             <SignedIn>
-                    <UserProfile>
+                <UserProfile>
 
                     <UserProfile.Page 
                         label="Edit Profile"
@@ -67,10 +121,14 @@ const Account = () => {
                         }
                     />
 
-                    <UserProfile.Link
+                    <UserProfile.Page
                         label="Logout"
                         labelIcon={ <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg> }
                         url='/logout'
+
+                        children={
+                            <Logout />
+                        }
                     />
                 </UserProfile>
             </SignedIn>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useContext, Suspense, lazy } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useAuth, useUser } from '@clerk/clerk-react';
+
+import useUserAuth from '@/app/hooks/useUserAuth';
 
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -20,7 +21,7 @@ const inputFields = [
     `}
 ]
 
-import useDocumentTitle from '@/app/hooks/UseDocumentTitle';
+import useDocumentTitle from '@/app/hooks/useDocumentTitle';
 
 import { Get, Post, formatTags } from '@/app/lib/utils';
 import { Skeleton } from '@/app/components/ui/skeleton';
@@ -32,6 +33,8 @@ const JobListing = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
+
+    const { isLoaded, isSignedIn, user } = useUserAuth();
 
     const queryParams = new URLSearchParams(location.search);
     const currentJobIdFromSearch = queryParams.get('currentJobId');
@@ -108,7 +111,7 @@ const JobListing = () => {
     const createChats = useCallback(async (chatId) => {
         const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createChat`, {data: {
             'id': chatId,
-            'members': [userAuthData._id, userFromJobId.id],
+            'members': [user.id, userFromJobId.id],
             'name': jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.title,
         }});
 
@@ -133,12 +136,12 @@ const JobListing = () => {
     const handleChat = async (e, jobId) => {
         e.preventDefault();
 
-        if (userAuthData === null || userAuthData === undefined) {            
+        if (!user) {            
             navigate('/login', { state: { info: 'You must be logged in to send a message!' } } );
         } else {
             setWaitForChatToCreate(true);
 
-            const chatId = jobId + userAuthData._id + userFromJobId.id;
+            const chatId = jobId + user.id + userFromJobId.id;
             const chatCreated = await createChats(chatId);
             
             if (!chatCreated) {
@@ -429,11 +432,11 @@ const JobListing = () => {
                         </div>
 
                         <div className='my-5'>
-                            {userAuthData && userAuthData.account_type[0] === 'option_requester' && (
+                            {/* {user && userAuthData.account_type[0] === 'option_requester' && ( */}
                                 <div className='flex items-center justify-center'>
                                     <h1 onClick={() => {navigate('/job-listings/new')}} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
                                 </div>
-                            )}
+                            {/* )} */}
                         </div>
                     </div>
                 </div>

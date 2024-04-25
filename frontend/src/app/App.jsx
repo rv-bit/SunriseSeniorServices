@@ -19,9 +19,7 @@ const Contact = lazy(() => import('./pages/(information)/Contact.jsx'))
 
 const Login = lazy(() => import('./pages/(login)/Login.jsx'))
 const Signup = lazy(() => import('./pages/(signup)/Signup.jsx'))
-
 const Account = lazy(() => import('./pages/(account)/Account.jsx'))
-const Logout = lazy(() => import('./pages/(logout)/Logout.jsx'))
 
 const Chat = lazy(() => import('./pages/(chat)/Chat.jsx'))
 
@@ -83,7 +81,6 @@ export default function App () {
                             <Route path='/login' element={<Login />} />
                             <Route path='/signup' element={<Signup />} />
                             <Route path='/account' element={<Account />} />
-                            <Route path='/logout' element={<Logout />} />
                             
                             <Route path='/chat' element={<Chat />} />
 

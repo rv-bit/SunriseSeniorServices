@@ -2,7 +2,8 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { SignIn, useAuth, useUser } from '@clerk/clerk-react'
 
-import useDocumentTitle  from '@/app/hooks/UseDocumentTitle' // Custom hooks
+import useDocumentTitle  from '@/app/hooks/useDocumentTitle' // Custom hooks
+import useUserAuth from '@/app/hooks/useUserAuth' // Custom hooks
 
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
 import { Post, Get } from '@/app/lib/utils' // Common functions
@@ -32,13 +33,7 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const { isLoaded, isSignedIn } = useAuth();
-    const { user } = useUser();
-
-    const [alertState, setAlertState] = useState({
-        open: false,
-        message: '',
-    });
+    const { isLoaded, isSignedIn, user } = useUserAuth();
 
     useEffect(() => {
         if (isLoaded && isSignedIn) {
@@ -46,35 +41,11 @@ const Login = () => {
             return;
         }
 
-        const infoFromPreviousPage = location.state?.info;
-        if (infoFromPreviousPage) {
-            setAlertState({ ...alertState, open: true, message: info });
-        }
-
         return () => {};
-    }, [isLoaded, isSignedIn]);
-
-    if (!isLoaded) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="relative">
-                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
-                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
+    }, [isSignedIn, isLoaded]);
+    
     return (
         <div className="flex items-center justify-center min-h-5">
-            {alertState.open && (
-                <Notification
-                    alertState={alertState}
-                    setAlertState={setAlertState}
-                />
-            )}
-
             <div className="max-w-screen-sm mx-auto mb-10">
                 <SignIn />
             </div>
