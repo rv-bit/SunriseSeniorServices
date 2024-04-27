@@ -616,27 +616,20 @@ const JobListing = () => {
                                                     </div>
                                                 </div>
 
-                                                <ScrollArea className='w-full' style={{ height: `calc(100% - ${elementCurrentJobHeaderHeight}px)` }}>
-                                                    <div className='inline-block whitespace-normal break-words'>
-                                                        <div className='p-5'>
-                                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                            <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.location}</p>
-                                                        </div>
+                                                <ScrollArea className='w-full min-w-[90%]' style={{ height: `calc(100% - ${elementCurrentJobHeaderHeight}px)` }}>
+                                                    <div className='w-full flex flex-col gap-5 whitespace-normal break-words p-5'>
+                                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                        <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.location}</p>
 
-                                                        <div className='p-5'>
-                                                            <h1 className='text-xl font-bold text-slate-900'>Job Full Description</h1>
-
-                                                            <p className='text-slate-600 line-clamp-2'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.description}</p>
-                                                        </div>
+                                                        <h1 className='text-xl font-bold text-slate-900'>Job Full Description</h1>
+                                                        <p className='text-slate-600 line-clamp-2'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.description}</p>
 
                                                         {jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.additional_information && (
                                                             <React.Fragment>
                                                                 <hr className='w-full opacity-30 border-t border-slate-400' />
 
-                                                                <div className='p-5'>
-                                                                    <h1 className='text-xl font-bold text-slate-900'>Job Additional Details</h1>
-                                                                    <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.additional_information}</p>
-                                                                </div>
+                                                                <h1 className='text-xl font-bold text-slate-900'>Job Additional Details</h1>
+                                                                <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.additional_information}</p>
                                                             </React.Fragment>
                                                         )}
                                                     </div>
