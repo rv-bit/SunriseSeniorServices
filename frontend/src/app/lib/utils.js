@@ -70,7 +70,7 @@ export const formatTags = (tags) => {
             }
 
             switch (key) {
-                case 'payment_type' || 'payment_amount':
+                case 'payment_type' && 'payment_amount':
                     returnTags['Tag_Payment'] = "£" + tagValue['payment_amount'] + " / " + tagValue['payment_type']
                     break;
                 case 'days':

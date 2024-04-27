@@ -1,5 +1,6 @@
 import { Suspense, useContext, useState, useEffect, lazy } from 'react'
 import { useNavigate } from 'react-router-dom'
+import useUserAuth from '@/app/hooks/useUserAuth'
 
 import { Post, Get } from '@/app/lib/utils' // Common functions 
 
@@ -22,7 +23,7 @@ const defaultValues = formSteps.reduce((values, step) => {
 async function createJobListing(formData, alertState, setAlertState) {
     if (!formData) return;
 
-    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createJobListing`, {formData});
+    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/joblisting/createListing`, {formData});
     if (!response.ok) {
         const data = await response.json();
         setAlertState({ ...alertState, open: true, message: data.Error });
@@ -95,6 +96,7 @@ const FormNewJobListing = () => {
             if (currentStep === formSteps.length) {
                 setUserLoad(true);
 
+                formData.user_id = user.id;
                 const JobListingCreated = await createJobListing(formData, alertState, setAlertState);
 
                 setTimeout(() => {

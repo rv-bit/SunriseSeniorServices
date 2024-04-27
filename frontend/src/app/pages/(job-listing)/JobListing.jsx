@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useContext, Suspense, lazy } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useQuery } from 'react-query';
 
 import useUserAuth from '@/app/hooks/useUserAuth';
 
@@ -28,6 +29,54 @@ import { Skeleton } from '@/app/components/ui/skeleton';
 
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
 
+const fetchUserAdditionalInfo = async (user) => {
+    if (!user) {
+        throw new Error('User is not defined');
+    }
+
+    const response = await Get(`${import.meta.env.VITE_API_PREFIX}/user/${user.id}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error);
+    }
+
+    return data.data;
+}
+
+ const getJobListings = async () => {
+    const response = await Get(`${import.meta.env.VITE_API_PREFIX}/joblisting`);
+    
+    if (!response.ok) {
+        throw new Error(data.error);
+    }
+
+    const data = await response.json();
+
+    const newData = data.data.flat().map((job, index) => {   
+        job.hours = job.hours || 0;
+        job.location = job.location || 'Location not specified';
+
+        job.tags = {
+            payment_type: job.payment_type,
+            payment_amount: job.payment_amount,
+            category: job.category,
+            start_date: job.start_date,
+            days: job.days,
+            hours: job.hours,
+        }
+        
+        const newJobTags = formatTags(job.tags);
+
+        return {
+            ...job,
+            tags: newJobTags,
+        }
+    });
+
+    return newData;
+}
+
 const JobListing = () => {
     useDocumentTitle('Job Listings');
 
@@ -37,30 +86,16 @@ const JobListing = () => {
     const { isLoaded, isSignedIn, user } = useUserAuth();
     const [userDetails, setUserDetails] = useState(null);
 
-    useEffect(() => {
-        if (isLoaded && isSignedIn) {
-            const fetchData = async () => {
-                const response = await Get(`${import.meta.env.VITE_API_PREFIX}/user/${user.id}`);
-                if (!response.ok) {
-                    const data = await response.json();
-                    return;
-                }
+    const { data: userAdditionalInfo, isLoading: userInfoIsLoading, isError: userInfoIsError, error: userInfoError, status: userInfoStatus } = useQuery(['userAdditionalInfo', user], () => fetchUserAdditionalInfo(user), {
+        enabled: !!user && isLoaded && isSignedIn
+    });
 
-                const data = await response.json();
-                setUserDetails(data.data);
-            }
-            fetchData();
-        }
-
-        return () => {};
-    }, [isSignedIn, isLoaded]);
-
+    const { data: jobListings, isLoading: jobListingsIsLoading, isError: jobListingsIsError, error: jobListingsError, status: jobListingStatus } = useQuery(['jobListings'], () => getJobListings(), {
+        enabled: !!user && isLoaded && isSignedIn
+    });
 
     const queryParams = new URLSearchParams(location.search);
     const currentJobIdFromSearch = queryParams.get('currentJobId');
-
-    const [jobListings, setJobListings] = useState([]);
-    const [jobsDataIsLoading, setJobsDataLoad] = useState(false);
     
     const [searchInput, setSearchInput] = useState({ jobTitle: '', location: '' });
     const [searchResults, setSearchResults] = useState([]);
@@ -103,7 +138,7 @@ const JobListing = () => {
     const handleOpenInNewTab = useCallback((e, locationTab) => {
         e.preventDefault();
 
-        const newWindow = window.open(`${window.location.origin}/#${locationTab}`, '_blank', 'noopener,noreferrer');
+        const newWindow = window.open(`${window.location.origin}${locationTab}`, '_blank', 'noopener,noreferrer');
 
         if (newWindow) {
             newWindow.opener = null;
@@ -132,7 +167,7 @@ const JobListing = () => {
         const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createChat`, {data: {
             'id': chatId,
             'members': [user.id, userFromJobId.id],
-            'name': jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.title,
+            'name': jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.title,
         }});
 
         if (!response.ok) {
@@ -187,47 +222,14 @@ const JobListing = () => {
     }
 
     useEffect(() => {
-        let timeoutId = null;
-
-        const getJobListings = async () => {
-            setJobsDataLoad(true);
-
-            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getJobListings`);
-            
-            if (!response.ok) {
-                const data = await response.json();
-                setAlertState({ ...alertState, open: true, message: data.Error });
-                return;
-            }
-
-            const data = await response.json();
-
-            const newData = data.flat().map((job, index) => {
-                const newJobTags = formatTags(job.tags);
-                var dateParts = job.posted_at.split('-');
-                var formattedDate = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
-
-                return {
-                    ...job,
-                    tags: newJobTags,
-                    posted_at: formattedDate
-                }
-            });
-
-            timeoutId = setTimeout(() => {
-                setJobsDataLoad(false);
-                setJobListings(newData);
-            }, 2500);
-        }
-
-        if (jobListings.length === 0) getJobListings();
-
-        return () => {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
+        if (isLoaded && isSignedIn) {
+            if (userAdditionalInfo) {
+                setUserDetails(userAdditionalInfo);
             }
         }
-    }, []);
+
+        return () => {};
+    }, [isSignedIn, isLoaded, userInfoStatus]);
 
     useEffect(() => {
         if (currentJobIdFromSearch && !currentJobId) {
@@ -238,8 +240,10 @@ const JobListing = () => {
     }, [jobListings]);
 
     useEffect(() => {
+        if (jobListingStatus !== 'success') return;
+
         if (currentJobIdFromSearch && currentJobIdFromSearch !== currentJobId) {
-            const jobIndex = jobListings.findIndex((job) => job.id === currentJobIdFromSearch);
+            const jobIndex = jobListings.findIndex((job) => job._id === currentJobIdFromSearch);
 
             if (jobIndex !== -1) {
                 setCurrentJobIds(jobListings[jobIndex].id);
@@ -252,9 +256,10 @@ const JobListing = () => {
         }
 
         return () => {}
-    }, [currentJobIdFromSearch]);
+    }, [currentJobIdFromSearch, jobListingStatus]);
 
     useEffect(() => {
+        if (jobListingStatus !== 'success') return;
         if (!currentJobId) return;
 
         let timeoutId = null;
@@ -263,7 +268,7 @@ const JobListing = () => {
             setWaitingForUser(true);
             setUserFromJobId(null);
 
-            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/getUserByIdForJobListing?user_id=${userId}`);
+            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/joblisting/${userId}`);
 
             if (!response.ok) {
                 const data = await response.json();
@@ -282,18 +287,18 @@ const JobListing = () => {
 
             timeoutId = setTimeout(() => {
                 setWaitingForUser(false);
-                setUserFromJobId(data);
+                setUserFromJobId(data.data);
             }, 2500);
         };
 
-        getUserByIdFromJob(jobListings[jobListings.findIndex((job) => job.id === currentJobId)].user_id);
+        getUserByIdFromJob(jobListings[jobListings.findIndex((job) => job._id === currentJobId)].user_id);
 
         return () => {
             if (timeoutId) {
                 clearTimeout(timeoutId);
             }
         }
-    }, [currentJobId]);
+    }, [currentJobId, jobListingStatus]);
 
     const [newHeight, setNewHeight] = useState(930);
     useLayoutEffect(() => {
@@ -358,7 +363,8 @@ const JobListing = () => {
                 const elementPosition = elementJobListingAdvertisementRef.current.getBoundingClientRect().top;
 
                 if (elementPosition < windowHeight) {
-
+                    elementJobListingAdvertisementRef.current.style.opacity = 1;
+                    elementJobListingAdvertisementRef.current.style.transform = 'translateY(0)';
                 }
             }
         }
@@ -452,7 +458,7 @@ const JobListing = () => {
                         </div>
 
                         <div className='my-5'>
-                            {user && (userDetails && userDetails.account_type === 'option_requester') && (
+                            {userDetails && userDetails.account_type === 'option_requester' && (
                                 <div className='flex items-center justify-center'>
                                     <h1 onClick={() => {navigate('/job-listings/new')}} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
                                 </div>
@@ -467,7 +473,7 @@ const JobListing = () => {
                     <div className='flex justify-center my-5 w-[900px]'>
                         <div className='flex items-center flex-col mt-5 w-full'>
                             {
-                                jobsDataIsLoading ?
+                                jobListingsIsLoading ?
                                     <div className='mx-5 h-auto mb-2 bg-white border-2 border-black rounded-lg lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]'>
                                         <div className='flex items-center justify-between m-5'>
                                             <div className='w-full'>
@@ -488,7 +494,7 @@ const JobListing = () => {
                                         </div>
                                     </div>
                                 : 
-                                    jobListings.length === 0 ?
+                                    (jobListings && jobListings.length === 0) ?
                                         <div className='flex items-center justify-center w-full h-full gap-2'>
                                             <div className='flex items-center justify-center gap-2 w-full'>
                                                 <div className='flex items-center justify-center w-full h-full gap-2'>
@@ -501,9 +507,9 @@ const JobListing = () => {
                                     : null
                             }
 
-                            {jobListings.length !== 0 && jobListings.map((job, index) => {
+                            {(jobListings && jobListings.length !== 0) && jobListings.map((job, index) => {
                                 const newIndex = index + 1;
-                                const jobId = job.id;
+                                const jobId = job._id;
 
                                 return (
                                     <div
@@ -544,7 +550,7 @@ const JobListing = () => {
                                 );
                             })}
 
-                            {jobListings.length !== 0 && (
+                            {(jobListings && jobListings.length !== 0) && (
                                 <div className='flex items-center justify-center my-2 w-1/2'>
                                     <Button className='w-full'>Load More</Button>
                                 </div>
@@ -576,67 +582,69 @@ const JobListing = () => {
                                             </div>
                                         </React.Fragment>
                                     :
-                                        <React.Fragment>
-                                            <div className='flex items-center'>
-                                                <div ref={elementCurrentJobHeaderRef} className='shadow-md w-full rounded-sm'>
-                                                    <div className='p-5'>
-                                                        <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobId)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
-                                                            <span className='text-black'>X</span>
-                                                        </Button>
+                                        (jobListingStatus === 'success') ?
+                                            <React.Fragment>
+                                                <div className='flex items-center'>
+                                                    <div ref={elementCurrentJobHeaderRef} className='shadow-md w-full rounded-sm'>
+                                                        <div className='p-5'>
+                                                            <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobId)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
+                                                                <span className='text-black'>X</span>
+                                                            </Button>
 
-                                                        <div className='w-11/12 inline-block whitespace-normal break-words'>
-                                                            <h1 className='text-2xl font-bold text-slate-900'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.title}</h1>
-                                                            <h1 className='w-fit text-md text-slate-900 underline hover:cursor-pointer'>by {userFromJobId ? userFromJobId.name : ''}</h1>
-                                                            <p className='text-slate-600 text-opacity-75'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.location}</p>
-                                                        </div>
-
-                                                        <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
-                                                            {Object.entries(jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.tags).filter(([key, value]) => value !== '' && key.startsWith('Tag_')).map(([key, value], index) => {
-                                                                return (
-                                                                    <div key={index} className='bg-slate-100 px-2 py-1 h-full rounded-md text-ellipsis overflow-hidden flex items-center justify-center'>
-                                                                        <p className='text-xs'>{value}</p>
-                                                                    </div>
-                                                                )
-                                                            })}
-                                                        </div>
-
-                                                        <Button 
-                                                            disabled={waitForChatToCreate}
-                                                            onClick={(e) => handleChat(e, currentJobId)}
-                                                            onAuxClick={(e) => handleChat(e, currentJobId)}
-                                                            className='mt-5 bg-[#dd673cfd] bg-opacity-90 hover:bg-[#e8432dea] hover:bg-opacity-100'>Message</Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <ScrollArea className='w-full' style={{ height: `calc(100% - ${elementCurrentJobHeaderHeight}px)` }}>
-                                                <div className='w-[55%] inline-block whitespace-normal break-words'>
-                                                    <div className='p-5'>
-                                                        <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                        <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.location}</p>
-                                                    </div>
-
-                                                    <div className='p-5'>
-                                                        <h1 className='text-xl font-bold text-slate-900'>Job Full Description</h1>
-
-                                                        <p className='text-slate-600 line-clamp-2'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.description}</p>
-                                                    </div>
-
-                                                    {jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.additional_information && (
-                                                        <React.Fragment>
-                                                            <hr className='w-full opacity-30 border-t border-slate-400' />
-
-                                                            <div className='p-5'>
-                                                                <h1 className='text-xl font-bold text-slate-900'>Job Additional Details</h1>
-                                                                <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job.id === currentJobId)]?.additional_information}</p>
+                                                            <div className='w-11/12 inline-block whitespace-normal break-words'>
+                                                                <h1 className='text-2xl font-bold text-slate-900'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.title}</h1>
+                                                                <h1 className='w-fit text-md text-slate-900 underline hover:cursor-pointer'>by {userFromJobId ? userFromJobId.fullName : ''}</h1>
+                                                                <p className='text-slate-600 text-opacity-75'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.location}</p>
                                                             </div>
-                                                        </React.Fragment>
-                                                    )}
+
+                                                            <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
+                                                                {Object.entries(jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.tags).filter(([key, value]) => value !== '' && key.startsWith('Tag_')).map(([key, value], index) => {
+                                                                    return (
+                                                                        <div key={index} className='bg-slate-100 px-2 py-1 h-full rounded-md text-ellipsis overflow-hidden flex items-center justify-center'>
+                                                                            <p className='text-xs'>{value}</p>
+                                                                        </div>
+                                                                    )
+                                                                })}
+                                                            </div>
+
+                                                            <Button 
+                                                                disabled={waitForChatToCreate}
+                                                                onClick={(e) => handleChat(e, currentJobId)}
+                                                                onAuxClick={(e) => handleChat(e, currentJobId)}
+                                                                className='mt-5 bg-[#dd673cfd] bg-opacity-90 hover:bg-[#e8432dea] hover:bg-opacity-100'>Message</Button>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
-                                                <ScrollBar orientation="vertical" />
-                                            </ScrollArea>
-                                        </React.Fragment>
+                                                <ScrollArea className='w-full' style={{ height: `calc(100% - ${elementCurrentJobHeaderHeight}px)` }}>
+                                                    <div className='inline-block whitespace-normal break-words'>
+                                                        <div className='p-5'>
+                                                            <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
+                                                            <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.location}</p>
+                                                        </div>
+
+                                                        <div className='p-5'>
+                                                            <h1 className='text-xl font-bold text-slate-900'>Job Full Description</h1>
+
+                                                            <p className='text-slate-600 line-clamp-2'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.description}</p>
+                                                        </div>
+
+                                                        {jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.additional_information && (
+                                                            <React.Fragment>
+                                                                <hr className='w-full opacity-30 border-t border-slate-400' />
+
+                                                                <div className='p-5'>
+                                                                    <h1 className='text-xl font-bold text-slate-900'>Job Additional Details</h1>
+                                                                    <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.additional_information}</p>
+                                                                </div>
+                                                            </React.Fragment>
+                                                        )}
+                                                    </div>
+
+                                                    <ScrollBar orientation="vertical" />
+                                                </ScrollArea>
+                                            </React.Fragment>
+                                        : ''
                                     }
                                 </div>
                             </div>

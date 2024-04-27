@@ -26,16 +26,8 @@ if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") 
 
 const jobListingRouter = require('./routes/joblisting');
 const userRouter = require('./routes/user');
-app.use('/job-listings', jobListingRouter);
+app.use('/joblisting', jobListingRouter);
 app.use('/user', userRouter);
-
-app.get('/', (req, res) => {
-    console.log('GET /');
-
-    res.json({
-        message: 'GET /'
-    });
-});
 
 socketIO.on('connection', (socket) => {
     console.log(`⚡: ${socket.id} user just connected!`);
