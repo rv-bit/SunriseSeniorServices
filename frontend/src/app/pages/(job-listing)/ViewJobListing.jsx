@@ -52,7 +52,7 @@ const ViewJobListing = () => {
     const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
 
     const createChats = useCallback(async (chatId) => {
-        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chat/createChat`, {data: {
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/createChat`, {data: {
             'id': chatId,
             'members': [user.id, jobListing.user_id],
             'name': jobListing.title,

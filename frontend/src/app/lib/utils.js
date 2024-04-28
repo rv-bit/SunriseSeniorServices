@@ -104,8 +104,9 @@ export const formatTags = (tags) => {
 }
 
 export const formatDate = (date) => {
-    const dateParts = date.split('-');
-    const formattedDate = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}T${dateParts[3]}:${dateParts[4]}:${dateParts[5]}`;
+    const formattedDate = date.replace(/-/g, (match, index, original) => {
+        return (original.indexOf(match) === 4 || original.indexOf(match) === 7) ? '-' : ' ';
+    }).replace(':', ':');
 
     const newDate = new Date(formattedDate);
     const currentDate = new Date();

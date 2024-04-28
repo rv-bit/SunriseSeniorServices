@@ -159,7 +159,7 @@ const JobListing = () => {
     const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
 
     const createChats = useCallback(async (chatId) => {
-        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chat/createChat`, {data: {
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/createChat`, {data: {
             'id': chatId,
             'members': [user.id, userFromJobId.id],
             'name': jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.title,
@@ -248,12 +248,8 @@ const JobListing = () => {
     useEffect(() => {
         if (jobListingStatus !== 'success') return;
 
-        console.log(currentJobIdFromSearch, currentJobId, 'da');
-
         if (currentJobIdFromSearch && currentJobIdFromSearch !== currentJobId) {
             const jobIndex = jobListings.findIndex((job) => job._id === currentJobIdFromSearch);
-            console.log('here', jobIndex, currentJobIdFromSearch, jobListings);
-
             if (jobIndex !== -1) {
                 setCurrentJobIds(jobListings[jobIndex]._id);
                 return;
