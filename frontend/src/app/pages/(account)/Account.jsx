@@ -176,7 +176,21 @@ const Account = () => {
 
     return (
         <>
-
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                limit={3}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+                stacked={true}
+            />
+            
             <div className="flex items-center justify-center">
                 <SignedIn>
                     <UserProfile>
@@ -272,8 +286,7 @@ const Account = () => {
                         />
                     </UserProfile>
                 </SignedIn>
-            </div>
-            <ToastContainer />
+            </div>     
         </>
     )
 }

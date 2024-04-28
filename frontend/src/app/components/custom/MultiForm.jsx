@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
 
-import { Notification } from '@/app/components/custom/Notifications' // Custom components
+import { useState, useEffect } from 'react'
 
 import { Loader2 } from "lucide-react"
 import {
@@ -40,7 +41,6 @@ const MultiForm = (props) => {
 
     const errors = props.errors;
     const handleSetCheckboxValues = props.handleSetCheckboxValues;
-    const alertState = props.alertState;
     const currentStep = props.currentStep;
     const currentSubStep = props.currentSubStep;
 
@@ -53,13 +53,21 @@ const MultiForm = (props) => {
     
     return (
         <div className="max-w-screen-sm mx-auto">
-            {alertState.open && (
-                <Notification
-                    alertState={alertState}
-                    setAlertState={props.setAlertState}
-                />
-            )}
-
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                limit={3}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+                stacked={true}
+            />
+            
             <div className='mx-5'>
                 <Stepper className="flex flex-wrap justify-center items-center mt-5 mb-20" hideConnectors={windowWidth <= 640 ? 'inactive' : false} activeStep={currentStep} steps={formSteps[currentStep]?.name}>
                     {formSteps.map((step, index) => (

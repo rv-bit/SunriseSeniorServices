@@ -1,5 +1,9 @@
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
+
 import React, { useCallback, useRef, useContext, useEffect, useState, useLayoutEffect, lazy, Suspense } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useQuery } from 'react-query'
 
 import useUserAuth from '@/app/hooks/useUserAuth'
 import useDocumentTitle from '@/app/hooks/useDocumentTitle'
@@ -12,43 +16,46 @@ import { ScrollArea, ScrollBar } from '@/app/components/ui/scroll-area';
 import { Button } from '@/app/components/ui/button'
 import { BsChevronLeft } from "react-icons/bs";
 
-const Notification = lazy(() => import('@/app/components/custom/Notifications'))
+const fetchChats = async (user) => {
+    if (!user) {
+        throw new Error('User is not authenticated');
+    }
+
+    const response = await Get(`${import.meta.env.VITE_API_PREFIX}/chats/${user.id}`, );
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch chats');
+    }
+    
+    const data = await response.json();
+    return data.data;
+};
 
 const Chat = () => {
     useDocumentTitle('Chat')
+
     const navigate = useNavigate();
     const location = useLocation();
 
     const { socket } = useContext(SocketioProvider);
     const { isLoaded, isSignedIn, user } = useUserAuth();
 
-    useEffect(() => {        
-        if (isLoaded && !isSignedIn) {
-            navigate('/');
-            return;
-        }
-
-        return () => {};
-    }, [isSignedIn, isLoaded]);
+    const { data: chatsData, isLoading: chatsDataIsLoading, isError: chatsDataIsError, error: chatsDataError, status: chatsDataStatus } = useQuery(['gatherChats'], () => fetchChats(user), {
+        enabled: !!user && isLoaded && isSignedIn
+    });
 
     const queryParams = new URLSearchParams(location.search);
     const currentChatIdFromSearch = queryParams.get('currentChatId');
 
-    const [alertState, setAlertState] = useState({
-        open: false,
-        message: '',
-    });
-
     const [chats, setChats] = useState([]);
     const [chatMessages, setChatMessages] = useState([]);
+    const [sentMessage, setSentMessage] = useState('');
     
     const [chatOpen, setChatOpen] = useState(true);
     const [selectedChatId, setSelectedChatId] = useState({});
 
     const chatBoxRef = useRef(null);
     const scrollChatArea = useRef(null);
-
-    const [sentMessage, setSentMessage] = useState('');
     
     const handleOpenInNewTab = useCallback((e, locationTab) => {
         e.preventDefault();
@@ -64,15 +71,13 @@ const Chat = () => {
         e.preventDefault();
 
         if (selectedChatId !== chatId && selectedChatId !== null && selectedChatId.length > 0) {
-            socket.on('disconnect', () => {
-                socket.emit('disconnectChat', { 
-                    chat_id: selectedChatId,
-                    memberDisconnect: user.id,
-                }, (error) => {
-                    if (error) {
-                        console.log('Error', error);
-                    }
-                });
+            socket.emit('disconnectChat', { 
+                chat_id: selectedChatId,
+                memberDisconnect: user.id,
+            }, (error) => {
+                if (error) {
+                    console.log('Error', error);
+                }
             });
         }
 
@@ -126,28 +131,22 @@ const Chat = () => {
         messageBoxValue.focus();
     }
 
+    // Check if the user is authenticated using a useEffect because the user is loaded asynchronously
+    useEffect(() => {        
+        if (isLoaded && !isSignedIn) {
+            navigate('/');
+            return;
+        }
+
+        return () => {};
+    }, [isSignedIn, isLoaded]);
+
     useEffect(() => {
-        const fetchData = async () => {
-            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/gatherChats`);
+        if (chatsDataStatus !== 'success') return;
+        setChats(chatsData);
 
-            if (!response.ok) {
-                const data = await response.json();
-
-                if (data.Error === 'Unauthorized') {
-                    setUserAuth(null);
-                    navigate('/');
-                }
-
-                return;
-            }
-            
-            const data = await response.json();
-            setChats(data.chats);
-        };
-        fetchData();
-
-        return () => {}
-    }, [])
+        return () => {};
+    }, [chatsDataStatus]);
 
     useEffect(() => {
         if (currentChatIdFromSearch && currentChatIdFromSearch !== selectedChatId) {
@@ -167,25 +166,24 @@ const Chat = () => {
     }, [currentChatIdFromSearch, chats]);
 
     useEffect(() => {
+        if (!socket) return;
+        if (!isLoaded) return;
+
         if (!selectedChatId) {
-            socket.on('disconnect', () => {
-                socket.emit('disconnectChat', { 
-                    chat_id: selectedChatId,
-                    memberDisconnect: user.id,
-                }, (error) => {
-                    if (error) {
-                        console.log('Error', error);
-                    }
-                });
+            socket.emit('disconnectChat', { 
+                chat_id: selectedChatId,
+                memberDisconnect: user.id,
+            }, (error) => {
+                if (error) {
+                    console.log('Error', error);
+                }
             });
 
             return;
         }
 
         const gatherChatMessagesByChatId = async () => {
-            const response = await Post(`${import.meta.env.VITE_API_PREFIX}/gatherMessagesByChat`, {
-                chatId: selectedChatId,
-            });
+            const response = await Get(`${import.meta.env.VITE_API_PREFIX}/chats/gatherMessages/${selectedChatId}`);
 
             if (!response.ok) {
                 const data = await response.json();
@@ -196,9 +194,10 @@ const Chat = () => {
 
                 return;
             }
+
             
-            const data = await response.json();
-            setChatMessages(data.messages);
+            const data = await response.json();            
+            setChatMessages(data.data);
 
             if (scrollChatArea.current) {
                 scrollChatArea.current.scrollTop = scrollChatArea.current.scrollHeight;
@@ -229,7 +228,7 @@ const Chat = () => {
         return () => {
             socket.off('connectChat', () => {});
         };
-    }, [selectedChatId])
+    }, [selectedChatId, isLoaded])
 
     useEffect(() => {
         if (socket) {
@@ -253,8 +252,6 @@ const Chat = () => {
             };
 
             socket.on('receiveMessage', receiveMessageHandler);
-
-            // Return a cleanup function that removes the event listener
             return () => {
                 socket.off('receiveMessage', receiveMessageHandler);
             };
@@ -278,13 +275,21 @@ const Chat = () => {
             </div>
         }>
             <React.Fragment>
-                {alertState.open && (
-                    <Notification
-                        alertState={alertState}
-                        setAlertState={setAlertState}
-                    />
-                )}
-            
+                <ToastContainer
+                    position="bottom-right"
+                    autoClose={5000}
+                    limit={3}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                    stacked={true}
+                />
+                
                 <div className='flex items-center justify-center w-full'>
                     <div className='mx-5 max-w-[1400px] w-full'>
 
@@ -292,82 +297,95 @@ const Chat = () => {
 
                             <section role='all-chats' className={`items-center justify-between h-full ${currentChatIdFromSearch ? 'sm:hidden max-md:hidden lg:flex lg:w-[40%] md:w-[50%]' : 'extraSm:flex sm:flex md:flex lg:flex w-[90%] md:w-[100%] lg:w-[40%] max-extraSm:w-[95%]'}`}>
                                 <div className='max-lg:border-0 border border-black rounded-l-md w-full h-full'>
-                                    <ScrollArea className='flex flex-col gap-2 items-center justify-between w-full h-full'>
-                                        {
-                                            chats.sort((a, b) => {
-                                                const datePartsA = a.last_message_date ? a.last_message_date.split('-') : 0;
-                                                const datePartsB = b.last_message_date ? b.last_message_date.split('-') : 0;
 
-                                                const formattedDateA = `${datePartsA[0]}-${datePartsA[1]}-${datePartsA[2]}T${datePartsA[3]}:${datePartsA[4]}:${datePartsA[5]}`;
-                                                const formattedDateB = `${datePartsB[0]}-${datePartsB[1]}-${datePartsB[2]}T${datePartsB[3]}:${datePartsB[4]}:${datePartsB[5]}`;
+                                    {chatsDataIsLoading ?
+                                        <React.Fragment>
+                                            <div className='flex items-center justify-center w-full h-full'>
+                                                <h1 className='text-lg'>Chats are loading..</h1>
+                                            </div>
+                                        </React.Fragment>
+                                    :
+                                        <React.Fragment>
+                                            <ScrollArea className='flex flex-col gap-2 items-center justify-between w-full h-full'>
+                                                {
+                                                    chats.sort((a, b) => {
+                                                        const formattedDateA = a.last_message_date?.replace(/-/g, (match, index, original) => {
+                                                            return (original.indexOf(match) === 4 || original.indexOf(match) === 7) ? '-' : ' ';
+                                                        }).replace(':', ':');
 
-                                                const dateA = a.last_message_date ? new Date(formattedDateA) : 0;
-                                                const dateB = b.last_message_date ? new Date(formattedDateB) : 0;
-                                                return dateB - dateA;
-                                            }).map((chat, index) => {
-                                                const lastMessage = chat.last_message ? chat.last_message : undefined;
-                                                
-                                                if (!lastMessage || lastMessage.length === 0) {
-                                                    return (
-                                                        <div key={index} 
-                                                        onClick={(e) => handleChatOpen(e, chat._id)}
-                                                        onAuxClick={(e) => handleChatOpen(e, chat._id)}
-                                                        className='flex w-full h-[100px] hover:bg-[#dd673cfd] hover:opacity-70 hover:cursor-pointer'>
+                                                        const formattedDateB = b.last_message_date?.replace(/-/g, (match, index, original) => {
+                                                            return (original.indexOf(match) === 4 || original.indexOf(match) === 7) ? '-' : ' ';
+                                                        }).replace(':', ':');
 
-                                                            <div className='flex align-middle items-center px-5 w-full'>
-                                                                <div className='flex'>
-                                                                    <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
-                                                                    
-                                                                    <div className='flex flex-col md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
-                                                                        <div className='align-top'>
-                                                                            <h1 className='line-clamp-2'>{chat.name}</h1>
-                                                                        </div>
+                                                        const dateA = a.last_message_date ? new Date(formattedDateA) : 0;
+                                                        const dateB = b.last_message_date ? new Date(formattedDateB) : 0;
+                                                        return dateB - dateA;
+                                                    }).map((chat, index) => {
+                                                        const lastMessage = chat.last_message ? chat.last_message : undefined;
+                                                        
+                                                        if (!lastMessage || lastMessage.length === 0) {
+                                                            return (
+                                                                <div key={index} 
+                                                                onClick={(e) => handleChatOpen(e, chat._id)}
+                                                                onAuxClick={(e) => handleChatOpen(e, chat._id)}
+                                                                className='flex w-full h-[100px] hover:bg-[#dd673cfd] hover:opacity-70 hover:cursor-pointer'>
 
-                                                                        <div className='align-bottom text-sm'>
-                                                                            <p className='line-clamp-1 overflow-hidden text-ellipsis whitespace-nowrap'>Start to chat!</p>
+                                                                    <div className='flex align-middle items-center px-5 w-full'>
+                                                                        <div className='flex'>
+                                                                            <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
+                                                                            
+                                                                            <div className='flex flex-col md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
+                                                                                <div className='align-top'>
+                                                                                    <h1 className='line-clamp-2'>{chat.name}</h1>
+                                                                                </div>
+
+                                                                                <div className='align-bottom text-sm'>
+                                                                                    <p className='line-clamp-1 overflow-hidden text-ellipsis whitespace-nowrap'>Start to chat!</p>
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
+                                                            )
+                                                        }
+                                                        
+                                                        const dateFormatedLastMessage = formatDate(chat.last_message_date);
+                                                        return (
+                                                            <div key={index} 
+                                                                onClick={(e) => handleChatOpen(e, chat._id)}
+                                                                onAuxClick={(e) => handleChatOpen(e, chat._id)}
+                                                                className='flex w-full h-[100px] hover:bg-[#dd673cfd] hover:opacity-70 hover:cursor-pointer'>
+
+                                                                <div className='flex align-middle items-center px-5 w-full'>
+                                                                    <div className='flex'>
+                                                                        <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
+                                                                        
+                                                                        <div className='flex flex-col md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
+                                                                            <div className='align-top'>
+                                                                                <h1 className='line-clamp-2'>{chat.name}</h1>
+                                                                            </div>
+
+                                                                            <div className='align-bottom text-sm'>
+                                                                                <p className='line-clamp-1 overflow-hidden text-ellipsis whitespace-nowrap'>{lastMessage}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className='flex items-center justify-center mx-5 w-[40%] lg:w-[30%]'>
+                                                                    <div className='align-middle'>
+                                                                        <span className='text-xs'>{dateFormatedLastMessage}</span>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    )
+                                                        )
+                                                    })
                                                 }
-                                                
-                                                const dateFormatedLastMessage = formatDate(chat.last_message_date);
-                                                return (
-                                                    <div key={index} 
-                                                        onClick={(e) => handleChatOpen(e, chat._id)}
-                                                        onAuxClick={(e) => handleChatOpen(e, chat._id)}
-                                                        className='flex w-full h-[100px] hover:bg-[#dd673cfd] hover:opacity-70 hover:cursor-pointer'>
 
-                                                        <div className='flex align-middle items-center px-5 w-full'>
-                                                            <div className='flex'>
-                                                                <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
-                                                                
-                                                                <div className='flex flex-col md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
-                                                                    <div className='align-top'>
-                                                                        <h1 className='line-clamp-2'>{chat.name}</h1>
-                                                                    </div>
-
-                                                                    <div className='align-bottom text-sm'>
-                                                                        <p className='line-clamp-1 overflow-hidden text-ellipsis whitespace-nowrap'>{lastMessage}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className='flex items-center justify-center mx-5 w-[40%] lg:w-[30%]'>
-                                                            <div className='align-middle'>
-                                                                <span className='text-xs'>{dateFormatedLastMessage}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })
-                                        }
-
-                                        <ScrollBar orientation="vertical" />
-                                    </ScrollArea>
+                                                <ScrollBar orientation="vertical" />
+                                            </ScrollArea>
+                                        </React.Fragment>
+                                    }    
                                 </div>
                             </section>
 
@@ -397,8 +415,8 @@ const Chat = () => {
                                         </span>
 
                                         <ScrollArea ref={scrollChatArea} className='p-5 w-full h-[90%]'>
-                                            {chatMessages.map((chatMessage, index) => {
-                                                const isSentByCurrentUser = chatMessage.sender_id === user._id;
+                                            {(chatMessages && chatMessages.length > 0) && chatMessages.map((chatMessage, index) => {
+                                                const isSentByCurrentUser = chatMessage.sender_id === user.id;
                                                 const dateFormated = formatDate(chatMessage.created_at);
 
                                                 if (isSentByCurrentUser) {
@@ -408,7 +426,7 @@ const Chat = () => {
 
                                                                 <div className='flex flex-col items-end justify-end w-full gap-1'>
                                                                     <div className='align-top'>
-                                                                        <h1>{user.firstName + " " + user.lastName} <span className='text-xs'>{dateFormated}</span></h1>
+                                                                        <h1>{user.fullName} <span className='text-xs'>{dateFormated}</span></h1>
                                                                     </div>
 
                                                                     <div className='align-bottom bg-[#dd673ca9] rounded-md p-5 overflow-hidden'>
@@ -427,7 +445,7 @@ const Chat = () => {
 
                                                             <div className='flex flex-col w-full gap-1'>
                                                                 <div className='align-top'>
-                                                                    <h1>{chatMessage.sender.first_name + " " + chatMessage.sender.last_name} <span className='text-xs'>{dateFormated}</span></h1>
+                                                                    <h1>{chatMessage.sender.fullName} <span className='text-xs'>{dateFormated}</span></h1>
                                                                 </div>
 
                                                                 <div className='align-bottom bg-slate-200 rounded-md p-5 overflow-hidden'>

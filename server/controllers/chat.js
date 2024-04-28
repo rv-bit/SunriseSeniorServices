@@ -5,11 +5,85 @@ const asyncHandler = require('express-async-handler');
 const { clerkClient } = require('@clerk/clerk-sdk-node');
 
 const db = require('../services/db');
+const { socketIO } = require('../services/socket');
+
 const prepareDocument = require('../utils/prepare_document');
+const { formatDate } = require('../utils/utils');
+
 const { NewChatSchema, NewMessageSchema } = require('../schemas/chat');
 
+socketIO.on('connection', (socket) => {
+    socket.on('connectChat', (data) => {
+        const chatId = data.chat_id;
+        const members = data.members;
+
+        console.log(`⚡: ${socket.id} user just connected! Chat ID: ${chatId} Members: ${members}`);
+        socket.join(chatId);
+    });
+
+    socket.on('sendMessage', async (data) => {
+        const message = {
+            chat_id: data.chat_id,
+            sender_id: data.sender_id,
+            message: data.message
+        }
+        console.log(`🚀: ${socket.id} user just sent a message! Chat ID: ${message.chat_id} Sender ID: ${message.sender_id} Message: ${message.message}`);
+        const messageDocument = await saveMessage(message);
+
+        socketIO.to(message.chat_id).emit('receiveMessage', messageDocument);
+    });
+
+    socket.on('disconnectChat', (chatId) => {
+        console.log(`🔥: ${socket.id} user just disconnected! Chat ID: ${chatId}`);
+        socket.leave(chatId);
+    })
+});
+
+const saveMessage = async (message) => {
+    const _id = crypto.randomBytes(16).toString('hex');
+
+    const formatedDate = formatDate(new Date());
+    const newMessage = {
+        _id: _id,
+        chat_id: message.chat_id,
+        sender_id: message.sender_id,
+        message: message.message,
+        created_at: formatedDate
+    }
+
+    const messageDocument = prepareDocument(NewMessageSchema, newMessage);
+    const result = await db.collection('messages').insertOne(messageDocument);
+
+    if (!result) {
+        return res.status(500).json({
+            message: 'Failed to send message'
+        });
+    }
+
+    if (result) {
+        let senderInformation;
+
+        try {
+            senderInformation = await clerkClient.users.getUser(message.sender_id);
+        } catch (error) {
+            console.log(error);
+        }
+
+        if (senderInformation) {
+            messageDocument.sender = {
+                id: senderInformation.id,
+                firstName: senderInformation.firstName,
+                lastName: senderInformation.lastName,
+                fullName: senderInformation.fullName
+            }
+        }
+    }
+
+    return messageDocument;
+}
+
 exports.getChats = asyncHandler(async (req, res) => {
-    const userId = req.body.user_id;
+    const userId = req.params.id;
 
     if (!userId) {
         return res.status(400).json({
@@ -25,11 +99,15 @@ exports.getChats = asyncHandler(async (req, res) => {
         });
     }
 
-    const lastMessage = await db.collection('messages').find({ chat_id: chats._id }, { sort: { created_at: -1 }, limit: 1 }).toArray();
+    for (let i = 0; i < chats.length; i++) {
+        const lastMessage = await db.collection('messages').find({ chat_id: chats[i]._id }, { sort: { created_at: -1 }, limit: 1 }).toArray();
 
-    if (lastMessage) {
-        chat.lastMessage = lastMessage.message;
-        chat.lastMessage.date = new Date(lastMessage.created_at).toDateString();
+        console.log(lastMessage);
+
+        if (lastMessage && lastMessage.length > 0) {
+            chats[i].last_message = lastMessage[0].message
+            chats[i].last_message_date = lastMessage[0].created_at
+        }
     }
 
     res.status(200).json({
@@ -37,7 +115,7 @@ exports.getChats = asyncHandler(async (req, res) => {
     });
 });
 
-exports.getChatFromId = asyncHandler(async (req, res) => {
+exports.getChatMessagesFromId = asyncHandler(async (req, res) => {
     const chatId = req.params.id;
 
     if (!chatId) {
@@ -46,24 +124,36 @@ exports.getChatFromId = asyncHandler(async (req, res) => {
         });
     }
 
-    const chat = await db.collection('chats').findOne({ _id: chatId });
+    const messages = await db.collection('messages').find({ chat_id: chatId }).toArray();
 
-    if (!chat) {
+    if (!messages) {
         return res.status(500).json({
-            message: 'Failed to get chat'
+            message: 'Failed to get messages'
         });
     }
 
-    chat.person = await clerkClient.users.getUser(chat.user_id);
-    chat.person = {
-        id: chat.person.id,
-        firstName: chat.person.firstName,
-        lastName: chat.person.lastName,
-        fullName: chat.person.fullName
+    if (messages.length > 0) {
+        let senderInformation;
+        try {
+            senderInformation = await clerkClient.users.getUser(messages[0].sender_id);
+        } catch (error) {
+            console.log(error);
+        }
+
+        if (senderInformation) {
+            for (let i = 0; i < messages.length; i++) {
+                messages[i].sender = {
+                    id: senderInformation.id,
+                    firstName: senderInformation.firstName,
+                    lastName: senderInformation.lastName,
+                    fullName: senderInformation.fullName
+                }
+            }
+        }
     }
 
     res.status(200).json({
-        data: chat
+        data: messages
     });
 });
 
@@ -76,7 +166,6 @@ exports.createChat = asyncHandler(async (req, res) => {
         });
     }
 
-
     const _id = crypto.randomBytes(16).toString('hex');
     const newChat = {
         _id: _id,
@@ -86,7 +175,8 @@ exports.createChat = asyncHandler(async (req, res) => {
     }
 
     const chatDocument = prepareDocument(NewChatSchema, newChat);
-    const chatExists = await db.collection('chats').findOne({ members: chat.members });
+
+    const chatExists = await db.collection('chats').findOne({ name: chat.name, members: chat.members });
 
     if (chatExists) {
         return res.status(200).json({

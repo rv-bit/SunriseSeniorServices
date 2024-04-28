@@ -159,7 +159,7 @@ const JobListing = () => {
     const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
 
     const createChats = useCallback(async (chatId) => {
-        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chat/createChat`, {data: {
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/createChat`, {data: {
             'id': chatId,
             'members': [user.id, userFromJobId.id],
             'name': jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.title,
@@ -250,9 +250,8 @@ const JobListing = () => {
 
         if (currentJobIdFromSearch && currentJobIdFromSearch !== currentJobId) {
             const jobIndex = jobListings.findIndex((job) => job._id === currentJobIdFromSearch);
-
             if (jobIndex !== -1) {
-                setCurrentJobIds(jobListings[jobIndex].id);
+                setCurrentJobIds(jobListings[jobIndex]._id);
                 return;
             }
             
@@ -278,6 +277,7 @@ const JobListing = () => {
 
             if (!response.ok) {
                 const data = await response.json();
+
                 if (data.error === "UserNotFound") {
                     const index = jobListings.findIndex((job) => job._id === currentJobId);
                     if (index !== -1) {
@@ -288,7 +288,6 @@ const JobListing = () => {
                 setCurrentJobIds(null);
                 navigate('/job-listings');
                 toast.error('An error occurred while trying to fetch the user');
-
                 return;
             }
 
@@ -393,8 +392,21 @@ const JobListing = () => {
                 </div>
             </div>
         }>
-            <ToastContainer position="bottom-right" autoClose={5000} closeOnClick={true} pauseOnHover={false} draggable={false} pauseOnFocusLoss={true} />
-
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                limit={3}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+                stacked={true}
+            />
+            
             <section className='mx-auto min-h-5'>
                 <div className='flex items-center justify-center'>
                     <div className='mx-5'>
