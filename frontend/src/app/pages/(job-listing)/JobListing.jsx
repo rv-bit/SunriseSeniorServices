@@ -248,11 +248,14 @@ const JobListing = () => {
     useEffect(() => {
         if (jobListingStatus !== 'success') return;
 
+        console.log(currentJobIdFromSearch, currentJobId, 'da');
+
         if (currentJobIdFromSearch && currentJobIdFromSearch !== currentJobId) {
             const jobIndex = jobListings.findIndex((job) => job._id === currentJobIdFromSearch);
+            console.log('here', jobIndex, currentJobIdFromSearch, jobListings);
 
             if (jobIndex !== -1) {
-                setCurrentJobIds(jobListings[jobIndex].id);
+                setCurrentJobIds(jobListings[jobIndex]._id);
                 return;
             }
             
@@ -278,6 +281,7 @@ const JobListing = () => {
 
             if (!response.ok) {
                 const data = await response.json();
+
                 if (data.error === "UserNotFound") {
                     const index = jobListings.findIndex((job) => job._id === currentJobId);
                     if (index !== -1) {
@@ -288,7 +292,6 @@ const JobListing = () => {
                 setCurrentJobIds(null);
                 navigate('/job-listings');
                 toast.error('An error occurred while trying to fetch the user');
-
                 return;
             }
 
