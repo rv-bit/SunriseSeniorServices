@@ -233,6 +233,11 @@ const JobListing = () => {
     }, [isSignedIn, isLoaded, userInfoStatus]);
 
     useEffect(() => {
+        if (jobListings && jobListings.length === 0) {
+            setCurrentJobIds(null);
+            navigate('/job-listings');
+        }
+
         if (currentJobIdFromSearch && !currentJobId) {
             setCurrentJobIds(currentJobIdFromSearch);
         }
@@ -273,14 +278,17 @@ const JobListing = () => {
 
             if (!response.ok) {
                 const data = await response.json();
-
-                if (data.Error) {
-                    navigate('/job-listings');
-                    toast.error(data.Error);
-                    return;
+                if (data.error === "UserNotFound") {
+                    const index = jobListings.findIndex((job) => job._id === currentJobId);
+                    if (index !== -1) {
+                        jobListings.splice(index, 1);
+                    }
                 }
 
+                setCurrentJobIds(null);
+                navigate('/job-listings');
                 toast.error('An error occurred while trying to fetch the user');
+
                 return;
             }
 
