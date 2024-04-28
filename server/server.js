@@ -26,8 +26,10 @@ if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") 
 
 const jobListingRouter = require('./routes/joblisting');
 const userRouter = require('./routes/user');
+const chatRouter = require('./routes/chat');
 app.use('/joblisting', jobListingRouter);
 app.use('/user', userRouter);
+app.use('/chat', chatRouter);
 
 socketIO.on('connection', (socket) => {
     console.log(`⚡: ${socket.id} user just connected!`);

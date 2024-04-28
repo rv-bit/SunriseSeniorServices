@@ -1,14 +1,16 @@
+import 'react-toastify/dist/ReactToastify.css';
+
 import React, { useCallback, useEffect, useState, useContext } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from 'react-query';
 
+import { Post, Get, formatTags } from '@/app/lib/utils';
+
 import useUserAuth from '@/app/hooks/useUserAuth';
 import useDocumentTitle from '@/app/hooks/useDocumentTitle';
 
-import { Post, Get, formatTags } from '@/app/lib/utils';
 import { BsChevronLeft } from "react-icons/bs";
-
-import { Notification } from '@/app/components/custom/Notifications';
+import { ToastContainer, toast } from 'react-toastify';
 import { Button } from '@/app/components/ui/button';
 
 const getJobListing = async (jobId) => {
@@ -41,11 +43,6 @@ const ViewJobListing = () => {
         enabled: !!currentJobIdFromSearch,
     });
 
-    const [alertState, setAlertState] = useState({
-        open: false,
-        message: '',
-    });
-
     const handleCloseCurrentJobId = (e, currentJobId) => {
         e.preventDefault();
 
@@ -55,22 +52,22 @@ const ViewJobListing = () => {
     const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
 
     const createChats = useCallback(async (chatId) => {
-        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createChat`, {data: {
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chat/createChat`, {data: {
             'id': chatId,
             'members': [user.id, jobListing.user_id],
             'name': jobListing.title,
         }});
 
         if (!response.ok) {
-            const data = await response.json();
+            toast.error('Failed to create chat');
 
-            setAlertState({ ...alertState, open: true, message: data.Error });
             return false;
         }
 
         const data = await response.json();
-        if (data.chatExists) {
-            setAlertState({ ...alertState, open: true, message: 'Chat already exists, moving to the chat' });
+        if (data.message) {
+            toast.info('Chat already exists, moving to the chat');
+
             return true;
         }
 
@@ -86,6 +83,14 @@ const ViewJobListing = () => {
             navigate('/login', { state: { info: 'You must be logged in to send a message!' } } );
         } else {
             setWaitForChatToCreate(true);
+
+            if (user.id === jobListing.user_id) {
+                toast.error('You cannot message yourself');
+                
+                return setTimeout(() => {
+                    setWaitForChatToCreate(false);
+                }, 2500);
+            }
 
             const chatId = jobId + user.id + jobListing.user_id;
             const chatCreated = await createChats(chatId);
@@ -120,12 +125,7 @@ const ViewJobListing = () => {
 
     return (
         <>
-            {alertState.open && (
-                <Notification
-                    alertState={alertState}
-                    setAlertState={setAlertState}
-                />
-            )}
+            <ToastContainer position="bottom-right" autoClose={5000} closeOnClick={true} pauseOnHover={false} draggable={false} pauseOnFocusLoss={true} />
 
             <hr className='w-full opacity-30 border-t border-slate-400' />
 

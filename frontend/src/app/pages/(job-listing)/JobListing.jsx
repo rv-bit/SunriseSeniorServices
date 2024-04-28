@@ -1,8 +1,12 @@
+import 'react-toastify/dist/ReactToastify.css';
+
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useContext, Suspense, lazy } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useQuery } from 'react-query';
+import { ToastContainer, toast } from 'react-toastify';
 
 import useUserAuth from '@/app/hooks/useUserAuth';
+import useDocumentTitle from '@/app/hooks/useDocumentTitle';
 
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -22,12 +26,8 @@ const inputFields = [
     `}
 ]
 
-import useDocumentTitle from '@/app/hooks/useDocumentTitle';
-
 import { Get, Post, formatTags } from '@/app/lib/utils';
 import { Skeleton } from '@/app/components/ui/skeleton';
-
-import { Notification } from '@/app/components/custom/Notifications' // Custom components
 
 const fetchUserAdditionalInfo = async (user) => {
     if (!user) {
@@ -105,11 +105,6 @@ const JobListing = () => {
     const [userFromJobId, setUserFromJobId] = useState(null);
     const [waitingForUser, setWaitingForUser] = useState(false);
 
-    const [alertState, setAlertState] = useState({
-        open: false,
-        message: '',
-    });
-
     const handleInputChange = (e, inputName) => {
         setSearchInput({
             ...searchInput,
@@ -164,22 +159,20 @@ const JobListing = () => {
     const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
 
     const createChats = useCallback(async (chatId) => {
-        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createChat`, {data: {
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chat/createChat`, {data: {
             'id': chatId,
             'members': [user.id, userFromJobId.id],
             'name': jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.title,
         }});
 
         if (!response.ok) {
-            const data = await response.json();
-
-            setAlertState({ ...alertState, open: true, message: data.Error });
+            toast.error('An error occurred while trying to create the chat');
             return false;
         }
 
         const data = await response.json();
         if (data.chatExists) {
-            setAlertState({ ...alertState, open: true, message: 'Chat already exists, moving to the chat' });
+            toast.error('Chat already exists, moving to the chat');
             return true;
         }
 
@@ -195,6 +188,14 @@ const JobListing = () => {
             navigate('/login', { state: { info: 'You must be logged in to send a message!' } } );
         } else {
             setWaitForChatToCreate(true);
+
+            if (user.id === userFromJobId.id) {
+                toast.error('You cannot message yourself');
+                
+                return setTimeout(() => {
+                    setWaitForChatToCreate(false);
+                }, 2500);
+            }
 
             const chatId = jobId + user.id + userFromJobId.id;
             const chatCreated = await createChats(chatId);
@@ -275,11 +276,11 @@ const JobListing = () => {
 
                 if (data.Error) {
                     navigate('/job-listings');
-                    setAlertState({ ...alertState, open: true, message: data.Error });
+                    toast.error(data.Error);
                     return;
                 }
 
-                setAlertState({ ...alertState, open: true, message: 'An error occurred while trying to fetch the user' });
+                toast.error('An error occurred while trying to fetch the user');
                 return;
             }
 
@@ -384,12 +385,8 @@ const JobListing = () => {
                 </div>
             </div>
         }>
-            {alertState.open && (
-                <Notification
-                    alertState={alertState}
-                />
-            )}
-            
+            <ToastContainer position="bottom-right" autoClose={5000} closeOnClick={true} pauseOnHover={false} draggable={false} pauseOnFocusLoss={true} />
+
             <section className='mx-auto min-h-5'>
                 <div className='flex items-center justify-center'>
                     <div className='mx-5'>
