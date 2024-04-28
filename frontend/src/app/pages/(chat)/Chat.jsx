@@ -275,8 +275,21 @@ const Chat = () => {
             </div>
         }>
             <React.Fragment>
-                <ToastContainer position="bottom-right" autoClose={5000} closeOnClick={true} pauseOnHover={false} draggable={false} pauseOnFocusLoss={true} />
-
+                <ToastContainer
+                    position="bottom-right"
+                    autoClose={5000}
+                    limit={3}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                    stacked={true}
+                />
+                
                 <div className='flex items-center justify-center w-full'>
                     <div className='mx-5 max-w-[1400px] w-full'>
 

@@ -57,7 +57,8 @@ const Home = () => {
         e.preventDefault();
 
         if (user && isSignedIn) {
-            navigate('/job-listings');
+            // navigate('/job-listings');
+            toast.error('This function doesn\'t work just yet');
             return
         }
 
@@ -195,7 +196,20 @@ const Home = () => {
                     />
                 )}
 
-                <ToastContainer position="bottom-right" autoClose={5000} closeOnClick={true} pauseOnHover={false} draggable={false} pauseOnFocusLoss={true} />
+                <ToastContainer
+                    position="bottom-right"
+                    autoClose={5000}
+                    limit={3}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                    stacked={true}
+                />
 
                 <div className='flex flex-col items-center justify-center w-full'>
                     <div className='flex items-center justify-center w-full'>

@@ -268,8 +268,21 @@ const FormNewJobListing = () => {
                 </div>
             </div>
         }>
-            <ToastContainer position="bottom-right" autoClose={5000} closeOnClick={true} pauseOnHover={false} draggable={false} pauseOnFocusLoss={true} />
-
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                limit={3}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+                stacked={true}
+            />
+            
             <MultiForm
                 onSubmit={onSubmit}
                 handleSetOptionClick={handleSetOptionClick}
