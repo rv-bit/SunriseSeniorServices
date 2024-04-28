@@ -5,7 +5,7 @@ const joblistingController = require('../controllers/joblisting');
 
 router.get('/', joblistingController.getJobListings);
 router.get('/:id', joblistingController.getJobListingUserFromId);
-router.get('/viewjob', joblistingController.getJobListings);
+router.get('/viewjob/:id', joblistingController.getJobListingsFromId);
 router.post('/createListing', joblistingController.createJobListing);
 
 module.exports = router;

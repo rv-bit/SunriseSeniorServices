@@ -22,6 +22,31 @@ exports.getJobListings = asyncHandler(async (req, res) => {
     });
 });
 
+exports.getJobListingsFromId = asyncHandler(async (req, res) => {
+    console.log(req.params);
+
+    const jobId = req.params.id;
+    const jobListing = await db.collection('jobListings').findOne({ _id: jobId });
+
+    if (!jobListing) {
+        return res.status(500).json({
+            message: 'Failed to get job listing'
+        });
+    }
+
+    jobListing.person = await clerkClient.users.getUser(jobListing.user_id);
+    jobListing.person = {
+        id: jobListing.person.id,
+        firstName: jobListing.person.firstName,
+        lastName: jobListing.person.lastName,
+        fullName: jobListing.person.fullName
+    }
+
+    res.status(200).json({
+        data: jobListing
+    });
+});
+
 exports.getJobListingUserFromId = asyncHandler(async (req, res) => {
     const user = req.params.id;
     const clerkUser = await clerkClient.users.getUser(user);
