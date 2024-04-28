@@ -1,3 +1,6 @@
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
+
 import { Suspense, useContext, useState, useEffect, lazy } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useUserAuth from '@/app/hooks/useUserAuth'
@@ -9,8 +12,6 @@ import formSteps from '@/app/data/FormJobListing';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { Notification } from '@/app/components/custom/Notifications' // Custom components
-
 const MultiForm = lazy(() => import('@/app/components/custom/MultiForm'));
 
 const defaultValues = formSteps.reduce((values, step) => {
@@ -20,13 +21,13 @@ const defaultValues = formSteps.reduce((values, step) => {
     return values;
 }, {});
 
-async function createJobListing(formData, alertState, setAlertState) {
+async function createJobListing(formData) {
     if (!formData) return;
 
     const response = await Post(`${import.meta.env.VITE_API_PREFIX}/joblisting/createListing`, {formData});
     if (!response.ok) {
         const data = await response.json();
-        setAlertState({ ...alertState, open: true, message: data.Error });
+        toast.error(data.message);
         return false;
     }
 
@@ -86,10 +87,6 @@ const FormNewJobListing = () => {
     }, []);
 
     const [userIsLoading, setUserLoad] = useState(false);
-    const [alertState, setAlertState] = useState({
-        open: false,
-        message: '',
-    });
 
     useEffect(() => {
         const createJobListingAndNavigate = async () => {
@@ -97,7 +94,7 @@ const FormNewJobListing = () => {
                 setUserLoad(true);
 
                 formData.user_id = user.id;
-                const JobListingCreated = await createJobListing(formData, alertState, setAlertState);
+                const JobListingCreated = await createJobListing(formData);
 
                 setTimeout(() => {
                     if (JobListingCreated) {
@@ -271,12 +268,7 @@ const FormNewJobListing = () => {
                 </div>
             </div>
         }>
-            {alertState.open && (
-                <Notification
-                    alertState={alertState}
-                    setAlertState={setAlertState}
-                />
-            )}
+            <ToastContainer position="bottom-right" autoClose={5000} closeOnClick={true} pauseOnHover={false} draggable={false} pauseOnFocusLoss={true} />
 
             <MultiForm
                 onSubmit={onSubmit}
@@ -285,8 +277,6 @@ const FormNewJobListing = () => {
                 setCurrentSubStep={setCurrentSubStep}
                 setHasUserNavigatedBack={setHasUserNavigatedBack}        
 
-                alertState={alertState}
-                setAlertState={setAlertState}
                 userIsLoading={userIsLoading}
 
                 currentStep={currentStep}

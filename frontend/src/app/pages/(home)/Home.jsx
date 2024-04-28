@@ -1,9 +1,10 @@
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
+
 import { Suspense, useState, useContext, useEffect, useRef, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 
 import useDocumentTitle from '@/app/hooks/useDocumentTitle' // Custom hooks
-
-import { Notification } from '@/app/components/custom/Notifications' // Custom components
 
 import { Post, Get } from '@/app/lib/utils' // Common functions
 
@@ -52,11 +53,6 @@ const Home = () => {
     const [searchingPostCode, setSearchingPostCode] = useState(false);
     const [addresses, setAddresses] = useState({});
 
-    const [alertState, setAlertState] = useState({
-        open: false,
-        message: '',
-    });
-
     const handlePostCodeSearch = async (e) => {
         e.preventDefault();
 
@@ -65,7 +61,7 @@ const Home = () => {
             return
         }
 
-        setAlertState({ ...alertState, open: true, message: `This function doesn't work just yet` });
+        toast.error('This function doesn\'t work just yet');
     }
 
     // const handlePostCodeSearch = async (e) => {
@@ -85,7 +81,7 @@ const Home = () => {
     //     const response = await Get(`${import.meta.env.VITE_API_PREFIX}/searchPostCodeGeo?postCode=${postCode}`);
 
     //     if (!response.ok) {
-    //         setAlertState({ ...alertState, open: true, message: 'Post code not found, please try again.' });
+    //         toast.error('Post code not found, please try again.');
     //         setSearchingPostCode(false);
     //         return;
     //     }
@@ -199,13 +195,8 @@ const Home = () => {
                     />
                 )}
 
-                {alertState.open && (
-                    <Notification
-                        alertState={alertState}
-                        setAlertState={setAlertState}
-                    />
-                )}
-                
+                <ToastContainer position="bottom-right" autoClose={5000} closeOnClick={true} pauseOnHover={false} draggable={false} pauseOnFocusLoss={true} />
+
                 <div className='flex flex-col items-center justify-center w-full'>
                     <div className='flex items-center justify-center w-full'>
 

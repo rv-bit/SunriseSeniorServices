@@ -1,10 +1,12 @@
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
+
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SignUp, useAuth, useUser } from "@clerk/clerk-react";
 
 import useDocumentTitle from '@/app/hooks/useDocumentTitle' // Custom hooks
 
-import { Notification } from '@/app/components/custom/Notifications' // Custom components
 import { Post, Get } from '@/app/lib/utils' // Common functions
 
 import { Loader2 } from "lucide-react"

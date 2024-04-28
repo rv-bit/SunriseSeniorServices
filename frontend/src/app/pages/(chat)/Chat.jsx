@@ -1,3 +1,6 @@
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
+
 import React, { useCallback, useRef, useContext, useEffect, useState, useLayoutEffect, lazy, Suspense } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useQuery } from 'react-query'
@@ -12,8 +15,6 @@ import { formatDate, Get, Post } from '@/app/lib/utils' // Common functions
 import { ScrollArea, ScrollBar } from '@/app/components/ui/scroll-area';
 import { Button } from '@/app/components/ui/button'
 import { BsChevronLeft } from "react-icons/bs";
-
-const Notification = lazy(() => import('@/app/components/custom/Notifications'))
 
 const fetchChats = async (user) => {
     if (!user) {
@@ -45,11 +46,6 @@ const Chat = () => {
 
     const queryParams = new URLSearchParams(location.search);
     const currentChatIdFromSearch = queryParams.get('currentChatId');
-
-    const [alertState, setAlertState] = useState({
-        open: false,
-        message: '',
-    });
 
     const [chats, setChats] = useState([]);
     const [chatMessages, setChatMessages] = useState([]);
@@ -279,13 +275,8 @@ const Chat = () => {
             </div>
         }>
             <React.Fragment>
-                {alertState.open && (
-                    <Notification
-                        alertState={alertState}
-                        setAlertState={setAlertState}
-                    />
-                )}
-            
+                <ToastContainer position="bottom-right" autoClose={5000} closeOnClick={true} pauseOnHover={false} draggable={false} pauseOnFocusLoss={true} />
+
                 <div className='flex items-center justify-center w-full'>
                     <div className='mx-5 max-w-[1400px] w-full'>
 
