@@ -6,30 +6,31 @@ const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
 
-const pkg = require('@clerk/clerk-sdk-node');
-const clerkClient = pkg.default;
-
 const PORT = process.env.PORT || 5001;
 const SOCKET_URL = 'http://localhost:5001';
 
 app.use(bodyParser.json());
 
+const jobListingRouter = require('./routes/joblisting');
+const userRouter = require('./routes/user');
+const chatRouter = require('./routes/chat');
+
 if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") {
-    app.use(express.static(path.join(__dirname, '../frontend/dist')));
-    app.get('/*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
-    });
     app.use(cors({ origin: 'https://sunriseseniorservices.fun' }));
+    app.use(express.static(path.join(__dirname, '../frontend/dist')));
 } else {
     app.use(cors())
 }
 
-const jobListingRouter = require('./routes/joblisting');
-const userRouter = require('./routes/user');
-const chatRouter = require('./routes/chat');
 app.use('/joblisting', jobListingRouter);
 app.use('/user', userRouter);
 app.use('/chat', chatRouter);
+
+if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") {
+    app.get('/*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+    });
+}
 
 socketIO.on('connection', (socket) => {
     console.log(`⚡: ${socket.id} user just connected!`);
