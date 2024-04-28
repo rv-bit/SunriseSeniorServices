@@ -49,9 +49,11 @@ exports.getJobListingsFromId = asyncHandler(async (req, res) => {
 
 exports.getJobListingUserFromId = asyncHandler(async (req, res) => {
     const user = req.params.id;
-    const clerkUser = await clerkClient.users.getUser(user);
+    let clerkUser;
 
-    if (!clerkUser) {
+    try {
+        clerkUser = await clerkClient.users.getUser(user);
+    } catch (error) {
         const deleteListing = await db.collection('jobListings').deleteOne({
             user_id: user
         });
@@ -63,7 +65,7 @@ exports.getJobListingUserFromId = asyncHandler(async (req, res) => {
         }
 
         return res.status(400).json({
-            message: 'User does not exist'
+            error: 'UserNotFound'
         });
     }
 
