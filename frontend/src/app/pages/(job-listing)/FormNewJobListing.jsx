@@ -1,5 +1,6 @@
 import { Suspense, useContext, useState, useEffect, lazy } from 'react'
 import { useNavigate } from 'react-router-dom'
+import useUserAuth from '@/app/hooks/useUserAuth'
 
 import { Post, Get } from '@/app/lib/utils' // Common functions 
 
@@ -22,7 +23,7 @@ const defaultValues = formSteps.reduce((values, step) => {
 async function createJobListing(formData, alertState, setAlertState) {
     if (!formData) return;
 
-    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/createJobListing`, {formData});
+    const response = await Post(`${import.meta.env.VITE_API_PREFIX}/joblisting/createListing`, {formData});
     if (!response.ok) {
         const data = await response.json();
         setAlertState({ ...alertState, open: true, message: data.Error });
@@ -35,6 +36,32 @@ async function createJobListing(formData, alertState, setAlertState) {
 
 const FormNewJobListing = () => {
     const navigate = useNavigate();
+
+    const { isLoaded, isSignedIn, user } = useUserAuth();
+    const [userDetails, setUserDetails] = useState(null);
+
+    useEffect(() => {        
+        if (isLoaded && !isSignedIn) {
+            navigate('/');
+            return;
+        }
+
+        if (isLoaded && isSignedIn) {
+            const fetchData = async () => {
+                const response = await Get(`${import.meta.env.VITE_API_PREFIX}/user/${user.id}`);
+                if (!response.ok) {
+                    const data = await response.json();
+                    return;
+                }
+
+                const data = await response.json();
+                setUserDetails(data.data);
+            }
+            fetchData();
+        }
+
+        return () => {};
+    }, [isSignedIn, isLoaded]);
 
     const [currentStep, setCurrentStep] = useState(0);
     const [currentSubStep, setCurrentSubStep] = useState(1);
@@ -50,7 +77,7 @@ const FormNewJobListing = () => {
     const form = useForm({defaultValues});
 
     useEffect(() => {
-        if (userAuthData === null || userAuthData === undefined || (userAuthData && userAuthData.account_type[0] !== 'option_requester')) {
+        if (!user || (userDetails && userDetails.account_type !== 'option_requester')) {
             navigate('/');
             return;
         }
@@ -69,6 +96,7 @@ const FormNewJobListing = () => {
             if (currentStep === formSteps.length) {
                 setUserLoad(true);
 
+                formData.user_id = user.id;
                 const JobListingCreated = await createJobListing(formData, alertState, setAlertState);
 
                 setTimeout(() => {

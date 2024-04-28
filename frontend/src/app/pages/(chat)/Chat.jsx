@@ -1,9 +1,10 @@
 import React, { useCallback, useRef, useContext, useEffect, useState, useLayoutEffect, lazy, Suspense } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-import SocketioProvider from '@/app/providers/SocketioProvider'
+import useUserAuth from '@/app/hooks/useUserAuth'
+import useDocumentTitle from '@/app/hooks/useDocumentTitle'
 
-import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
+import SocketioProvider from '@/app/providers/SocketioProvider'
 
 import { formatDate, Get, Post } from '@/app/lib/utils' // Common functions 
 
@@ -15,11 +16,20 @@ const Notification = lazy(() => import('@/app/components/custom/Notifications'))
 
 const Chat = () => {
     useDocumentTitle('Chat')
-
-    const {socket} = useContext(SocketioProvider);
-
     const navigate = useNavigate();
     const location = useLocation();
+
+    const { socket } = useContext(SocketioProvider);
+    const { isLoaded, isSignedIn, user } = useUserAuth();
+
+    useEffect(() => {        
+        if (isLoaded && !isSignedIn) {
+            navigate('/');
+            return;
+        }
+
+        return () => {};
+    }, [isSignedIn, isLoaded]);
 
     const queryParams = new URLSearchParams(location.search);
     const currentChatIdFromSearch = queryParams.get('currentChatId');
@@ -57,7 +67,7 @@ const Chat = () => {
             socket.on('disconnect', () => {
                 socket.emit('disconnectChat', { 
                     chat_id: selectedChatId,
-                    memberDisconnect: userAuthData._id,
+                    memberDisconnect: user.id,
                 }, (error) => {
                     if (error) {
                         console.log('Error', error);
@@ -103,7 +113,7 @@ const Chat = () => {
         socket.emit('sendMessage', {
             chat_id: chatId,
             message: messageBoxValue.value,
-            sender_id: userAuthData._id,
+            sender_id: user.id,
         }, (error) => {
             if (error) {
                 console.log('Error', error);
@@ -117,11 +127,6 @@ const Chat = () => {
     }
 
     useEffect(() => {
-        if (userAuthData && userAuthData.length < 0 || userAuthData && !userAuthData.isConnected) {
-            navigate('/');
-            return;
-        }
-
         const fetchData = async () => {
             const response = await Get(`${import.meta.env.VITE_API_PREFIX}/gatherChats`);
 
@@ -162,16 +167,11 @@ const Chat = () => {
     }, [currentChatIdFromSearch, chats]);
 
     useEffect(() => {
-        if (userAuthData && userAuthData.length < 0 || userAuthData && !userAuthData.isConnected) {
-            navigate('/');
-            return;
-        }
-
         if (!selectedChatId) {
             socket.on('disconnect', () => {
                 socket.emit('disconnectChat', { 
                     chat_id: selectedChatId,
-                    memberDisconnect: userAuthData._id,
+                    memberDisconnect: user.id,
                 }, (error) => {
                     if (error) {
                         console.log('Error', error);
@@ -191,7 +191,6 @@ const Chat = () => {
                 const data = await response.json();
 
                 if (data.Error === 'Unauthorized') {
-                    setUserAuth(null);
                     navigate('/');
                 }
 
@@ -399,7 +398,7 @@ const Chat = () => {
 
                                         <ScrollArea ref={scrollChatArea} className='p-5 w-full h-[90%]'>
                                             {chatMessages.map((chatMessage, index) => {
-                                                const isSentByCurrentUser = chatMessage.sender_id === userAuthData._id;
+                                                const isSentByCurrentUser = chatMessage.sender_id === user._id;
                                                 const dateFormated = formatDate(chatMessage.created_at);
 
                                                 if (isSentByCurrentUser) {
@@ -409,7 +408,7 @@ const Chat = () => {
 
                                                                 <div className='flex flex-col items-end justify-end w-full gap-1'>
                                                                     <div className='align-top'>
-                                                                        <h1>{userAuthData.first_name + " " + userAuthData.last_name} <span className='text-xs'>{dateFormated}</span></h1>
+                                                                        <h1>{user.firstName + " " + user.lastName} <span className='text-xs'>{dateFormated}</span></h1>
                                                                     </div>
 
                                                                     <div className='align-bottom bg-[#dd673ca9] rounded-md p-5 overflow-hidden'>

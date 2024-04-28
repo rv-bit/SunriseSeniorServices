@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useAuth, useUser } from "@clerk/clerk-react";
+
+import useUserAuth from "@/app/hooks/useUserAuth";
 
 import {
     DropdownMenu,
@@ -32,20 +33,7 @@ const LinksConnectedWithLogo = [
 ]
 
 const Navbar = () => {
-    const { isLoaded, isSignedIn } = useAuth();
-    const { user } = useUser();
-
-    if (!isLoaded) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="relative">
-                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
-                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
-                    </div>
-                </div>
-            </div>
-        )
-    }
+    const { isLoaded, isSignedIn, user } = useUserAuth();
 
     return (
         <section className="max-w-screen-lg px-2 md:px-8 mx-auto backdrop-blur-xl bg-[#ffffff90] mb-10 mt-12">

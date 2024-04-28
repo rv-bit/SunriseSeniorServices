@@ -1,7 +1,7 @@
 import { Suspense, useState, useContext, useEffect, useRef, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 
-import useDocumentTitle from '@/app/hooks/UseDocumentTitle' // Custom hooks
+import useDocumentTitle from '@/app/hooks/useDocumentTitle' // Custom hooks
 
 import { Notification } from '@/app/components/custom/Notifications' // Custom components
 
