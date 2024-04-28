@@ -52,8 +52,18 @@ exports.getJobListingUserFromId = asyncHandler(async (req, res) => {
     const clerkUser = await clerkClient.users.getUser(user);
 
     if (!clerkUser) {
-        return res.status(500).json({
-            message: 'Failed to get user'
+        const deleteListing = await db.collection('jobListings').deleteOne({
+            user_id: user
+        });
+
+        if (!deleteListing) {
+            return res.status(500).json({
+                message: 'Failed to delete job listing'
+            });
+        }
+
+        return res.status(400).json({
+            message: 'User does not exist'
         });
     }
 
