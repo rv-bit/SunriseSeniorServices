@@ -6,9 +6,6 @@ const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
 
-const pkg = require('@clerk/clerk-sdk-node');
-const clerkClient = pkg.default;
-
 const PORT = process.env.PORT || 5001;
 const SOCKET_URL = 'http://localhost:5001';
 
