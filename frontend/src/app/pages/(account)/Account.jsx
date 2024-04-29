@@ -1,9 +1,9 @@
 import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
 
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
-import { ToastContainer, toast } from 'react-toastify';
 
 import { SignedIn, UserProfile, useAuth } from '@clerk/clerk-react'
 

@@ -140,3 +140,16 @@ export const formatDate = (date) => {
 export function cn(...inputs) {
     return twMerge(clsx(inputs))
 }
+
+export function splitPostcode(postcode) {
+    const match = postcode.match(/^([A-Z0-9]{2,4})([0-9][A-Z]{2})$/i);
+
+    if (!match) {
+        return null;
+    }
+
+    return {
+        outcode: match[1],
+        incode: match[2]
+    };
+}

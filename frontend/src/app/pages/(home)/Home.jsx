@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 import useDocumentTitle from '@/app/hooks/useDocumentTitle' // Custom hooks
 
-import { Post, Get } from '@/app/lib/utils' // Common functions
+import { Post, Get, splitPostcode } from '@/app/lib/utils' // Common functions
 
 import heroPhotoOfWoman from '@/app/assets/img-hero-page.jpg'
 
@@ -56,41 +56,60 @@ const Home = () => {
     const handlePostCodeSearch = async (e) => {
         e.preventDefault();
 
-        if (user && isSignedIn) {
-            // navigate('/job-listings');
-            toast.error('This function doesn\'t work just yet');
-            return
+        // if (user && isSignedIn) {
+        //     navigate('/job-listings');
+        //     return
+        // }
+
+        if (searchingPostCode) return;
+
+        if (!searchPostCodeRef.current.value) return;
+
+        const postCode = searchPostCodeRef.current.value;
+        const postCodeLastPart = splitPostcode(postCode);
+
+        const response = await Get('https://api.postcodes.io/postcodes?query=' + postCode);
+        const data = await response.json();
+
+        if (!data.result) {
+            toast.error('Post code not found, please try again.');
+            setSearchingPostCode(false);
+            return;
         }
 
-        toast.error('This function doesn\'t work just yet');
+        if (data.result.length > 0) {
+            data.result = data.result.slice(0, 5);
+
+            data.result = data.result.map((address) => {
+                const { postcode, postal_town, country, region, admin_ward } = address;
+                const addressPostCodeLastPart = splitPostcode(postcode);
+
+                if ((postCodeLastPart && postCodeLastPart.incode) && (addressPostCodeLastPart && addressPostCodeLastPart.incode)) {
+
+                    if (postCodeLastPart === addressPostCodeLastPart) {
+                        return {
+                            post_code: postcode,
+                            postal_town: postal_town,
+                            country: country,
+                            region: region,
+                            formatted_address: admin_ward
+                        }
+                    };
+                }
+
+                return {
+                    post_code: postcode,
+                    postal_town: postal_town,
+                    country: country,
+                    region: region,
+                    formatted_address: admin_ward
+                }
+            }
+        )}
+
+        setAddresses(data.result);
+        setSearchingPostCode(false);
     }
-
-    // const handlePostCodeSearch = async (e) => {
-    //     e.preventDefault();
-
-    //     if (user && isSignedIn) {
-    //         navigate('/job-listings');
-    //         return
-    //     }
-
-    //     if (searchingPostCode) return;
-
-    //     if (!searchPostCodeRef.current.value) return;
-
-    //     const postCode = searchPostCodeRef.current.value;
-
-    //     const response = await Get(`${import.meta.env.VITE_API_PREFIX}/searchPostCodeGeo?postCode=${postCode}`);
-
-    //     if (!response.ok) {
-    //         toast.error('Post code not found, please try again.');
-    //         setSearchingPostCode(false);
-    //         return;
-    //     }
-
-    //     const data = await response.json();
-    //     setAddresses(data.data);
-    //     setSearchingPostCode(false);
-    // }
 
     const [alertDialog, setAlertDialog] = useState({
         message: '',
@@ -231,17 +250,22 @@ const Home = () => {
                                             <div className='flex items-center justify-center w-full border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200 mb-2'>
                                                 <label
                                                     onChange={(e) => {
-                                                        // setSearchingPostCode(true);
+                                                        if (searchingPostCode) return;
                                                         setTimeout(() => handlePostCodeSearch(e), 1000)
                                                     }}
-                                                    onKeyDown={(e) => e.key === 'Enter' && handlePostCodeSearch(e)} 
+                                                    onKeyDown={(e) => {
+                                                        if (searchingPostCode) return;
+
+                                                        e.key === 'Enter' && handlePostCodeSearch(e)
+                                                    }}
                                                     className='flex items-center text-slate-600 w-full h-full focus-within:outline-none hover:cursor-text'>
 
                                                     <input type='text' ref={searchPostCodeRef} className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a post code'/>
                                                 
                                                     <Button
                                                         onClick={(e) => {
-                                                            // setSearchingPostCode(true);
+                                                            if (searchingPostCode) return;
+
                                                             handlePostCodeSearch(e)
                                                         }} 
                                                         disabled={searchingPostCode}
@@ -267,17 +291,23 @@ const Home = () => {
                                         <div className='flex items-center justify-center w-full border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200 mb-2'>
                                             <label
                                                 onChange={(e) => {
-                                                    // setSearchingPostCode(true);
+                                                    if (searchingPostCode) return;
+
                                                     setTimeout(() => handlePostCodeSearch(e), 1000)
                                                 }}
-                                                onKeyDown={(e) => e.key === 'Enter' && handlePostCodeSearch(e)} 
+                                                onKeyDown={(e) => {
+                                                    if (searchingPostCode) return;
+
+                                                    e.key === 'Enter' && handlePostCodeSearch(e)
+                                                }} 
                                                 className='flex items-center text-slate-600 w-full h-full focus-within:outline-none hover:cursor-text'>
 
                                                 <input type='text' ref={searchPostCodeRef} className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a post code'/>
                                             
                                                 <Button
                                                     onClick={(e) => {
-                                                        // setSearchingPostCode(true);
+                                                        if (searchingPostCode) return;
+
                                                         handlePostCodeSearch(e)
                                                     }} 
                                                     disabled={searchingPostCode}
