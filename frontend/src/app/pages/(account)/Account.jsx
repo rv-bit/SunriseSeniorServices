@@ -82,6 +82,14 @@ const Account = () => {
         enabled: !!user && isLoaded && isSignedIn
     });
 
+    const [userEditing, setUserEditing] = useState(null);
+
+    const editOptions = (e, step) => {
+        e.preventDefault();
+
+        setUserEditing(step);
+    }
+
     const selectOption = async (e, index) => {
         e.preventDefault();
 
@@ -89,6 +97,8 @@ const Account = () => {
 
         const option = e.target.value;
 
+        setUserEditing(null);
+        
         const response = await Post(`${import.meta.env.VITE_API_PREFIX}/user/update`, {
             user: user.id,
             data: {
@@ -107,6 +117,8 @@ const Account = () => {
 
     const choseDate = async (date, dateString, option) => {
         if (!isSignedIn) return;
+
+        setUserEditing(null);
 
         const age = calculateAge(dateString);
 
@@ -140,8 +152,6 @@ const Account = () => {
         const ageDifMs = Date.now() - birthday.getTime();
         const ageDate = new Date(ageDifMs);
         const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-
-        console.log(age);
 
         if (isNaN(age)) return null;
         if (age < 21) return null;
@@ -209,18 +219,12 @@ const Account = () => {
                                                     <span className="text-xs text-gray-500">{step}</span>
 
                                                         <span>
-                                                            {/* {
+                                                           {
                                                                 formSteps[step].reduce((label, form) => {
                                                                     if (!label && form.type === 'selector' && userDetails) {
-                                                                        console.log(form.name, userDetails.account_type);
-
                                                                         if (form.name === userDetails.account_type) {
                                                                             return form.label;
-                                                                        } else if (!userDetails.account_type) {
-                                                                            return 'Account Type Is Required';
                                                                         }
-
-                                                                        return 'Account Type Not Found';
                                                                     } else if (!label && form.type === 'date' && userDetails) {
                                                                         if (!userDetails.option_age_user) {
                                                                             return 'Date of Birth is Required';
@@ -236,36 +240,51 @@ const Account = () => {
                                                                     }
 
                                                                     return label;
-                                                                }, null)
-                                                            } */}
+                                                                }, null) || (userDetails && userDetails.account_type ? 'Account Type Not Found' : 'Account Type Is Required')
+                                                            }
                                                         </span>
                                                 </div>
 
                                                 <div className="flex justify-end items-center">
-                                                    <Button className="py-2 px-8 border border-gray-300 rounded-md" onClick={(e) => editOptions(e, index, step)}>
-                                                        Edit
-                                                    </Button>
+                                                    {userEditing === null || userEditing !== step ?
+                                                        <span className="text-sm font-medium text-center">
+                                                            <Button className="py-2 px-8 border border-gray-300 rounded-md" onClick={(e) => editOptions(e, step)}>
+                                                                Edit
+                                                            </Button>
+                                                        </span>
+                                                        
+                                                    : null}
 
-                                                    {formSteps[step].find(form => form.type === 'selector')?.type === 'selector' ?
-                                                        <select
-                                                            key={index}
-                                                            className="p-2 border border-gray-300 rounded-md"
-                                                            onChange={(e) => selectOption(e)}    
-                                                        >
-                                                            {formSteps[step].map((form, indexForm) => {
-                                                                return (
-                                                                    <option key={indexForm} value={form.name}>{form.label}</option>
-                                                                )
-                                                            })}
-                                                        </select>
-                                                    :
-                                                        <DatePicker 
-                                                            value={(userDetails && userDetails.age) ? dayjs(userDetails.age).format('YYYY-MM-DD') : ''}
-                                                            onChange={
-                                                                (date, dateString) => {                                                            
-                                                                    choseDate(date, dateString, formSteps[step].find(form => form.type === 'date')?.name)
-                                                                }
-                                                        } />
+                                                    {(userEditing && userEditing === step) ? 
+                                                        formSteps[userEditing].find(form => form.type === 'selector')?.type === 'selector' ?
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <select
+                                                                    key={index}
+                                                                    className="p-2 border border-gray-300 rounded-md"
+                                                                    onChange={(e) => selectOption(e)}
+                                                                    value={userDetails.account_type || ''}
+                                                                >
+                                                                    {formSteps[step].map((form, indexForm) => {
+                                                                        return (
+                                                                            <option key={indexForm} value={form.name}>{form.label}</option>
+                                                                        )
+                                                                    })}
+                                                                </select>
+
+                                                                <Button className="py-2 px-8 border border-gray-300 rounded-md" onClick={(e) => setUserEditing(null)}>Cancel</Button>
+                                                            </div>
+                                                        :
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <DatePicker 
+                                                                    value={(userDetails && userDetails.age) ? dayjs(userDetails.age).format('YYYY-MM-DD') : ''}
+                                                                    onChange={
+                                                                        (date, dateString) => {                                                            
+                                                                            choseDate(date, dateString, formSteps[step].find(form => form.type === 'date')?.name)
+                                                                        } 
+                                                                    } />
+                                                                <Button className="py-2 px-8 border border-gray-300 rounded-md" onClick={(e) => setUserEditing(null)}>Cancel</Button>
+                                                            </div>
+                                                    : null
                                                     }
                                                 </div>
                                             </div>
