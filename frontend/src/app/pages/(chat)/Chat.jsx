@@ -31,6 +31,38 @@ const fetchChats = async (user) => {
     return data.data;
 };
 
+const EditChat = (props) => {
+    const { chat, onClose } = props;
+
+    console.log(chat)
+
+    const handleCloseEditing = (e) => {
+        e.preventDefault();
+
+        const body = document.querySelector('body');
+        body.style.overflow = 'auto';
+
+        onClose();
+    }
+
+    useEffect(() => {
+        const body = document.querySelector('body');
+        body.style.overflow = 'hidden';
+
+        return () => { };
+    }, []);
+
+    return (
+        <div className='flex justify-center items-center fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 z-50'>
+            <div className='bg-slate-600 p-5'>
+                <h1>Edit Chat</h1>
+                <p>Chat ID: {chat._id}</p>
+                <Button onClick={(e) => handleCloseEditing(e)}>Close Chat</Button>
+            </div>
+        </div>
+    )
+}
+
 const Chat = () => {
     useDocumentTitle('Chat')
 
@@ -50,6 +82,8 @@ const Chat = () => {
     const [chats, setChats] = useState([]);
     const [chatMessages, setChatMessages] = useState([]);
     const [sentMessage, setSentMessage] = useState('');
+
+    const [showEditChat, setShowEditChat] = useState(false);
 
     const [chatOpen, setChatOpen] = useState(true);
     const [selectedChatId, setSelectedChatId] = useState({});
@@ -129,6 +163,10 @@ const Chat = () => {
 
         messageBoxValue.value = '';
         messageBoxValue.focus();
+    }
+
+    const handleEditChat = () => {
+        setShowEditChat(!showEditChat);
     }
 
     // Check if the user is authenticated using a useEffect because the user is loaded asynchronously
@@ -290,6 +328,8 @@ const Chat = () => {
                     stacked={true}
                 />
 
+                {showEditChat && <EditChat chat={chats.find(chat => chat._id === selectedChatId)} onClose={handleEditChat} />}
+
                 <div className='flex items-center justify-center w-full'>
                     <div className='mx-5 max-w-[1400px] w-full'>
 
@@ -405,31 +445,59 @@ const Chat = () => {
                                     </React.Fragment>
                                 )}
 
-                                {selectedChatId && (
-                                    <React.Fragment>
-                                        <span
-                                            onClick={(e) => handleChatClose(e, selectedChatId)}
-                                            className='max-lg:flex hidden items-center gap-1 -mt-5 hover:underline hover:cursor-pointer'>
-                                            <BsChevronLeft size={15} />
-                                            <h1>Go Back</h1>
-                                        </span>
+                                {selectedChatId && (chats && chats.length > 0) && (
+                                    <div className='w-full h-full'>
+                                        <div className='flex items-center justify-between w-full h-[10%] px-5 gap-5'>
+                                            <h1 className='text-lg w-[90%] truncate'>Chat with {chats[chats.findIndex((chat) => chat._id === selectedChatId)].name}</h1>
 
-                                        <ScrollArea ref={scrollChatArea} className='p-5 w-full h-[90%]'>
-                                            {(chatMessages && chatMessages.length > 0) && chatMessages.map((chatMessage, index) => {
-                                                const isSentByCurrentUser = chatMessage.sender_id === user.id;
-                                                const dateFormated = formatDate(chatMessage.created_at);
+                                            <div className='flex items-center justify-end'>
+                                                <Button onClick={(e) => handleEditChat(e)}>Edit Chat</Button>
+                                            </div>
+                                        </div>
 
-                                                if (isSentByCurrentUser) {
-                                                    return (
-                                                        <div key={index} className='flex w-full h-auto items-end justify-end my-5'>
-                                                            <div className='flex w-auto h-auto'>
+                                        <div className='w-full h-[90%]'>
+                                            <span
+                                                onClick={(e) => handleChatClose(e, selectedChatId)}
+                                                className='max-lg:flex hidden items-center gap-1 -mt-5 hover:underline hover:cursor-pointer'>
+                                                <BsChevronLeft size={15} />
+                                                <h1>Go Back</h1>
+                                            </span>
 
-                                                                <div className='flex flex-col items-end justify-end w-full gap-1'>
-                                                                    <div className='align-top'>
-                                                                        <h1>{user.fullName} <span className='text-xs'>{dateFormated}</span></h1>
+                                            <ScrollArea ref={scrollChatArea} className='p-5 w-full h-[90%]'>
+                                                {(chatMessages && chatMessages.length > 0) && chatMessages.map((chatMessage, index) => {
+                                                    const isSentByCurrentUser = chatMessage.sender_id === user.id;
+                                                    const dateFormated = formatDate(chatMessage.created_at);
+
+                                                    if (isSentByCurrentUser) {
+                                                        return (
+                                                            <div key={index} className='flex w-full h-auto items-end justify-end my-5'>
+                                                                <div className='flex w-auto h-auto'>
+
+                                                                    <div className='flex flex-col items-end justify-end w-full gap-1'>
+                                                                        <div className='align-top'>
+                                                                            <h1>{user.fullName} <span className='text-xs'>{dateFormated}</span></h1>
+                                                                        </div>
+
+                                                                        <div className='align-bottom bg-[#dd673ca9] rounded-md p-5 overflow-hidden'>
+                                                                            <p className='text-sm' style={{ overflowWrap: 'anywhere' }} >{chatMessage.message}</p>
+                                                                        </div>
                                                                     </div>
 
-                                                                    <div className='align-bottom bg-[#dd673ca9] rounded-md p-5 overflow-hidden'>
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    }
+
+                                                    return (
+                                                        <div key={index} className='flex w-full h-auto'>
+                                                            <div className='flex w-auto h-auto'>
+
+                                                                <div className='flex flex-col w-full gap-1'>
+                                                                    <div className='align-top'>
+                                                                        <h1>{chatMessage.sender.fullName} <span className='text-xs'>{dateFormated}</span></h1>
+                                                                    </div>
+
+                                                                    <div className='align-bottom bg-slate-200 rounded-md p-5 overflow-hidden'>
                                                                         <p className='text-sm' style={{ overflowWrap: 'anywhere' }} >{chatMessage.message}</p>
                                                                     </div>
                                                                 </div>
@@ -437,46 +505,28 @@ const Chat = () => {
                                                             </div>
                                                         </div>
                                                     )
-                                                }
+                                                })}
 
-                                                return (
-                                                    <div key={index} className='flex w-full h-auto'>
-                                                        <div className='flex w-auto h-auto'>
+                                                <ScrollBar orientation="vertical" />
+                                            </ScrollArea>
 
-                                                            <div className='flex flex-col w-full gap-1'>
-                                                                <div className='align-top'>
-                                                                    <h1>{chatMessage.sender.fullName} <span className='text-xs'>{dateFormated}</span></h1>
-                                                                </div>
+                                            <div className='px-5'>
+                                                <div className='flex items-center justify-center w-full border border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200'>
+                                                    <label
+                                                        onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage(e, selectedChatId)}
+                                                        className='flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[#ed6c39de] focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text'>
 
-                                                                <div className='align-bottom bg-slate-200 rounded-md p-5 overflow-hidden'>
-                                                                    <p className='text-sm' style={{ overflowWrap: 'anywhere' }} >{chatMessage.message}</p>
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })}
-
-                                            <ScrollBar orientation="vertical" />
-                                        </ScrollArea>
-
-                                        <div className='px-5'>
-                                            <div className='flex items-center justify-center w-full border border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200'>
-                                                <label
-                                                    onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage(e, selectedChatId)}
-                                                    className='flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[#ed6c39de] focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text'>
-
-                                                    <input type='text' ref={chatBoxRef} className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a message...' />
-                                                </label>
-                                                <hr className='border border-slate-300 h-[90%] mr-5' />
-                                                <Button
-                                                    onClick={(e) => handleSendChatMessage(e, selectedChatId)}
-                                                    className='mr-5'>Send
-                                                </Button>
+                                                        <input type='text' ref={chatBoxRef} className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a message...' />
+                                                    </label>
+                                                    <hr className='border border-slate-300 h-[90%] mr-5' />
+                                                    <Button
+                                                        onClick={(e) => handleSendChatMessage(e, selectedChatId)}
+                                                        className='mr-5'>Send
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </React.Fragment>
+                                    </div>
                                 )}
 
                             </section>

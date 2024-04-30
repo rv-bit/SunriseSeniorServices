@@ -74,8 +74,6 @@ const saveMessage = async (message) => {
             console.log(error);
         }
 
-        console.log(senderInformation.fullName);
-
         if (senderInformation) {
             messageDocument.sender = {
                 id: senderInformation.id,
@@ -87,6 +85,30 @@ const saveMessage = async (message) => {
     }
 
     return messageDocument;
+}
+
+const membersInformation = async (members) => {
+    let membersInformation = [];
+
+    for (let i = 0; i < members.length; i++) {
+        let memberInformation;
+        try {
+            memberInformation = await clerkClient.users.getUser(members[i]);
+        } catch (error) {
+            console.log(error);
+        }
+
+        if (memberInformation) {
+            membersInformation.push({
+                id: memberInformation.id,
+                firstName: memberInformation.firstName,
+                lastName: memberInformation.lastName,
+                fullName: memberInformation.fullName
+            });
+        }
+    }
+
+    return membersInformation;
 }
 
 exports.getChats = asyncHandler(async (req, res) => {
@@ -113,6 +135,9 @@ exports.getChats = asyncHandler(async (req, res) => {
             chats[i].last_message = lastMessage[0].message
             chats[i].last_message_date = lastMessage[0].created_at
         }
+
+        const infoMembers = await membersInformation(chats[i].members);
+        chats[i].members = infoMembers;
     }
 
     res.status(200).json({
