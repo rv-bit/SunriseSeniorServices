@@ -32,9 +32,9 @@ const fetchChats = async (user) => {
 };
 
 const EditChat = (props) => {
-    const { chat, onClose } = props;
+    const { chatInfo, onClose, userInfo } = props;
 
-    console.log(chat)
+    console.log(chatInfo)
 
     const handleCloseEditing = (e) => {
         e.preventDefault();
@@ -54,10 +54,63 @@ const EditChat = (props) => {
 
     return (
         <div className='flex justify-center items-center fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 z-50'>
-            <div className='bg-slate-600 p-5'>
-                <h1>Edit Chat</h1>
-                <p>Chat ID: {chat._id}</p>
-                <Button onClick={(e) => handleCloseEditing(e)}>Close Chat</Button>
+            <div className='max-sm:w-full w-[500px] h-[50%] bg-white rounded-2xl p-5'>
+                {/* <div className='flex items-center justify-between mb-5 h-fit'>
+                    <h1>Editing Chat</h1>
+                    <Button onClick={(e) => handleCloseEditing(e)}>Close</Button>
+                </div> */}
+
+                <div className='flex flex-col justify-between mb-5 h-full'>
+
+                    <div className='flex flex-col items-start justify-start gap-2 h-[85%]'>
+                        <ScrollArea className='w-full h-full'>
+                            <ul className='flex flex-col items-start justify-start gap-2'>
+                                {
+                                    Object.entries(chatInfo.members).map(([key, value]) => {
+                                        return (
+                                            <li
+                                                className='flex items-center justify-between gap-2 p-5 bg-slate-200 rounded-2xl w-full'
+                                                key={key}
+                                            >
+                                                <h1>
+                                                    {value.fullName}
+                                                </h1>
+
+                                                <div className='flex items-center justify-end'>
+                                                    <Button>Remove</Button>
+                                                </div>
+                                            </li>
+                                        )
+                                    })
+                                }
+                            </ul>
+
+                            <ScrollBar orientation="vertical" className='' />
+                        </ScrollArea>
+                    </div>
+
+                    <div className='flex justify-between gap-2'>
+                        <div className='flex items-center justify-start gap-2'>
+                            {
+                                chatInfo.created_by && (
+                                    chatInfo.created_by === userInfo.id ?
+                                        <React.Fragment>
+                                            <Button>Delete Chat</Button>
+                                            <Button>Save Changes</Button>
+                                            <Button>Add Person</Button>
+                                        </React.Fragment>
+                                        :
+                                        <Button>Leave Chat</Button>
+                                )
+                            }
+                        </div>
+
+                        <div className='flex items-end justify-end'>
+                            <Button onClick={(e) => handleCloseEditing(e)}>Close Editing</Button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     )
@@ -328,7 +381,7 @@ const Chat = () => {
                     stacked={true}
                 />
 
-                {showEditChat && <EditChat chat={chats.find(chat => chat._id === selectedChatId)} onClose={handleEditChat} />}
+                {showEditChat && <EditChat chatInfo={chats.find(chat => chat._id === selectedChatId)} onClose={handleEditChat} userInfo={user} />}
 
                 <div className='flex items-center justify-center w-full'>
                     <div className='mx-5 max-w-[1400px] w-full'>

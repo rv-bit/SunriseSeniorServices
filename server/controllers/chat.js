@@ -199,6 +199,7 @@ exports.createChat = asyncHandler(async (req, res) => {
         _id: _id,
         members: chat.members,
         name: chat.name,
+        created_by: chat.created_by,
         created_at: new Date().toDateString()
     }
 
