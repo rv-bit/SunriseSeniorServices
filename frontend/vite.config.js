@@ -13,6 +13,12 @@ const devConfig = {
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
+      "/proxy": {
+        target: "https://maps.googleapis.com",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/proxy/, ""),
+      },
     },
   },
 };
