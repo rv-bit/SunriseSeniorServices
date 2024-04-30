@@ -37,6 +37,11 @@ socketIO.on('connection', (socket) => {
         console.log(`🔥: ${socket.id} user just disconnected! Chat ID: ${chatId}`);
         socket.leave(chatId);
     })
+
+    socket.on('disconnect', () => {
+        console.log(`🔥: ${socket.id} user just disconnected!`);
+        socket.disconnect();
+    });
 });
 
 const saveMessage = async (message) => {
@@ -68,6 +73,8 @@ const saveMessage = async (message) => {
         } catch (error) {
             console.log(error);
         }
+
+        console.log(senderInformation.fullName);
 
         if (senderInformation) {
             messageDocument.sender = {
@@ -102,8 +109,6 @@ exports.getChats = asyncHandler(async (req, res) => {
     for (let i = 0; i < chats.length; i++) {
         const lastMessage = await db.collection('messages').find({ chat_id: chats[i]._id }, { sort: { created_at: -1 }, limit: 1 }).toArray();
 
-        console.log(lastMessage);
-
         if (lastMessage && lastMessage.length > 0) {
             chats[i].last_message = lastMessage[0].message
             chats[i].last_message_date = lastMessage[0].created_at
@@ -117,6 +122,7 @@ exports.getChats = asyncHandler(async (req, res) => {
 
 exports.getChatMessagesFromId = asyncHandler(async (req, res) => {
     const chatId = req.params.id;
+    const userId = req.params.userId;
 
     if (!chatId) {
         return res.status(400).json({
@@ -132,23 +138,20 @@ exports.getChatMessagesFromId = asyncHandler(async (req, res) => {
         });
     }
 
-    if (messages.length > 0) {
-        let senderInformation;
-        try {
-            senderInformation = await clerkClient.users.getUser(messages[0].sender_id);
-        } catch (error) {
-            console.log(error);
-        }
+    const sender = messages.find(message => message.sender_id !== userId);
+    let senderInformation;
+    try {
+        senderInformation = await clerkClient.users.getUser(sender.sender_id);
+    } catch (error) {
+        console.log(error);
+    }
 
-        if (senderInformation) {
-            for (let i = 0; i < messages.length; i++) {
-                messages[i].sender = {
-                    id: senderInformation.id,
-                    firstName: senderInformation.firstName,
-                    lastName: senderInformation.lastName,
-                    fullName: senderInformation.fullName
-                }
-            }
+    for (let i = 0; i < messages.length; i++) {
+        messages[i].sender = {
+            id: senderInformation.id,
+            firstName: senderInformation.firstName,
+            lastName: senderInformation.lastName,
+            fullName: senderInformation.fullName
         }
     }
 
