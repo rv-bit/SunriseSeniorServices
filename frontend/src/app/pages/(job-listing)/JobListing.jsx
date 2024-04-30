@@ -160,10 +160,9 @@ const JobListing = () => {
 
     const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
 
-    const createChats = useCallback(async (chatId) => {
+    const createChats = useCallback(async () => {
         const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/createChat`, {
             data: {
-                'id': chatId,
                 'members': [user.id, userFromJobId.id],
                 'created_by': user.id,
                 'name': jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.title,
@@ -181,9 +180,7 @@ const JobListing = () => {
             return true;
         }
 
-        if (data.Success) {
-            return true;
-        }
+        return response;
     });
 
     const handleChat = async (e, jobId) => {
@@ -202,8 +199,7 @@ const JobListing = () => {
                 }, 2500);
             }
 
-            const chatId = jobId + user.id + userFromJobId.id;
-            const chatCreated = await createChats(chatId);
+            const chatCreated = await createChats();
 
             if (!chatCreated) {
                 return setTimeout(() => {
@@ -215,12 +211,12 @@ const JobListing = () => {
                 setWaitForChatToCreate(false);
 
                 if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
-                    handleOpenInNewTab(e, `/chat?currentChatId=${chatId}`);
+                    handleOpenInNewTab(e, `/chat?currentChatId=${chatCreated._id}`);
                 } else {
                     if (window.innerWidth < 1180) {
-                        navigate(`/chat?currentChatId=${chatId}`)
+                        navigate(`/chat?currentChatId=${chatCreated._id}`)
                     } else {
-                        navigate(`/chat?currentChatId=${chatId}`)
+                        navigate(`/chat?currentChatId=${chatCreated._id}`)
                     }
                 }
             }, 2500);

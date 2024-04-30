@@ -26,34 +26,28 @@ export const Get = async (url, body) => {
     return response;
 }
 
-export const googleCheckAccount = async (code) => {
-    if (!code) return;
+export const Put = async (url, data) => {
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    });
 
-    const promiseData = await Post(`${import.meta.env.VITE_API_PREFIX}/google/checkAccount`, { code });
-    const response = await promiseData;
+    return response;
+}
 
-    if (!response.ok) {
-        const data = await response.json();
-        return [false, data];
-    }
+export const Delete = async (url, data) => {
+    const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    });
 
-    const data = await response.json();
-    return [true, data];
-};
-
-export const userLogIn = async (formData) => {
-    if (!formData) return;
-
-    const promiseData = Post(`${import.meta.env.VITE_API_PREFIX}/login`, { email: formData.email, password: formData.password });
-    const response = await promiseData;
-
-    if (!response.ok) {
-        const data = await response.json();
-        return [false, data];
-    }
-
-    const data = await response.json();
-    return [true, data];
+    return response;
 }
 
 export const formatTags = (tags) => {

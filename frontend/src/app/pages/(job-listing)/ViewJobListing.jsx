@@ -51,10 +51,9 @@ const ViewJobListing = () => {
 
     const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
 
-    const createChats = useCallback(async (chatId) => {
+    const createChats = useCallback(async () => {
         const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/createChat`, {
             data: {
-                'id': chatId,
                 'members': [user.id, jobListing.user_id],
                 'created_by': user.id,
                 'name': jobListing.title,
@@ -70,13 +69,10 @@ const ViewJobListing = () => {
         const data = await response.json();
         if (data.message) {
             toast.info('Chat already exists, moving to the chat');
-
-            return true;
+            return data.data;
         }
 
-        if (data.Success) {
-            return true;
-        }
+        return data.data;
     });
 
     const handleChat = async (e, jobId) => {
@@ -95,8 +91,7 @@ const ViewJobListing = () => {
                 }, 2500);
             }
 
-            const chatId = jobId + user.id + jobListing.user_id;
-            const chatCreated = await createChats(chatId);
+            const chatCreated = await createChats();
 
             if (!chatCreated) {
                 return setTimeout(() => {
@@ -108,12 +103,12 @@ const ViewJobListing = () => {
                 setWaitForChatToCreate(false);
 
                 if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
-                    handleOpenInNewTab(e, `/chat?currentChatId=${chatId}`);
+                    handleOpenInNewTab(e, `/chat?currentChatId=${chatCreated._id}`);
                 } else {
                     if (window.innerWidth < 1180) {
-                        navigate(`/chat?currentChatId=${chatId}`)
+                        navigate(`/chat?currentChatId=${chatCreated._id}`)
                     } else {
-                        navigate(`/chat?currentChatId=${chatId}`)
+                        navigate(`/chat?currentChatId=${chatCreated._id}`)
                     }
                 }
             }, 2500);

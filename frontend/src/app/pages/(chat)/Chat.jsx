@@ -3,18 +3,20 @@ import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useCallback, useRef, useContext, useEffect, useState, useLayoutEffect, lazy, Suspense } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useQuery } from 'react-query'
+import { useQuery, useQueryClient } from 'react-query'
 
 import useUserAuth from '@/app/hooks/useUserAuth'
 import useDocumentTitle from '@/app/hooks/useDocumentTitle'
 
 import SocketioProvider from '@/app/providers/SocketioProvider'
 
-import { formatDate, Get, Post } from '@/app/lib/utils' // Common functions 
+import { formatDate, Get, Post, Delete } from '@/app/lib/utils' // Common functions 
 
 import { ScrollArea, ScrollBar } from '@/app/components/ui/scroll-area';
 import { Button } from '@/app/components/ui/button'
 import { BsChevronLeft } from "react-icons/bs";
+
+const Alertbox = lazy(() => import('@/app/components/custom/Alertbox'));
 
 const fetchChats = async (user) => {
     if (!user) {
@@ -32,9 +34,14 @@ const fetchChats = async (user) => {
 };
 
 const EditChat = (props) => {
-    const { chatInfo, onClose, userInfo } = props;
+    const { chatInfo, onClose, onDelete, userInfo } = props;
 
-    console.log(chatInfo)
+    const [showAlert, setShowAlert] = useState({
+        show: false,
+        title: '',
+        message: '',
+        action: ''
+    });
 
     const handleCloseEditing = (e) => {
         e.preventDefault();
@@ -45,6 +52,43 @@ const EditChat = (props) => {
         onClose();
     }
 
+    const handleDelete = (e) => {
+        e.preventDefault();
+
+        setShowAlert({
+            show: true,
+            action: 'delete',
+            title: 'Delete Chat',
+            message: 'Are you sure you want to delete this chat?'
+        });
+    }
+
+    const onSubmit = (e) => {
+        e.preventDefault();
+
+        if (showAlert.action === 'delete') {
+            onDelete(e, chatInfo._id);
+        }
+
+        setShowAlert({
+            show: false,
+            action: '',
+            title: '',
+            message: ''
+        });
+    }
+
+    const onCancel = (e) => {
+        e.preventDefault();
+
+        setShowAlert({
+            show: false,
+            action: '',
+            title: '',
+            message: ''
+        });
+    }
+
     useEffect(() => {
         const body = document.querySelector('body');
         body.style.overflow = 'hidden';
@@ -53,66 +97,83 @@ const EditChat = (props) => {
     }, []);
 
     return (
-        <div className='flex justify-center items-center fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 z-50'>
-            <div className='max-sm:w-full w-[550px] h-[50%] max-sm:h-[90%] bg-white rounded-2xl p-5'>
-                {/* <div className='flex items-center justify-between mb-5 h-fit'>
-                    <h1>Editing Chat</h1>
-                    <Button onClick={(e) => handleCloseEditing(e)}>Close</Button>
-                </div> */}
-
-                <div className='flex items-end justify-end mb-5'>
-                    <Button
-                        className='bg-inherit text-black hover:bg-slate-200 hover:text-black'
-                        onClick={(e) => handleCloseEditing(e)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                    </Button>
-                </div>
-
-                <div className='flex flex-col justify-between mb-5 w-full h-full gap-5'>
-                    <ScrollArea className='flex flex-col items-start justify-start gap-2 h-[80%]'>
-                        <ul className='flex flex-col items-start justify-start gap-2'>
-                            {
-                                Object.entries(chatInfo.members).map(([key, value]) => {
-                                    return (
-                                        <li
-                                            className='flex items-center justify-between gap-2 p-5 bg-slate-200 rounded-2xl w-full'
-                                            key={key}
-                                        >
-                                            <h1>
-                                                {value.fullName}
-                                            </h1>
-
-                                            <div className='flex items-center justify-end'>
-                                                <Button>Remove</Button>
-                                            </div>
-                                        </li>
-                                    )
-                                })
-                            }
-
-                        </ul>
-
-                        <ScrollBar orientation="vertical" className='' />
-                    </ScrollArea>
-
-                    <div className='flex justify-center gap-2 max-sm:flex-col mb-16'>
-                        {
-                            chatInfo.created_by && (
-                                chatInfo.created_by === userInfo.id ?
-                                    <React.Fragment>
-                                        <Button>Delete Chat</Button>
-                                        <Button>Save Changes</Button>
-                                        <Button>Add Person</Button>
-                                    </React.Fragment>
-                                    :
-                                    <Button>Leave Chat</Button>
-                            )
-                        }
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-screen">
+                <div className="relative">
+                    <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
+                    <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
                     </div>
                 </div>
-
             </div>
-        </div>
+        }>
+            {
+                showAlert.show && (
+                    <Alertbox
+                        Title={showAlert.title}
+                        Description={showAlert.message}
+                        onSubmit={onSubmit}
+                        onCancel={onCancel}
+                        button={{ second: "Cancel", main: "Submit" }}
+                    />
+                )
+            }
+
+            <div className='flex justify-center items-center fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 z-50'>
+                <div className='max-sm:w-full w-[550px] h-[50%] max-sm:h-[90%] bg-white rounded-2xl p-5'>
+                    <div className='flex items-end justify-end mb-5'>
+                        <Button
+                            className='bg-inherit text-black hover:bg-slate-200 hover:text-black'
+                            onClick={(e) => handleCloseEditing(e)}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                        </Button>
+                    </div>
+
+                    <div className='flex flex-col justify-between mb-5 w-full h-full gap-5'>
+                        <ScrollArea className='flex flex-col items-start justify-start gap-2 h-[80%]'>
+                            <ul className='flex flex-col items-start justify-start gap-2'>
+                                {
+                                    Object.entries(chatInfo.members).map(([key, value]) => {
+                                        return (
+                                            <li
+                                                className='flex items-center justify-between gap-2 p-5 bg-slate-200 rounded-2xl w-full'
+                                                key={key}
+                                            >
+                                                <h1>
+                                                    {value.fullName}
+                                                </h1>
+
+                                                <div className='flex items-center justify-end'>
+                                                    <Button>Remove</Button>
+                                                </div>
+                                            </li>
+                                        )
+                                    })
+                                }
+
+                            </ul>
+
+                            <ScrollBar orientation="vertical" className='' />
+                        </ScrollArea>
+
+                        <div className='flex justify-center gap-2 max-sm:flex-col mb-16'>
+                            {
+                                chatInfo.created_by && (
+                                    chatInfo.created_by === userInfo.id ?
+                                        <React.Fragment>
+                                            <Button onClick={(e) => handleDelete(e)}>Delete Chat</Button>
+                                            <Button>Save Changes</Button>
+                                            <Button>Add Person</Button>
+                                        </React.Fragment>
+                                        :
+                                        <Button>Leave Chat</Button>
+                                )
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </Suspense>
     )
 }
 
@@ -126,6 +187,7 @@ const Chat = () => {
     const { isLoaded, isSignedIn, user } = useUserAuth();
 
     const { data: chatsData, isLoading: chatsDataIsLoading, isError: chatsDataIsError, error: chatsDataError, status: chatsDataStatus } = useQuery(['gatherChats'], () => fetchChats(user), {
+        refetchOnMount: 'always',
         enabled: !!user && isLoaded && isSignedIn
     });
 
@@ -222,7 +284,26 @@ const Chat = () => {
         setShowEditChat(!showEditChat);
     }
 
-    // Check if the user is authenticated using a useEffect because the user is loaded asynchronously
+    const handleDelete = async (e, chatId) => {
+        e.preventDefault();
+
+        const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/chats/delete/${chatId}`, {
+            user_id: user.id,
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        const data = await response.json();
+        toast.success(data.message);
+
+        console.log('Chat deleted', data, user, isLoaded, isSignedIn);
+        setShowEditChat(false);
+    }
+
     useEffect(() => {
         if (isLoaded && !isSignedIn) {
             navigate('/');
@@ -381,7 +462,7 @@ const Chat = () => {
                     stacked={true}
                 />
 
-                {showEditChat && <EditChat chatInfo={chats.find(chat => chat._id === selectedChatId)} onClose={handleEditChat} userInfo={user} />}
+                {showEditChat && <EditChat chatInfo={chats.find(chat => chat._id === selectedChatId)} onClose={handleEditChat} userInfo={user} onDelete={handleDelete} />}
 
                 <div className='flex items-center justify-center w-full'>
                     <div className='mx-5 max-w-[1400px] w-full'>

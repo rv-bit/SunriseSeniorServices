@@ -163,20 +163,23 @@ exports.getChatMessagesFromId = asyncHandler(async (req, res) => {
         });
     }
 
-    const sender = messages.find(message => message.sender_id !== userId);
-    let senderInformation;
-    try {
-        senderInformation = await clerkClient.users.getUser(sender.sender_id);
-    } catch (error) {
-        console.log(error);
-    }
+    const sender = messages.find(message => (message.sender_id && message.sender_id !== userId));
 
-    for (let i = 0; i < messages.length; i++) {
-        messages[i].sender = {
-            id: senderInformation.id,
-            firstName: senderInformation.firstName,
-            lastName: senderInformation.lastName,
-            fullName: senderInformation.fullName
+    if (sender) {
+        let senderInformation;
+        try {
+            senderInformation = await clerkClient.users.getUser(sender.sender_id);
+        } catch (error) {
+            console.log(error);
+        }
+
+        for (let i = 0; i < messages.length; i++) {
+            messages[i].sender = {
+                id: senderInformation.id,
+                firstName: senderInformation.firstName,
+                lastName: senderInformation.lastName,
+                fullName: senderInformation.fullName
+            }
         }
     }
 
@@ -209,6 +212,7 @@ exports.createChat = asyncHandler(async (req, res) => {
 
     if (chatExists) {
         return res.status(200).json({
+            data: chatExists,
             message: 'Chat already exists'
         });
     }
@@ -221,7 +225,33 @@ exports.createChat = asyncHandler(async (req, res) => {
         });
     }
 
+    console.log('Chat created', chatDocument._id, result._id);
+
     res.status(200).json({
         data: chatDocument
+    });
+});
+
+exports.deleteChat = asyncHandler(async (req, res) => {
+    const chatId = req.params.id;
+    const userId = req.body.user_id;
+
+    if (!chatId || !userId) {
+        return res.status(400).json({
+            message: 'Error while deleting chat'
+        });
+    }
+
+    const chat = await db.collection('chats').findOneAndDelete({ _id: chatId, created_by: userId });
+
+    if (!chat) {
+        return res.status(500).json({
+            message: 'Failed to delete chat'
+        });
+    }
+
+
+    res.status(200).json({
+        message: 'Chat deleted'
     });
 });
