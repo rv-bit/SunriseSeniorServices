@@ -54,60 +54,60 @@ const EditChat = (props) => {
 
     return (
         <div className='flex justify-center items-center fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 z-50'>
-            <div className='max-sm:w-full w-[500px] h-[50%] bg-white rounded-2xl p-5'>
+            <div className='max-sm:w-full w-[550px] h-[50%] max-sm:h-[90%] bg-white rounded-2xl p-5'>
                 {/* <div className='flex items-center justify-between mb-5 h-fit'>
                     <h1>Editing Chat</h1>
                     <Button onClick={(e) => handleCloseEditing(e)}>Close</Button>
                 </div> */}
 
-                <div className='flex flex-col justify-between mb-5 h-full'>
+                <div className='flex items-end justify-end mb-5'>
+                    <Button
+                        className='bg-inherit text-black hover:bg-slate-200 hover:text-black'
+                        onClick={(e) => handleCloseEditing(e)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                    </Button>
+                </div>
 
-                    <div className='flex flex-col items-start justify-start gap-2 h-[85%]'>
-                        <ScrollArea className='w-full h-full'>
-                            <ul className='flex flex-col items-start justify-start gap-2'>
-                                {
-                                    Object.entries(chatInfo.members).map(([key, value]) => {
-                                        return (
-                                            <li
-                                                className='flex items-center justify-between gap-2 p-5 bg-slate-200 rounded-2xl w-full'
-                                                key={key}
-                                            >
-                                                <h1>
-                                                    {value.fullName}
-                                                </h1>
-
-                                                <div className='flex items-center justify-end'>
-                                                    <Button>Remove</Button>
-                                                </div>
-                                            </li>
-                                        )
-                                    })
-                                }
-                            </ul>
-
-                            <ScrollBar orientation="vertical" className='' />
-                        </ScrollArea>
-                    </div>
-
-                    <div className='flex justify-between gap-2'>
-                        <div className='flex items-center justify-start gap-2'>
+                <div className='flex flex-col justify-between mb-5 w-full h-full gap-5'>
+                    <ScrollArea className='flex flex-col items-start justify-start gap-2 h-[80%]'>
+                        <ul className='flex flex-col items-start justify-start gap-2'>
                             {
-                                chatInfo.created_by && (
-                                    chatInfo.created_by === userInfo.id ?
-                                        <React.Fragment>
-                                            <Button>Delete Chat</Button>
-                                            <Button>Save Changes</Button>
-                                            <Button>Add Person</Button>
-                                        </React.Fragment>
-                                        :
-                                        <Button>Leave Chat</Button>
-                                )
-                            }
-                        </div>
+                                Object.entries(chatInfo.members).map(([key, value]) => {
+                                    return (
+                                        <li
+                                            className='flex items-center justify-between gap-2 p-5 bg-slate-200 rounded-2xl w-full'
+                                            key={key}
+                                        >
+                                            <h1>
+                                                {value.fullName}
+                                            </h1>
 
-                        <div className='flex items-end justify-end'>
-                            <Button onClick={(e) => handleCloseEditing(e)}>Close Editing</Button>
-                        </div>
+                                            <div className='flex items-center justify-end'>
+                                                <Button>Remove</Button>
+                                            </div>
+                                        </li>
+                                    )
+                                })
+                            }
+
+                        </ul>
+
+                        <ScrollBar orientation="vertical" className='' />
+                    </ScrollArea>
+
+                    <div className='flex justify-center gap-2 max-sm:flex-col mb-16'>
+                        {
+                            chatInfo.created_by && (
+                                chatInfo.created_by === userInfo.id ?
+                                    <React.Fragment>
+                                        <Button>Delete Chat</Button>
+                                        <Button>Save Changes</Button>
+                                        <Button>Add Person</Button>
+                                    </React.Fragment>
+                                    :
+                                    <Button>Leave Chat</Button>
+                            )
+                        }
                     </div>
                 </div>
 
@@ -500,8 +500,14 @@ const Chat = () => {
 
                                 {selectedChatId && (chats && chats.length > 0) && (
                                     <div className='w-full h-full'>
-                                        <div className='flex items-center justify-between w-full h-[10%] px-5 gap-5'>
-                                            <h1 className='text-lg w-[90%] truncate'>Chat with {chats[chats.findIndex((chat) => chat._id === selectedChatId)].name}</h1>
+                                        <div className='flex items-center justify-between max-extraSm:w-[90%] w-full h-[10%] px-5'>
+                                            <div
+                                                onClick={(e) => handleChatClose(e, selectedChatId)}
+                                                className='w-[75%] flex justify-center items-center hover:cursor-pointer'>
+
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
+                                                <h1 className='text-lg w-full truncate'>Chat with {chats[chats.findIndex((chat) => chat._id === selectedChatId)].name}</h1>
+                                            </div>
 
                                             <div className='flex items-center justify-end'>
                                                 <Button onClick={(e) => handleEditChat(e)}>Edit Chat</Button>
@@ -509,13 +515,6 @@ const Chat = () => {
                                         </div>
 
                                         <div className='w-full h-[90%]'>
-                                            <span
-                                                onClick={(e) => handleChatClose(e, selectedChatId)}
-                                                className='max-lg:flex hidden items-center gap-1 -mt-5 hover:underline hover:cursor-pointer'>
-                                                <BsChevronLeft size={15} />
-                                                <h1>Go Back</h1>
-                                            </span>
-
                                             <ScrollArea ref={scrollChatArea} className='p-5 w-full h-[90%]'>
                                                 {(chatMessages && chatMessages.length > 0) && chatMessages.map((chatMessage, index) => {
                                                     const isSentByCurrentUser = chatMessage.sender_id === user.id;
