@@ -19,11 +19,11 @@ import { BsSearch } from "react-icons/bs";
 
 import { Card, CardContent } from "@/app/components/ui/card";
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
 } from "@/app/components/ui/carousel"
 
 import { AspectRatio } from "@/app/components/ui/aspect-ratio"
@@ -32,9 +32,9 @@ import { ScrollArea, ScrollBar } from "@/app/components/ui/scroll-area";
 const Alertbox = lazy(() => import('@/app/components/custom/Alertbox'));
 
 const buttons = [
-    { name: "Child Care", icon: ChildrenCareSvg, option:"option_childcare" },
-    { name: "Elderly Care", icon: ElderlyCareSvg, option:"option_seniorcare" },
-    { name: "Pet Care", icon: PetCareSvg, option:"option_petcare" }
+    { name: "Child Care", icon: ChildrenCareSvg, option: "option_childcare" },
+    { name: "Elderly Care", icon: ElderlyCareSvg, option: "option_seniorcare" },
+    { name: "Pet Care", icon: PetCareSvg, option: "option_petcare" }
 ]
 
 import PagesData from "@/app/data/PagesData";
@@ -48,10 +48,22 @@ const Home = () => {
     const { isLoaded, isSignedIn } = useAuth();
     const { user } = useUser();
 
-    const searchPostCodeRef = useRef(null);
-
     const [searchingPostCode, setSearchingPostCode] = useState(false);
     const [addresses, setAddresses] = useState({});
+
+    const searchPostCodeRef = useRef();
+
+    const grabPostCode = () => {
+        const postCodes = document.querySelectorAll('#searchPostCode');
+
+        postCodes.forEach((postCode) => {
+            if (postCode.value.length > 0) {
+                searchPostCodeRef.current = postCode;
+            }
+        })
+
+        return searchPostCodeRef.current;
+    }
 
     const handlePostCodeSearch = async (e) => {
         e.preventDefault();
@@ -63,7 +75,15 @@ const Home = () => {
 
         if (searchingPostCode) return;
 
-        if (!searchPostCodeRef.current.value) return;
+        const searchPostCode = grabPostCode();
+
+        if (!searchPostCodeRef.current.value) {
+            if (addresses && addresses.length > 0) {
+                setAddresses([]);
+            }
+
+            return;
+        };
 
         const postCode = searchPostCodeRef.current.value;
         const postCodeLastPart = splitPostcode(postCode);
@@ -72,7 +92,6 @@ const Home = () => {
         const data = await response.json();
 
         if (!data.result) {
-            toast.error('Post code not found, please try again.');
             setSearchingPostCode(false);
             return;
         }
@@ -105,7 +124,8 @@ const Home = () => {
                     formatted_address: admin_ward
                 }
             }
-        )}
+            )
+        }
 
         setAddresses(data.result);
         setSearchingPostCode(false);
@@ -122,13 +142,13 @@ const Home = () => {
     }
 
     const handleAlertDialogClose = () => {
-        setAlertDialog({ ...alertDialog, open: false});
+        setAlertDialog({ ...alertDialog, open: false });
 
         setFormData({ ...formData, option: 'option_requester' });
     }
 
-    const handleAlertDialogSubmit = () => {        
-        setAlertDialog({ ...alertDialog, open: false});
+    const handleAlertDialogSubmit = () => {
+        setAlertDialog({ ...alertDialog, open: false });
 
         setFormData({ ...formData, option: 'option_helper' });
     }
@@ -142,7 +162,8 @@ const Home = () => {
         handleAlertDialog('Are you a carer or a person seeking care?');
 
         const options = {}
-        
+        const searchPostCode = grabPostCode();
+
         if (searchPostCodeRef.current.value) {
             options.postCode = searchPostCodeRef.current.value;
         }
@@ -151,7 +172,7 @@ const Home = () => {
 
         setFormData(options);
     }
-    
+
     const handleJoinAsCarer = () => {
         if (user && isSignedIn) {
             navigate('/job-listings');
@@ -159,6 +180,7 @@ const Home = () => {
         }
 
         const options = {}
+        const searchPostCode = grabPostCode();
 
         if (searchPostCodeRef.current.value) {
             options.postCode = searchPostCodeRef.current.value;
@@ -168,6 +190,14 @@ const Home = () => {
 
         setFormData(options);
         navigate('/signup')
+    }
+
+    const handleLocation = (e, postCode) => {
+        e.preventDefault();
+
+        searchPostCodeRef.current.value = postCode;
+
+        setAddresses([]);
     }
 
     useEffect(() => {
@@ -187,7 +217,7 @@ const Home = () => {
             <div className="flex items-center justify-center h-screen">
                 <div className="relative">
                     <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
-                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
                     </div>
                 </div>
             </div>
@@ -199,7 +229,7 @@ const Home = () => {
             <div className="flex items-center justify-center h-screen">
                 <div className="relative">
                     <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
-                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
                     </div>
                 </div>
             </div>
@@ -233,21 +263,21 @@ const Home = () => {
                 <div className='flex flex-col items-center justify-center w-full'>
                     <div className='flex items-center justify-center w-full'>
 
-                        <div className="w-auto h-auto hidden max-md:flex flex-col col-span-2 items-center justify-center">
+                        <div className="w-auto h-auto hidden max-md:flex flex-col col-span-2 items-center justify-center z-20">
                             <div className='flex items-center justify-center w-full relative'>
-                                <img src={heroPhotoOfWoman} alt='Home' className="object-cover max-lg:h-[400px] w-full rounded-3xl"/>
+                                <img src={heroPhotoOfWoman} alt='Home' className="object-cover max-lg:h-[400px] w-full rounded-3xl" />
 
-                                <div className="absolute w-full h-full shadow-2xl"></div>                   
+                                <div className="absolute w-full h-full shadow-2xl"></div>
                             </div>
 
                             <div className="w-full h-[350px] -mt-20 rounded-2xl bg-[#eeb89c] shadow-xl drop-shadow-2xl">
                                 <div className='flex items-center justify-center h-full w-full'>
-                                    
+
                                     <div className='flex flex-col items-start justify-center w-full h-full py-20 px-10 gap-5'>
                                         <h1 className='text-start text-xl font-bold'>Find trusted locals for your every need</h1>
 
                                         <div className="flex flex-col items-start justify-center gap-2">
-                                            <div className='flex items-center justify-center w-full border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200 mb-2'>
+                                            <div className='flex flex-col items-center justify-center w-full border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200 mb-2'>
                                                 <label
                                                     onChange={(e) => {
                                                         if (searchingPostCode) return;
@@ -260,35 +290,52 @@ const Home = () => {
                                                     }}
                                                     className='flex items-center text-slate-600 w-full h-full focus-within:outline-none hover:cursor-text'>
 
-                                                    <input type='text' ref={searchPostCodeRef} className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a post code'/>
-                                                
+                                                    <input type='text' id='searchPostCode' className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a post code' />
+
                                                     <Button
                                                         onClick={(e) => {
                                                             if (searchingPostCode) return;
 
                                                             handlePostCodeSearch(e)
-                                                        }} 
+                                                        }}
                                                         disabled={searchingPostCode}
-                                                        className='mr-5 bg-inherit hover:bg-inherit'> <BsSearch size={20} color="black"/>
+                                                        className='mr-5 bg-inherit hover:bg-inherit'> <BsSearch size={20} color="black" />
                                                     </Button>
-
                                                 </label>
+
+                                                {addresses && addresses.length > 0 && (
+                                                    <div className="w-[285px] max-extraSm:w-full h-auto max-h-[300px] bg-slate-100 rounded-lg absolute top-[15.5rem] max-extraSm:mx-5">
+                                                        <ScrollArea className="w-full h-full">
+                                                            {addresses.map((address, index) => {
+                                                                const { post_code, postal_town, formatted_address } = address;
+
+                                                                return (
+                                                                    <div key={index} className="flex items-center justify-center w-full h-12 hover:bg-slate-200 rounded-lg mb-2 px-2 last:mb-0">
+                                                                        <button className="text-center" onClick={(e) => handleLocation(e, post_code)}>{post_code} - {formatted_address}</button>
+                                                                    </div>
+                                                                )
+                                                            })}
+
+                                                            <ScrollBar orientation="vertical" className="absolute inset-y-0 right-0 bg-slate-200 rounded-lg" />
+                                                        </ScrollArea>
+                                                    </div>
+                                                )}
                                             </div>
                                             <h1 className='text-xs'>This is a simple page with a hero image</h1>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
 
-                        <div className="w-[1200px] h-[350px] max-md:hidden block max-md:bottom-16 rounded-2xl bg-[#eeb89c] shadow-xl drop-shadow-2xl overflow-hidden">
+                        <div className="w-[1200px] h-[350px] max-md:hidden block max-md:bottom-16 rounded-2xl bg-[#eeb89c] shadow-xl drop-shadow-2xl z-20">
                             <div className='flex items-center justify-center h-full w-full'>
-                                
                                 <div className='flex flex-col items-start justify-center w-1/2 h-full py-20 px-10 gap-5'>
                                     <h1 className='text-start text-4xl font-bold'>Find trusted locals for your every need</h1>
 
                                     <div className="flex flex-col items-start justify-center gap-2">
-                                        <div className='flex items-center justify-center w-full border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200 mb-2'>
+                                        <div className='flex flex-col items-center justify-center w-full border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200 mb-2'>
                                             <label
                                                 onChange={(e) => {
                                                     if (searchingPostCode) return;
@@ -299,76 +346,76 @@ const Home = () => {
                                                     if (searchingPostCode) return;
 
                                                     e.key === 'Enter' && handlePostCodeSearch(e)
-                                                }} 
+                                                }}
                                                 className='flex items-center text-slate-600 w-full h-full focus-within:outline-none hover:cursor-text'>
 
-                                                <input type='text' ref={searchPostCodeRef} className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a post code'/>
-                                            
+                                                <input type='text' id='searchPostCode' className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a post code' />
+
                                                 <Button
                                                     onClick={(e) => {
                                                         if (searchingPostCode) return;
 
                                                         handlePostCodeSearch(e)
-                                                    }} 
+                                                    }}
                                                     disabled={searchingPostCode}
-                                                    className='mr-5 bg-inherit hover:bg-inherit'> <BsSearch size={20} color="black"/>
+                                                    className='mr-5 bg-inherit hover:bg-inherit'> <BsSearch size={20} color="black" />
                                                 </Button>
 
                                             </label>
+
+                                            {addresses && addresses.length > 0 && (
+                                                <div className="w-[285px] h-auto max-h-[300px] bg-slate-100 rounded-lg absolute top-[15.5rem]">
+                                                    <ScrollArea className="w-full h-full">
+                                                        {addresses.map((address, index) => {
+                                                            const { post_code, postal_town, formatted_address } = address;
+
+                                                            return (
+                                                                <div key={index} className="flex items-center justify-center w-full h-12 hover:bg-slate-200 rounded-lg mb-2 px-2 last:mb-0">
+                                                                    <button className="text-center" onClick={(e) => handleLocation(e, post_code)}>{post_code} - {formatted_address}</button>
+                                                                </div>
+                                                            )
+                                                        })}
+
+                                                        <ScrollBar orientation="vertical" className="absolute inset-y-0 right-0 bg-slate-200 rounded-lg" />
+                                                    </ScrollArea>
+                                                </div>
+                                            )}
                                         </div>
                                         <h1 className='text-xs'>This is a simple page with a hero image</h1>
                                     </div>
                                 </div>
 
-                                <div className='max-md:hidden flex flex-col items-center justify-end w-1/2 gap-1 relative'>
-                                    <img src={heroPhotoOfWoman} alt='Home' className="object-cover max-lg:h-[400px]"/>
+                                <div className='max-md:hidden flex flex-col items-center justify-end w-1/2 h-full gap-1 relative overflow-hidden rounded-e-xl'>
+                                    <img src={heroPhotoOfWoman} alt='Home' className="object-cover max-lg:h-[400px]" />
 
                                     {/* Looks like a separator, cuts the image ina diagonal way */}
-                                    <div className="absolute left-0 w-full h-full" style={{background: 'linear-gradient(100deg, #eeb89c 10%, transparent 35%)'}}></div>                   
+                                    <div className="absolute left-0 w-full h-full" style={{ background: 'linear-gradient(100deg, #eeb89c 10%, transparent 35%)' }}></div>
                                 </div>
                             </div>
 
                         </div>
                     </div>
 
-                    {/* {addresses && addresses.length > 0 && (
-                        <div className="w-[285px] h-[170px] -mt-24 -ml-[52rem] max-lg:-ml-[44.5rem] absolute bg-slate-100 rounded-lg">
-                            <ScrollArea className="w-full h-full">
-                                {addresses.map((address, index) => {
-                                    const { post_code, postal_town, formatted_address } = address;
-
-                                    return (
-                                        <div key={index} className="flex items-center justify-center w-full h-12 hover:bg-slate-200 rounded-lg mb-2">
-                                            <h1 className="text-center">{formatted_address}</h1>
-                                        </div>
-                                    )
-                                })}
-
-                                <ScrollBar orientation="vertical" className="absolute inset-y-0 right-0 bg-slate-200 rounded-lg"/>
-                            </ScrollArea>
-                        </div>
-                    )} */}
-
                     <Carousel
                         opts={{
                             align: "start",
                             loop: true,
                         }}
-                        className="flex items-center justify-center mt-20"
+                        className="flex items-center justify-center mt-20 z-10"
                     >
                         <CarouselContent className="">
                             {buttons.map((button, index) => {
                                 const { name, icon, option } = button;
-                                
+
                                 return (
                                     <CarouselItem key={index} className="basis-1/3 max-md:basis-1/2 max-sm:basis-11/12">
                                         <Card>
                                             <CardContent
                                                 onClick={() => handleCarouselClick(option)}
                                                 className="flex aspect-square items-center justify-center size-30 lg:p-10 p-16 max-sm:p-3 max-md:p-10 max-extraSm:p-1 hover:cursor-pointer hover:bg-slate-200 hover:bg-opacity-25">
-                                                
+
                                                 <div className="flex flex-col justify-center items-center gap-2 h-full max-lg:w-full w-[150px]">
-                                                    <img src={icon} alt={name} className="size-20"/>
+                                                    <img src={icon} alt={name} className="size-20" />
                                                     <h1 className="text-xl font-semibold">{name}</h1>
                                                 </div>
                                             </CardContent>
@@ -376,10 +423,10 @@ const Home = () => {
                                     </CarouselItem>
                                 );
                             })}
-                            
+
                         </CarouselContent>
 
-                        <CarouselPrevious className="max-md:hidden lg:flex"/>
+                        <CarouselPrevious className="max-md:hidden lg:flex" />
                         <CarouselNext className="max-md:hidden lg:flex" />
                     </Carousel>
 
@@ -391,13 +438,13 @@ const Home = () => {
                             align: "start",
                             loop: true,
                         }}
-                        className="flex items-center justify-center my-5"
+                        className="flex items-center justify-center my-5 w-full"
                     >
                         <CarouselContent>
                             {PagesData.Team.map((button, index) => {
                                 const { name, from, role, message } = button;
-                                const nameInitials = name.split(' ').map((n) => n[0]).join(''); 
-                                
+                                const nameInitials = name.split(' ').map((n) => n[0]).join('');
+
                                 return (
                                     <CarouselItem key={index} className="basis-1/3 max-md:basis-1/2 max-sm:basis-11/12">
                                         <Card>
@@ -436,7 +483,7 @@ const Home = () => {
                             })}
                         </CarouselContent>
 
-                        <CarouselPrevious className="hidden"/>
+                        <CarouselPrevious className="hidden" />
                         <CarouselNext className="hidden" />
                     </Carousel>
 
@@ -450,7 +497,7 @@ const Home = () => {
                     </div>
                 </div>
             </section>
-        </Suspense>
+        </Suspense >
     );
 }
 
