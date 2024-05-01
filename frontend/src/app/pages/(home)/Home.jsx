@@ -7,7 +7,7 @@ import { useUser, useAuth } from "@clerk/clerk-react";
 
 import useDocumentTitle from '@/app/hooks/useDocumentTitle' // Custom hooks
 
-import { Post, Get, getAddresses, splitPostcode } from '@/app/lib/utils' // Common functions
+import { Post, Get, getAddresses } from '@/app/lib/utils' // Common functions
 
 import heroPhotoOfWoman from '@/app/assets/img-hero-page.jpg'
 
@@ -84,43 +84,8 @@ const Home = () => {
             return;
         };
 
-        const postCode = searchPostCodeRef.current.value;
-        const postCodeLastPart = splitPostcode(postCode);
-        var newAddresses = await getAddresses(postCode);
-
-        if (!newAddresses) {
-            setSearchingPostCode(false);
-            return;
-        }
-
+        var newAddresses = await getAddresses(searchPostCodeRef.current.value);
         if (newAddresses.length > 0) {
-            newAddresses = newAddresses.splice(5);
-            newAddresses = newAddresses.map((address) => {
-                const { postcode, postal_town, country, region, admin_ward } = address;
-                const addressPostCodeLastPart = splitPostcode(postcode);
-
-                if ((postCodeLastPart && postCodeLastPart.incode) && (addressPostCodeLastPart && addressPostCodeLastPart.incode)) {
-
-                    if (postCodeLastPart === addressPostCodeLastPart) {
-                        return {
-                            post_code: postcode,
-                            postal_town: postal_town,
-                            country: country,
-                            region: region,
-                            formatted_address: admin_ward
-                        }
-                    };
-                }
-
-                return {
-                    post_code: postcode,
-                    postal_town: postal_town,
-                    country: country,
-                    region: region,
-                    formatted_address: admin_ward
-                }
-            });
-
             setAddresses(newAddresses);
         }
 

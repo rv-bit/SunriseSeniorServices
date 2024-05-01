@@ -3,7 +3,7 @@ import { ToastContainer, toast } from 'react-toastify';
 
 import { useState, useEffect } from 'react'
 
-import { getAddresses, splitPostcode } from "@/app/lib/utils"
+import { getAddresses } from "@/app/lib/utils"
 
 import { Loader2 } from "lucide-react"
 import {
@@ -72,35 +72,7 @@ const MultiForm = (props) => {
         setSearchingPostCode(true);
         var newAddresses = await getAddresses(searchPostCodeRef);
 
-        if (!newAddresses) {
-            setSearchingPostCode(false);
-            return;
-        }
-
         if (newAddresses.length > 0) {
-            newAddresses = newAddresses
-                .map((address) => {
-                    const { postcode, postal_town, country, region, admin_ward } = address;
-                    const addressPostCodeLastPart = splitPostcode(postcode);
-                    const postCodeLastPart = splitPostcode(searchPostCodeRef);
-
-                    let isMatch = false;
-                    if ((postCodeLastPart && postCodeLastPart.incode) && (addressPostCodeLastPart && addressPostCodeLastPart.incode)) {
-                        isMatch = postCodeLastPart.incode === addressPostCodeLastPart.incode;
-                    }
-
-                    return {
-                        post_code: postcode,
-                        postal_town: postal_town,
-                        country: country,
-                        region: region,
-                        formatted_address: admin_ward,
-                        isMatch: isMatch
-                    }
-                })
-                .sort((a, b) => b.isMatch - a.isMatch) // Sort so that matches are at the top
-                .slice(0, 5); // Get only the first 5 results
-
             setAddresses(newAddresses);
         }
 
