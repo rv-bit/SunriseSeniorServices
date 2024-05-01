@@ -60,7 +60,29 @@ export const getAddresses = async (query) => {
     }
 
     const data = await res.json()
-    return data.result;
+    const newAddresses = data.result.map((address) => {
+        const { postcode, postal_town, country, region, admin_ward } = address;
+        const addressPostCodeLastPart = splitPostcode(postcode);
+        const postCodeLastPart = splitPostcode(query);
+
+        let isMatch = false;
+        if ((postCodeLastPart && postCodeLastPart.incode) && (addressPostCodeLastPart && addressPostCodeLastPart.incode)) {
+            isMatch = postCodeLastPart.incode === addressPostCodeLastPart.incode;
+        }
+
+        return {
+            post_code: postcode,
+            postal_town: postal_town,
+            country: country,
+            region: region,
+            formatted_address: admin_ward,
+            isMatch: isMatch
+        }
+    })
+        .sort((a, b) => b.isMatch - a.isMatch) // Sort so that matches are at the top
+        .slice(0, 5); // Get only the first 5 results
+
+    return newAddresses;
 }
 
 export const formatTags = (tags) => {
