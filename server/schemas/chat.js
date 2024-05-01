@@ -2,6 +2,7 @@ const NewChatSchema = {
     _id: { type: String, required: true },
     name: { type: String, required: true },
     members: { type: Array, required: true },
+    created_by: { type: String, required: true },
     created_at: { type: String, required: true }
 }
 

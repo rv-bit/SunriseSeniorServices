@@ -16,11 +16,13 @@ import { BsSearch, BsFillGeoAltFill } from "react-icons/bs";
 import { ScrollArea, ScrollBar } from '@/app/components/ui/scroll-area';
 
 const inputFields = [
-    { name: 'jobTitle', placeholder: 'Job Title', icon: <BsSearch className='mx-3 size-5'/>, styleProps: `
+    {
+        name: 'jobTitle', placeholder: 'Job Title', icon: <BsSearch className='mx-3 size-5' />, styleProps: `
         flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[#ed6c39de]
         focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text
     `},
-    { name: 'location', placeholder: 'Location', icon: <BsFillGeoAltFill className='mx-3 size-5'/>, styleProps: `
+    {
+        name: 'location', placeholder: 'Location', icon: <BsFillGeoAltFill className='mx-3 size-5' />, styleProps: `
         flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-r-2 focus-within:border-[#ed6c39de] 
         focus-within:rounded-br-lg focus-within:rounded-tr-lg focus-within:rounded-bl-sm focus-within:rounded-tl-sm focus-within:border-b-4 hover:cursor-text
     `}
@@ -44,16 +46,16 @@ const fetchUserAdditionalInfo = async (user) => {
     return data.data;
 }
 
- const getJobListings = async () => {
+const getJobListings = async () => {
     const response = await Get(`${import.meta.env.VITE_API_PREFIX}/joblisting`);
-    
+
     if (!response.ok) {
         throw new Error(data.error);
     }
 
     const data = await response.json();
 
-    const newData = data.data.flat().map((job, index) => {   
+    const newData = data.data.flat().map((job, index) => {
         job.hours = job.hours || 0;
         job.location = job.location || 'Location not specified';
 
@@ -65,7 +67,7 @@ const fetchUserAdditionalInfo = async (user) => {
             days: job.days,
             hours: job.hours,
         }
-        
+
         const newJobTags = formatTags(job.tags);
 
         return {
@@ -96,10 +98,10 @@ const JobListing = () => {
 
     const queryParams = new URLSearchParams(location.search);
     const currentJobIdFromSearch = queryParams.get('currentJobId');
-    
+
     const [searchInput, setSearchInput] = useState({ jobTitle: '', location: '' });
     const [searchResults, setSearchResults] = useState([]);
-    
+
     const [currentJobId, setCurrentJobIds] = useState(null);
 
     const [userFromJobId, setUserFromJobId] = useState(null);
@@ -129,7 +131,7 @@ const JobListing = () => {
 
         setCurrentJobIds(null);
     }
-    
+
     const handleOpenInNewTab = useCallback((e, locationTab) => {
         e.preventDefault();
 
@@ -139,7 +141,7 @@ const JobListing = () => {
             newWindow.opener = null;
         }
     })
-    
+
     const handleCurrentJobId = (e, jobId) => {
         e.preventDefault();
 
@@ -158,12 +160,14 @@ const JobListing = () => {
 
     const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
 
-    const createChats = useCallback(async (chatId) => {
-        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/createChat`, {data: {
-            'id': chatId,
-            'members': [user.id, userFromJobId.id],
-            'name': jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.title,
-        }});
+    const createChats = useCallback(async () => {
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/createChat`, {
+            data: {
+                'members': [user.id, userFromJobId.id],
+                'created_by': user.id,
+                'name': jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.title,
+            }
+        });
 
         if (!response.ok) {
             toast.error('An error occurred while trying to create the chat');
@@ -176,46 +180,43 @@ const JobListing = () => {
             return true;
         }
 
-        if (data.Success) {
-            return true;
-        }
+        return response;
     });
 
     const handleChat = async (e, jobId) => {
         e.preventDefault();
 
-        if (!user) {            
-            navigate('/login', { state: { info: 'You must be logged in to send a message!' } } );
+        if (!user) {
+            navigate('/login', { state: { info: 'You must be logged in to send a message!' } });
         } else {
             setWaitForChatToCreate(true);
 
             if (user.id === userFromJobId.id) {
                 toast.error('You cannot message yourself');
-                
+
                 return setTimeout(() => {
                     setWaitForChatToCreate(false);
                 }, 2500);
             }
 
-            const chatId = jobId + user.id + userFromJobId.id;
-            const chatCreated = await createChats(chatId);
-            
+            const chatCreated = await createChats();
+
             if (!chatCreated) {
                 return setTimeout(() => {
                     setWaitForChatToCreate(false);
                 }, 2500);
             }
-            
+
             setTimeout(() => {
                 setWaitForChatToCreate(false);
 
                 if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
-                    handleOpenInNewTab(e, `/chat?currentChatId=${chatId}`);
+                    handleOpenInNewTab(e, `/chat?currentChatId=${chatCreated._id}`);
                 } else {
                     if (window.innerWidth < 1180) {
-                        navigate(`/chat?currentChatId=${chatId}`)
+                        navigate(`/chat?currentChatId=${chatCreated._id}`)
                     } else {
-                        navigate(`/chat?currentChatId=${chatId}`)
+                        navigate(`/chat?currentChatId=${chatCreated._id}`)
                     }
                 }
             }, 2500);
@@ -229,7 +230,7 @@ const JobListing = () => {
             }
         }
 
-        return () => {};
+        return () => { };
     }, [isSignedIn, isLoaded, userInfoStatus]);
 
     useEffect(() => {
@@ -242,7 +243,7 @@ const JobListing = () => {
             setCurrentJobIds(currentJobIdFromSearch);
         }
 
-        return () => {}
+        return () => { }
     }, [jobListings]);
 
     useEffect(() => {
@@ -254,13 +255,13 @@ const JobListing = () => {
                 setCurrentJobIds(jobListings[jobIndex]._id);
                 return;
             }
-            
+
             setCurrentJobIds(null);
         } else if (currentJobId && !currentJobIdFromSearch) {
             setCurrentJobIds(null);
         }
 
-        return () => {}
+        return () => { }
     }, [currentJobIdFromSearch, jobListingStatus]);
 
     useEffect(() => {
@@ -323,7 +324,7 @@ const JobListing = () => {
                 case (newHeight > windowHeight):
                     newHeight = windowHeight - 20;
                     break;
-                
+
                 case (newHeight <= 300):
                     newHeight = 300;
                     break;
@@ -357,7 +358,7 @@ const JobListing = () => {
             setElementCurrentJobHeaderHeight(elementCurrentJobHeaderRef.current.getBoundingClientRect().height);
         }
 
-        return () => {}
+        return () => { }
     }, [jobListings, userFromJobId, currentJobIdFromSearch]);
 
     const elementJobListingAdvertisementRef = useRef(null);
@@ -387,7 +388,7 @@ const JobListing = () => {
             <div className="flex items-center justify-center h-screen">
                 <div className="relative">
                     <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
-                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
                     </div>
                 </div>
             </div>
@@ -406,7 +407,7 @@ const JobListing = () => {
                 theme="light"
                 stacked={true}
             />
-            
+
             <section className='mx-auto min-h-5'>
                 <div className='flex items-center justify-center'>
                     <div className='mx-5'>
@@ -423,16 +424,16 @@ const JobListing = () => {
                                                         input.icon
                                                     )}
 
-                                                    <input name={input.name} onChange={(e) => handleInputChange(e, input.name)} className='outline-none w-3/4' type='text' placeholder={input.placeholder} value={searchInput[input.name]}/>
-                                                
+                                                    <input name={input.name} onChange={(e) => handleInputChange(e, input.name)} className='outline-none w-3/4' type='text' placeholder={input.placeholder} value={searchInput[input.name]} />
+
                                                     {searchInput[input.name] && (
-                                                        <Button onClick={() => {handleDeleteInput(input.name)}} className='ml-1 bg-white hover:bg-[#a0a0a06e]'>
+                                                        <Button onClick={() => { handleDeleteInput(input.name) }} className='ml-1 bg-white hover:bg-[#a0a0a06e]'>
                                                             <span className='text-black'>X</span>
                                                         </Button>
                                                     )}
                                                 </label>
                                             </div>
-                                            {index < inputFields.length - 1 && ( <Separator className='h-6 w-px mr-2 ml-0.5 bg-slate-400' />)}
+                                            {index < inputFields.length - 1 && (<Separator className='h-6 w-px mr-2 ml-0.5 bg-slate-400' />)}
                                         </React.Fragment>
                                     )
                                 })}
@@ -454,9 +455,9 @@ const JobListing = () => {
                                                             )}
 
                                                             <input name={input.name} onChange={(e) => handleInputChange(e, input.name)} className='outline-none w-full h-full' type='text' placeholder={input.placeholder} value={searchInput[input.name]} />
-                                                        
+
                                                             {searchInput[input.name] && (
-                                                                <Button onClick={() => {handleDeleteInput(input.name)}} className='bg-white hover:bg-[#a0a0a06e]'>
+                                                                <Button onClick={() => { handleDeleteInput(input.name) }} className='bg-white hover:bg-[#a0a0a06e]'>
                                                                     <span className='text-black'>X</span>
                                                                 </Button>
                                                             )}
@@ -477,7 +478,7 @@ const JobListing = () => {
                         <div className='my-5'>
                             {userDetails && userDetails.account_type === 'option_requester' && (
                                 <div className='flex items-center justify-center'>
-                                    <h1 onClick={() => {navigate('/job-listings/new')}} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
+                                    <h1 onClick={() => { navigate('/job-listings/new') }} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
                                 </div>
                             )}
                         </div>
@@ -510,7 +511,7 @@ const JobListing = () => {
                                             </div>
                                         </div>
                                     </div>
-                                : 
+                                    :
                                     (jobListings && jobListings.length === 0) ?
                                         <div className='flex items-center justify-center w-full h-full gap-2'>
                                             <div className='flex items-center justify-center gap-2 w-full'>
@@ -521,7 +522,7 @@ const JobListing = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    : null
+                                        : null
                             }
 
                             {(jobListings && jobListings.length !== 0) && jobListings.map((job, index) => {
@@ -534,11 +535,11 @@ const JobListing = () => {
                                         key={newIndex}
                                         onClick={(e) => handleCurrentJobId(e, jobId)}
                                         onAuxClick={(e) => handleCurrentJobId(e, jobId)}
-                                        className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' } ${currentJobId && currentJobId === jobId ? 'border-[#e8562d]' : 'border-black' }`}>
+                                        className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]'} ${currentJobId && currentJobId === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
 
                                         <div className='flex items-center justify-between m-5'>
                                             <div className='w-full'>
-                                                
+
                                                 <div className='w-full inline-block break-words whitespace-normal'>
                                                     <h1 className='text-xl font-bold text-slate-900 group-hover:underline'>{job.title}</h1>
                                                     <p className='text-slate-600'>{job.location}</p>
@@ -576,11 +577,11 @@ const JobListing = () => {
 
                         {currentJobId && (
                             <div className='w-[600px] h-dvh md:min-h-svh max-md:min-h-svh sticky top-2 z-50 lg:block md:hidden sm:hidden extraSm:hidden max-extraSm:hidden mr-5'>
-                                <div 
+                                <div
                                     className={`bg-white border-2 border-black rounded-lg box-border w-[600px]`}
-                                    style={{ height: `${newHeight + 2}px`  }}
+                                    style={{ height: `${newHeight + 2}px` }}
                                 >
-                                    {waitingForUser ? 
+                                    {waitingForUser ?
                                         <React.Fragment>
                                             <div className='flex items-center'>
                                                 <div className="space-y-2 p-5">
@@ -588,7 +589,7 @@ const JobListing = () => {
                                                     <Skeleton className="h-4 w-[200px]" />
                                                 </div>
                                             </div>
-                                            
+
                                             <hr className='w-11/12 mx-5 opacity-30 border-t border-slate-400' />
 
                                             <div className="space-y-2 p-5">
@@ -598,13 +599,13 @@ const JobListing = () => {
                                                 <Skeleton className="h-4 w-full" />
                                             </div>
                                         </React.Fragment>
-                                    :
+                                        :
                                         (jobListingStatus === 'success') ?
                                             <React.Fragment>
                                                 <div className='flex items-center'>
                                                     <div ref={elementCurrentJobHeaderRef} className='shadow-md w-full rounded-sm'>
                                                         <div className='p-5'>
-                                                            <Button onClick={(e) => {handleCloseCurrentJobId(e, currentJobId)}} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
+                                                            <Button onClick={(e) => { handleCloseCurrentJobId(e, currentJobId) }} className='bg-white hover:bg-[#a0a0a06e] absolute top-2 right-2'>
                                                                 <span className='text-black'>X</span>
                                                             </Button>
 
@@ -624,7 +625,7 @@ const JobListing = () => {
                                                                 })}
                                                             </div>
 
-                                                            <Button 
+                                                            <Button
                                                                 disabled={waitForChatToCreate}
                                                                 onClick={(e) => handleChat(e, currentJobId)}
                                                                 onAuxClick={(e) => handleChat(e, currentJobId)}
@@ -654,7 +655,7 @@ const JobListing = () => {
                                                     <ScrollBar orientation="vertical" />
                                                 </ScrollArea>
                                             </React.Fragment>
-                                        : ''
+                                            : ''
                                     }
                                 </div>
                             </div>

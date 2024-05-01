@@ -26,34 +26,41 @@ export const Get = async (url, body) => {
     return response;
 }
 
-export const googleCheckAccount = async (code) => {
-    if (!code) return;
+export const Put = async (url, data) => {
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    });
 
-    const promiseData = await Post(`${import.meta.env.VITE_API_PREFIX}/google/checkAccount`, { code });
-    const response = await promiseData;
+    return response;
+}
 
-    if (!response.ok) {
-        const data = await response.json();
-        return [false, data];
+export const Delete = async (url, data) => {
+    const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    });
+
+    return response;
+}
+
+export const getAddresses = async (query) => {
+    if (!query) return console.log('Please provide a query');
+
+    const res = await Get(`https://api.postcodes.io/postcodes?query=${query}`)
+
+    if (!res.ok) {
+        throw new Error(res.statusText)
     }
 
-    const data = await response.json();
-    return [true, data];
-};
-
-export const userLogIn = async (formData) => {
-    if (!formData) return;
-
-    const promiseData = Post(`${import.meta.env.VITE_API_PREFIX}/login`, { email: formData.email, password: formData.password });
-    const response = await promiseData;
-
-    if (!response.ok) {
-        const data = await response.json();
-        return [false, data];
-    }
-
-    const data = await response.json();
-    return [true, data];
+    const data = await res.json()
+    return data.result;
 }
 
 export const formatTags = (tags) => {
@@ -142,7 +149,7 @@ export function cn(...inputs) {
 }
 
 export function splitPostcode(postcode) {
-    const match = postcode.match(/^([A-Z0-9]{2,4})([0-9][A-Z]{2})$/i);
+    const match = postcode.match(/^([A-Z0-9]{2,4})\s*([0-9][A-Z]{2})$/i);
 
     if (!match) {
         return null;

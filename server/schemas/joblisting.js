@@ -10,6 +10,7 @@ const NewJobListingSchema = {
     start_date: { type: String, required: true },
     days: { type: Array, required: true },
     hours: { type: Number, required: true },
+    location: { type: String, required: true },
     posted_at: { type: String, required: true }
 }
 

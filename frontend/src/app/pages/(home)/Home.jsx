@@ -3,10 +3,11 @@ import { ToastContainer, toast } from 'react-toastify';
 
 import { Suspense, useState, useContext, useEffect, useRef, lazy } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser, useAuth } from "@clerk/clerk-react";
 
 import useDocumentTitle from '@/app/hooks/useDocumentTitle' // Custom hooks
 
-import { Post, Get, splitPostcode } from '@/app/lib/utils' // Common functions
+import { Post, Get, getAddresses, splitPostcode } from '@/app/lib/utils' // Common functions
 
 import heroPhotoOfWoman from '@/app/assets/img-hero-page.jpg'
 
@@ -39,8 +40,6 @@ const buttons = [
 
 import PagesData from "@/app/data/PagesData";
 
-import { useUser, useAuth } from "@clerk/clerk-react";
-
 const Home = () => {
     useDocumentTitle('Home');
     const navigate = useNavigate();
@@ -49,7 +48,7 @@ const Home = () => {
     const { user } = useUser();
 
     const [searchingPostCode, setSearchingPostCode] = useState(false);
-    const [addresses, setAddresses] = useState({});
+    const [addresses, setAddresses] = useState([]);
 
     const searchPostCodeRef = useRef();
 
@@ -87,19 +86,16 @@ const Home = () => {
 
         const postCode = searchPostCodeRef.current.value;
         const postCodeLastPart = splitPostcode(postCode);
+        var newAddresses = await getAddresses(postCode);
 
-        const response = await Get('https://api.postcodes.io/postcodes?query=' + postCode);
-        const data = await response.json();
-
-        if (!data.result) {
+        if (!newAddresses) {
             setSearchingPostCode(false);
             return;
         }
 
-        if (data.result.length > 0) {
-            data.result = data.result.slice(0, 5);
-
-            data.result = data.result.map((address) => {
+        if (newAddresses.length > 0) {
+            newAddresses = newAddresses.splice(5);
+            newAddresses = newAddresses.map((address) => {
                 const { postcode, postal_town, country, region, admin_ward } = address;
                 const addressPostCodeLastPart = splitPostcode(postcode);
 
@@ -123,11 +119,11 @@ const Home = () => {
                     region: region,
                     formatted_address: admin_ward
                 }
-            }
-            )
+            });
+
+            setAddresses(newAddresses);
         }
 
-        setAddresses(data.result);
         setSearchingPostCode(false);
     }
 
