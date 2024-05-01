@@ -1,35 +1,35 @@
 import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useContext, Suspense, lazy } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useQuery } from 'react-query';
-import { ToastContainer, toast } from 'react-toastify';
 
 import useUserAuth from '@/app/hooks/useUserAuth';
 import useDocumentTitle from '@/app/hooks/useDocumentTitle';
 
+import { Get, Post, formatTags } from '@/app/lib/utils';
+
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Separator } from '@/app/components/ui/separator';
-
-import { BsSearch, BsFillGeoAltFill } from "react-icons/bs";
 import { ScrollArea, ScrollBar } from '@/app/components/ui/scroll-area';
+import { Skeleton } from '@/app/components/ui/skeleton';
+
+import { Search, MapPin } from "lucide-react"
 
 const inputFields = [
     {
-        name: 'jobTitle', placeholder: 'Job Title', icon: <BsSearch className='mx-3 size-5' />, styleProps: `
+        name: 'jobTitle', placeholder: 'Job Title', icon: <Search className='mx-3 size-5' />, styleProps: `
         flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[#ed6c39de]
         focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text
     `},
     {
-        name: 'location', placeholder: 'Location', icon: <BsFillGeoAltFill className='mx-3 size-5' />, styleProps: `
+        name: 'location', placeholder: 'Location', icon: <MapPin className='mx-3 size-5' />, styleProps: `
         flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-r-2 focus-within:border-[#ed6c39de] 
         focus-within:rounded-br-lg focus-within:rounded-tr-lg focus-within:rounded-bl-sm focus-within:rounded-tl-sm focus-within:border-b-4 hover:cursor-text
     `}
 ]
-
-import { Get, Post, formatTags } from '@/app/lib/utils';
-import { Skeleton } from '@/app/components/ui/skeleton';
 
 const fetchUserAdditionalInfo = async (user) => {
     if (!user) {

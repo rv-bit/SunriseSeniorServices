@@ -1,17 +1,17 @@
 import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useCallback, useEffect, useState, useContext } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from 'react-query';
 
-import { Post, Get, formatTags } from '@/app/lib/utils';
-
 import useUserAuth from '@/app/hooks/useUserAuth';
 import useDocumentTitle from '@/app/hooks/useDocumentTitle';
 
-import { BsChevronLeft } from "react-icons/bs";
-import { ToastContainer, toast } from 'react-toastify';
+import { Post, Get, formatTags } from '@/app/lib/utils';
+
 import { Button } from '@/app/components/ui/button';
+import { ChevronLeft } from "lucide-react";
 
 const getJobListing = async (jobId) => {
     if (!jobId) {
@@ -157,7 +157,7 @@ const ViewJobListing = () => {
                                     <span
                                         onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}
                                         className='flex items-center gap-1 -mt-5 hover:underline hover:cursor-pointer'>
-                                        <BsChevronLeft size={15} />
+                                        <ChevronLeft size={15} />
                                         <h1>Go Back</h1>
                                     </span>
 

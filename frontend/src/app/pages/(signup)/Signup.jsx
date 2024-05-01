@@ -9,25 +9,25 @@ import useDocumentTitle from '@/app/hooks/useDocumentTitle' // Custom hooks
 
 import { Post, Get } from '@/app/lib/utils' // Common functions
 
-import { Loader2 } from "lucide-react"
-import { AiOutlineGoogle } from "react-icons/ai";
 import { Button } from "@/app/components/ui/button"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from "@/app/components/ui/card"
 import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
 } from "@/app/components/ui/tabs"
+
+import { Loader2 } from "lucide-react"
 
 const Signup = () => {
     useDocumentTitle('Sign Up');
@@ -42,7 +42,7 @@ const Signup = () => {
             return;
         }
 
-        return () => {};
+        return () => { };
     }, [isLoaded, isSignedIn]);
 
     if (!isLoaded) {
@@ -50,7 +50,7 @@ const Signup = () => {
             <div className="flex items-center justify-center h-screen">
                 <div className="relative">
                     <div className="h-24 w-24 rounded-full border-t-8 border-b-8 border-gray-200"></div>
-                        <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
+                    <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-t-8 border-b-8 border-blue-500 animate-spin">
                     </div>
                 </div>
             </div>

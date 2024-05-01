@@ -6,18 +6,14 @@ import { useNavigate } from "react-router-dom";
 import { useUser, useAuth } from "@clerk/clerk-react";
 
 import useDocumentTitle from '@/app/hooks/useDocumentTitle' // Custom hooks
-
 import { Post, Get, getAddresses } from '@/app/lib/utils' // Common functions
 
 import heroPhotoOfWoman from '@/app/assets/img-hero-page.jpg'
-
 import ChildrenCareSvg from '@/app/assets/Vertical_Childcare.svg'
 import ElderlyCareSvg from '@/app/assets/Vertical_Senior_Care.svg'
 import PetCareSvg from '@/app/assets/Vertical_Pet_Care.svg'
 
 import { Button } from '@/app/components/ui/button'
-import { BsSearch } from "react-icons/bs";
-
 import { Card, CardContent } from "@/app/components/ui/card";
 import {
     Carousel,
@@ -29,6 +25,8 @@ import {
 
 import { AspectRatio } from "@/app/components/ui/aspect-ratio"
 import { ScrollArea, ScrollBar } from "@/app/components/ui/scroll-area";
+
+import { Search } from "lucide-react";
 
 const Alertbox = lazy(() => import('@/app/components/custom/Alertbox'));
 
@@ -75,7 +73,6 @@ const Home = () => {
         if (searchingPostCode) return;
 
         const searchPostCode = grabPostCode();
-
         if (!searchPostCodeRef.current.value) {
             if (addresses && addresses.length > 0) {
                 setAddresses([]);
@@ -260,7 +257,7 @@ const Home = () => {
                                                             handlePostCodeSearch(e)
                                                         }}
                                                         disabled={searchingPostCode}
-                                                        className='mr-5 bg-inherit hover:bg-inherit'> <BsSearch size={20} color="black" />
+                                                        className='mr-5 bg-inherit hover:bg-inherit'> <Search size={20} color="black" />
                                                     </Button>
                                                 </label>
 
@@ -282,7 +279,7 @@ const Home = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                            <h1 className='text-xs'>This is a simple page with a hero image</h1>
+                                            <h1 className='text-xs'></h1>
                                         </div>
                                     </div>
 
@@ -319,7 +316,7 @@ const Home = () => {
                                                         handlePostCodeSearch(e)
                                                     }}
                                                     disabled={searchingPostCode}
-                                                    className='mr-5 bg-inherit hover:bg-inherit'> <BsSearch size={20} color="black" />
+                                                    className='mr-5 bg-inherit hover:bg-inherit'> <Search size={20} color="black" />
                                                 </Button>
 
                                             </label>
@@ -342,7 +339,7 @@ const Home = () => {
                                                 </div>
                                             )}
                                         </div>
-                                        <h1 className='text-xs'>This is a simple page with a hero image</h1>
+                                        <h1 className='text-xs'></h1>
                                     </div>
                                 </div>
 
