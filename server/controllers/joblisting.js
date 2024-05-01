@@ -101,6 +101,7 @@ exports.createJobListing = asyncHandler(async (req, res) => {
         start_date: form.start_date,
         days: form.days,
         hours: parseInt(form.work_hours),
+        location: form.location || 'N/A',
         posted_at: new Date().toDateString()
     }
 

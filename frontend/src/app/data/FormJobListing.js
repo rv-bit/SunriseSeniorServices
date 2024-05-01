@@ -20,12 +20,22 @@ const formSteps = [
                 description: 'This is the description of the job listing. Max 250 characters.',
                 type: 'textarea',
                 step: 2,
+            },
+
+            {
+                name: 'location',
+                label: 'Location',
+                placeholder: 'Enter the location of the job',
+                description: 'This is the location of the job listing',
+                type: 'location',
+                step: 3,
             }
         ],
 
         validationSchema: z.object({
             title: z.string().nonempty('Title is required').min(5, 'Title is too short').max(100, 'Title is too long'),
             description: z.string().nonempty('Description is required').min(25, 'Description is too little').max(250, 'Description is too long'),
+            location: z.string().nonempty('Location is required').min(7, 'Location is too short').max(9, 'Location is too long'),
         }),
     },
     {

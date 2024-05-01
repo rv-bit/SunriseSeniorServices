@@ -50,6 +50,19 @@ export const Delete = async (url, data) => {
     return response;
 }
 
+export const getAddresses = async (query) => {
+    if (!query) return console.log('Please provide a query');
+
+    const res = await Get(`https://api.postcodes.io/postcodes?query=${query}`)
+
+    if (!res.ok) {
+        throw new Error(res.statusText)
+    }
+
+    const data = await res.json()
+    return data.result;
+}
+
 export const formatTags = (tags) => {
     let returnTags = {}
     var tagValue = {}
@@ -136,7 +149,7 @@ export function cn(...inputs) {
 }
 
 export function splitPostcode(postcode) {
-    const match = postcode.match(/^([A-Z0-9]{2,4})([0-9][A-Z]{2})$/i);
+    const match = postcode.match(/^([A-Z0-9]{2,4})\s*([0-9][A-Z]{2})$/i);
 
     if (!match) {
         return null;
