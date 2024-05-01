@@ -3,7 +3,7 @@ import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useContext, Suspense, lazy } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 
 import useUserAuth from '@/app/hooks/useUserAuth';
 import useDocumentTitle from '@/app/hooks/useDocumentTitle';
@@ -84,6 +84,7 @@ const JobListing = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
+    const queryClient = useQueryClient();
 
     const { isLoaded, isSignedIn, user } = useUserAuth();
     const [userDetails, setUserDetails] = useState(null);
@@ -206,6 +207,8 @@ const JobListing = () => {
                     setWaitForChatToCreate(false);
                 }, 2500);
             }
+
+            // await queryClient.invalidateQueries('gatherChats');
 
             setTimeout(() => {
                 setWaitForChatToCreate(false);

@@ -14,6 +14,7 @@ import { formatDate, Get, Post, Delete } from '@/app/lib/utils' // Common functi
 
 import { ScrollArea, ScrollBar } from '@/app/components/ui/scroll-area';
 import { Button } from '@/app/components/ui/button'
+import { set } from 'react-hook-form';
 
 const Alertbox = lazy(() => import('@/app/components/custom/Alertbox'));
 
@@ -44,7 +45,6 @@ const EditChat = (props) => {
     const [userOptions, setUserOptions] = useState(false);
 
     const userOptionsRef = useRef(null);
-    const editMenuContainerRef = useRef(null);
 
     const handleCloseEditing = (e) => {
         e.preventDefault();
@@ -100,19 +100,8 @@ const EditChat = (props) => {
     }, []);
 
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (editMenuContainerRef.current && !editMenuContainerRef.current.contains(e.target)) {
-                onClose();
-            }
-        }
+        if (showAlert.show) return;
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        }
-    }, [editMenuContainerRef]);
-
-    useEffect(() => {
         if (userOptions) {
             const handleClickOutside = (e) => {
                 if (userOptionsRef.current && !userOptionsRef.current.contains(e.target)) {
@@ -151,7 +140,6 @@ const EditChat = (props) => {
 
             <div className='flex justify-center items-center fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-70 z-50 backdrop-blur-md'>
                 <div
-                    ref={editMenuContainerRef}
                     className='max-sm:w-full w-[550px] h-[50%] max-sm:h-[90%] bg-white rounded-2xl p-5'>
 
                     <div className='flex items-end justify-end mb-5'>
@@ -255,12 +243,12 @@ const Chat = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
+    const queryClient = useQueryClient();
 
     const { socket } = useContext(SocketioProvider);
     const { isLoaded, isSignedIn, user } = useUserAuth();
 
     const { data: chatsData, isLoading: chatsDataIsLoading, isError: chatsDataIsError, error: chatsDataError, status: chatsDataStatus } = useQuery(['gatherChats'], () => fetchChats(user), {
-        refetchOnMount: 'always',
         enabled: !!user && isLoaded && isSignedIn
     });
 
@@ -373,8 +361,12 @@ const Chat = () => {
         const data = await response.json();
         toast.success(data.message);
 
-        console.log('Chat deleted', data, user, isLoaded, isSignedIn);
+        await queryClient.refetchQueries('gatherChats');
+
+        setSelectedChatId(null);
         setShowEditChat(false);
+
+        navigate('/chat');
     }
 
     useEffect(() => {
@@ -388,12 +380,25 @@ const Chat = () => {
 
     useEffect(() => {
         if (chatsDataStatus !== 'success') return;
+
         setChats(chatsData);
 
         return () => { };
-    }, [chatsDataStatus]);
+    }, [chatsDataStatus, chatsData]);
 
     useEffect(() => {
+        if (chatsDataStatus !== 'success') return;
+
+        if (currentChatIdFromSearch && selectedChatId && currentChatIdFromSearch === selectedChatId) {
+            const chatIdIndex = chats.find((chat) => chat._id === selectedChatId);
+
+            if (!chatIdIndex) {
+                navigate('/chat');
+                setSelectedChatId(null);
+                return;
+            }
+        }
+
         if (currentChatIdFromSearch && currentChatIdFromSearch !== selectedChatId) {
             const chatIdIndex = chats.findIndex((chat) => chat._id === currentChatIdFromSearch);
 
@@ -402,13 +407,14 @@ const Chat = () => {
                 return;
             }
 
+            navigate('/chat');
             setSelectedChatId(null);
         } else if (selectedChatId && !currentChatIdFromSearch) {
             setSelectedChatId(null);
         }
 
         return () => { }
-    }, [currentChatIdFromSearch, chats]);
+    }, [currentChatIdFromSearch, chats, chatsDataStatus]);
 
     useEffect(() => {
         if (!socket) return;
@@ -478,8 +484,6 @@ const Chat = () => {
     useEffect(() => {
         if (socket) {
             const receiveMessageHandler = (data) => {
-                console.log('Received message', data);
-
                 setChatMessages((chatMessages) => [...chatMessages, data]);
 
                 setChats((chats) => {
@@ -660,7 +664,7 @@ const Chat = () => {
                                                 className='w-[75%] flex justify-center items-center hover:cursor-pointer'>
 
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
-                                                <h1 className='text-lg w-full truncate'>Chat with {chats[chats.findIndex((chat) => chat._id === selectedChatId)].name}</h1>
+                                                <h1 className='text-lg w-full truncate'>Chat with {chats.find((chat) => chat._id === selectedChatId)?.name}</h1>
                                             </div>
 
                                             <div className='flex items-center justify-end'>

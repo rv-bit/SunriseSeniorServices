@@ -121,8 +121,7 @@ const Home = () => {
 
         const options = {}
         const searchPostCode = grabPostCode();
-
-        if (searchPostCodeRef.current.value) {
+        if (searchPostCodeRef.current && searchPostCodeRef.current.value) {
             options.postCode = searchPostCodeRef.current.value;
         }
 
@@ -139,8 +138,7 @@ const Home = () => {
 
         const options = {}
         const searchPostCode = grabPostCode();
-
-        if (searchPostCodeRef.current.value) {
+        if (searchPostCodeRef.current && searchPostCodeRef.current.value) {
             options.postCode = searchPostCodeRef.current.value;
         }
 
