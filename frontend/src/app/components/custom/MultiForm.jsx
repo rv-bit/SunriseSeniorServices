@@ -3,7 +3,7 @@ import { ToastContainer, toast } from 'react-toastify';
 
 import { useState, useEffect } from 'react'
 
-import { getAddresses, splitPostcode } from "@/app/lib/utils"
+import { getAddresses } from "@/app/lib/utils"
 
 import { Loader2 } from "lucide-react"
 import {

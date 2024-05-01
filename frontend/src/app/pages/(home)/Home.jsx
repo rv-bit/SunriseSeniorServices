@@ -7,7 +7,7 @@ import { useUser, useAuth } from "@clerk/clerk-react";
 
 import useDocumentTitle from '@/app/hooks/useDocumentTitle' // Custom hooks
 
-import { Post, Get, getAddresses, splitPostcode } from '@/app/lib/utils' // Common functions
+import { Post, Get, getAddresses } from '@/app/lib/utils' // Common functions
 
 import heroPhotoOfWoman from '@/app/assets/img-hero-page.jpg'
 
