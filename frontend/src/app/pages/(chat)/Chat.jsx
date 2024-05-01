@@ -42,6 +42,10 @@ const EditChat = (props) => {
         message: '',
         action: ''
     });
+    const [userOptions, setUserOptions] = useState(false);
+
+    const userOptionsRef = useRef(null);
+    const editMenuContainerRef = useRef(null);
 
     const handleCloseEditing = (e) => {
         e.preventDefault();
@@ -96,6 +100,34 @@ const EditChat = (props) => {
         return () => { };
     }, []);
 
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (editMenuContainerRef.current && !editMenuContainerRef.current.contains(e.target)) {
+                onClose();
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [editMenuContainerRef]);
+
+    useEffect(() => {
+        if (userOptions) {
+            const handleClickOutside = (e) => {
+                if (userOptionsRef.current && !userOptionsRef.current.contains(e.target)) {
+                    setUserOptions(false);
+                }
+            }
+
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside);
+            }
+        }
+    }, [userOptions, userOptionsRef]);
+
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center h-screen">
@@ -118,8 +150,11 @@ const EditChat = (props) => {
                 )
             }
 
-            <div className='flex justify-center items-center fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 z-50'>
-                <div className='max-sm:w-full w-[550px] h-[50%] max-sm:h-[90%] bg-white rounded-2xl p-5'>
+            <div className='flex justify-center items-center fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-70 z-50 backdrop-blur-md'>
+                <div
+                    ref={editMenuContainerRef}
+                    className='max-sm:w-full w-[550px] h-[50%] max-sm:h-[90%] bg-white rounded-2xl p-5'>
+
                     <div className='flex items-end justify-end mb-5'>
                         <Button
                             className='bg-inherit text-black hover:bg-slate-200 hover:text-black'
@@ -132,22 +167,62 @@ const EditChat = (props) => {
                         <ScrollArea className='flex flex-col items-start justify-start gap-2 h-[80%]'>
                             <ul className='flex flex-col items-start justify-start gap-2'>
                                 {
-                                    Object.entries(chatInfo.members).map(([key, value]) => {
-                                        return (
-                                            <li
-                                                className='flex items-center justify-between gap-2 p-5 bg-slate-200 rounded-2xl w-full'
-                                                key={key}
-                                            >
-                                                <h1>
-                                                    {value.fullName}
-                                                </h1>
+                                    Object.entries(chatInfo.members)
+                                        .sort(([keyA, valueA], [keyB, valueB]) => {
+                                            if ('created_by' in valueA && 'created_by' in valueB) {
+                                                return valueA.created_by.localeCompare(valueB.created_by);
+                                            }
+                                            return 0;
+                                        }).map(([key, value]) => {
+                                            return (
+                                                <li
+                                                    className='flex items-center justify-between gap-2 p-5 bg-slate-200 rounded-2xl w-full'
+                                                    key={key}
+                                                >
+                                                    <h1>
+                                                        <div className='flex items-center gap-2'>
+                                                            <>
+                                                                {chatInfo.created_by && (chatInfo.created_by === value.id) ?
+                                                                    <>
+                                                                        {value.fullName} <span className='text-sm text-gray-500'>{value.id === userInfo.id ? 'You' : ''}</span>
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500 lucide lucide-crown"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z" /><path d="M5 21h14" /></svg>
+                                                                    </>
+                                                                    :
+                                                                    <>
+                                                                        {value.fullName} <span className='text-sm text-gray-500'>{value.id === userInfo.id ? 'You' : ''}</span>
+                                                                    </>
+                                                                }
+                                                            </>
+                                                        </div>
+                                                    </h1>
 
-                                                <div className='flex items-center justify-end'>
-                                                    <Button>Remove</Button>
-                                                </div>
-                                            </li>
-                                        )
-                                    })
+                                                    <div className='flex items-center justify-end'>
+                                                        {!userOptions || (userOptions !== value.id) ?
+                                                            <Button className='bg-inherit hover:bg-gray-400 text-black px-2' onClick={(e) => setUserOptions(value.id)}>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ellipsis-vertical"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg>
+                                                            </Button>
+                                                            :
+                                                            <div
+                                                                ref={userOptionsRef}
+                                                                className='flex items-center justify-end gap-2'>
+
+                                                                <Button
+                                                                    onClick={(e) => setUserOptions(false)}
+                                                                    className='bg-inherit hover:bg-gray-200 p-0 text-black'
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                                                </Button>
+
+                                                                <Button className='bg-inherit hover:bg-gray-200 text-black p-0'>Profile</Button>
+                                                                {chatInfo.created_by && (chatInfo.created_by === userInfo.id && value.id !== userInfo.id) && (
+                                                                    <Button className='bg-inherit hover:bg-gray-200 text-black p-0' onClick={(e) => handleDelete(e)}>Remove</Button>
+                                                                )}
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </li>
+                                            )
+                                        })
                                 }
 
                             </ul>
@@ -161,7 +236,6 @@ const EditChat = (props) => {
                                     chatInfo.created_by === userInfo.id ?
                                         <React.Fragment>
                                             <Button onClick={(e) => handleDelete(e)}>Delete Chat</Button>
-                                            <Button>Save Changes</Button>
                                             <Button>Add Person</Button>
                                         </React.Fragment>
                                         :
