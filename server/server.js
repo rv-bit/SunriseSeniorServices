@@ -28,7 +28,7 @@ app.use('/chats', chatRouter);
 
 if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") {
     app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+        res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
     });
 }
 
