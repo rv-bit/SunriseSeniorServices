@@ -225,8 +225,6 @@ exports.createChat = asyncHandler(async (req, res) => {
         });
     }
 
-    console.log('Chat created', chatDocument._id, result._id);
-
     res.status(200).json({
         data: chatDocument
     });
@@ -249,7 +247,6 @@ exports.deleteChat = asyncHandler(async (req, res) => {
             message: 'Failed to delete chat'
         });
     }
-
 
     res.status(200).json({
         message: 'Chat deleted'

@@ -1,14 +1,15 @@
-import { BrowserRouter as Router } from 'react-router-dom'
-import { ClerkProvider } from '@clerk/clerk-react'
-import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
-
-const queryClient = new QueryClient()
+import './index.css'
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './app/App.jsx'
 
-import './index.css'
+import App from './App.jsx'
+
+import { BrowserRouter as Router } from 'react-router-dom'
+import { ClerkProvider } from '@clerk/clerk-react'
+import { QueryClient, QueryClientProvider } from 'react-query'
+
+const queryClient = new QueryClient()
 
 let PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {

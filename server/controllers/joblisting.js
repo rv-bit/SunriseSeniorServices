@@ -6,6 +6,8 @@ const { clerkClient } = require('@clerk/clerk-sdk-node');
 
 const db = require('../services/db');
 const prepareDocument = require('../utils/prepare_document');
+const { formatDate } = require('../utils/utils');
+
 const { NewJobListingSchema } = require('../schemas/joblisting');
 
 exports.getJobListings = asyncHandler(async (req, res) => {
@@ -23,8 +25,6 @@ exports.getJobListings = asyncHandler(async (req, res) => {
 });
 
 exports.getJobListingsFromId = asyncHandler(async (req, res) => {
-    console.log(req.params);
-
     const jobId = req.params.id;
     const jobListing = await db.collection('jobListings').findOne({ _id: jobId });
 
@@ -34,7 +34,25 @@ exports.getJobListingsFromId = asyncHandler(async (req, res) => {
         });
     }
 
-    jobListing.person = await clerkClient.users.getUser(jobListing.user_id);
+    let clerkUser;
+    try {
+        clerkUser = await clerkClient.users.getUser(jobListing.user_id);
+    } catch (error) {
+        const deleteListing = await db.collection('jobListings').deleteOne({
+            _id: jobId
+        });
+
+        if (!deleteListing) {
+            return res.status(500).json({
+                message: 'Failed to delete job listing'
+            });
+        }
+
+        return res.status(400).json({
+            error: 'UserNotFound'
+        });
+    }
+
     jobListing.person = {
         id: jobListing.person.id,
         firstName: jobListing.person.firstName,
@@ -87,6 +105,7 @@ exports.createJobListing = asyncHandler(async (req, res) => {
     const form = data.formData;
 
     const _id = crypto.randomBytes(16).toString('hex');
+    const formatedDate = formatDate(new Date());
     const newJobListing = {
         _id: _id,
         user_id: form.user_id,
@@ -102,7 +121,7 @@ exports.createJobListing = asyncHandler(async (req, res) => {
         days: form.days,
         hours: parseInt(form.work_hours),
         location: form.location || 'N/A',
-        posted_at: new Date().toDateString()
+        posted_at: formatedDate
     }
 
     const document = prepareDocument(NewJobListingSchema, newJobListing);
