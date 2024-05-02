@@ -142,7 +142,7 @@ const ViewJobListing = () => {
 
             <hr className='w-full opacity-30 border-t border-slate-400' />
 
-            <div className='flex items-center justify-center w-full h-full gap-2 my-10 px-10 max-extraSm:px-0'>
+            <div className='flex items-center justify-center w-full h-full gap-2 my-10 px-10'>
                 <div className='flex items-center justify-center w-full h-full'>
                     <div className='flex justify-center flex-row w-full h-full'>
 
