@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from 'react-query';
 import useUserAuth from '@/hooks/useUserAuth';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 
-import { Get, Post, formatTags, formatDate } from '@/lib/utils';
+import { Get, Post, formatTags, formatDate, handleOpenInNewTab } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -160,16 +160,6 @@ const JobListing = () => {
 
         setCurrentJobIds(null);
     }
-
-    const handleOpenInNewTab = useCallback((e, locationTab) => {
-        e.preventDefault();
-
-        const newWindow = window.open(`${window.location.origin}${locationTab}`, '_blank', 'noopener,noreferrer');
-
-        if (newWindow) {
-            newWindow.opener = null;
-        }
-    })
 
     const handleCurrentJobId = (e, jobId) => {
         e.preventDefault();

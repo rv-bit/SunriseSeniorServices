@@ -90,6 +90,16 @@ export const getAddresses = async (query) => {
     return newAddresses;
 }
 
+export const handleOpenInNewTab = (e, locationTab) => {
+    e.preventDefault();
+
+    const newWindow = window.open(`${window.location.origin}/#${locationTab}`, '_blank', 'noopener,noreferrer');
+
+    if (newWindow) {
+        newWindow.opener = null;
+    }
+}
+
 export const formatTags = (tags) => {
     let returnTags = {}
     var tagValue = {}

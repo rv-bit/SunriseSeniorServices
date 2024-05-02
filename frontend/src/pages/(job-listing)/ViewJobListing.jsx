@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from 'react-query';
 import useUserAuth from '@/hooks/useUserAuth';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 
-import { Post, Get, formatTags } from '@/lib/utils';
+import { Post, Get, formatTags, handleOpenInNewTab } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from "lucide-react";
