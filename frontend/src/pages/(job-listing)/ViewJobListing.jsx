@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from 'react-query';
 import useUserAuth from '@/hooks/useUserAuth';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 
-import { Post, Get, formatTags } from '@/lib/utils';
+import { Post, Get, formatTags, formatDate, handleOpenInNewTab } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from "lucide-react";
@@ -204,7 +204,7 @@ const ViewJobListing = () => {
                                         <p className='my-5 text-slate-600 text-opacity-75'>Posted by <span className='text-slate-900 underline'>{jobListing?.person.fullName}</span></p>
 
                                         <div className='mt-5'>
-                                            <p className='text-slate-600 text-opacity-75'>Posted on <span className='text-slate-900'>{jobListing?.posted_at}</span></p>
+                                            <p className='text-slate-600 text-opacity-75'>Posted on <span className='text-slate-900'>{formatDate(jobListing?.posted_at)}</span></p>
                                         </div>
 
                                         <hr className='mt-10 w-full opacity-30 border-t border-slate-400' />

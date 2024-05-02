@@ -10,7 +10,7 @@ import SocketioProvider from '@/providers/SocketioProvider'
 import useUserAuth from '@/hooks/useUserAuth'
 import useDocumentTitle from '@/hooks/useDocumentTitle'
 
-import { formatDate, Get, Post, Delete } from '@/lib/utils' // Common functions 
+import { Get, Post, Delete, formatDate, handleOpenInNewTab } from '@/lib/utils' // Common functions 
 
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button'
@@ -266,16 +266,6 @@ const Chat = () => {
 
     const chatBoxRef = useRef(null);
     const scrollChatArea = useRef(null);
-
-    const handleOpenInNewTab = useCallback((e, locationTab) => {
-        e.preventDefault();
-
-        const newWindow = window.open(`${window.location.origin}/#${locationTab}`, '_blank', 'noopener,noreferrer');
-
-        if (newWindow) {
-            newWindow.opener = null;
-        }
-    })
 
     const handleChatOpen = (e, chatId) => {
         e.preventDefault();
