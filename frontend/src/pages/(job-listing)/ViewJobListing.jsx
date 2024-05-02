@@ -155,7 +155,7 @@ const ViewJobListing = () => {
                             </React.Fragment>
                             :
                             <React.Fragment>
-                                <div className='flex flex-col gap-3 w-full lg:w-[500px] md:w-3/4 max-extraSm:w-10/12'>
+                                <div className='flex flex-col gap-3 w-full lg:w-[500px] md:w-10/12'>
                                     <span
                                         onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}
                                         className='flex items-center gap-1 -mt-5 hover:underline hover:cursor-pointer'>
