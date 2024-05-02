@@ -73,6 +73,7 @@ const ViewJobListing = () => {
             return data.data;
         }
 
+        await queryClient.invalidateQueries('gatherChats');
         return data.data;
     });
 
@@ -99,8 +100,6 @@ const ViewJobListing = () => {
                     setWaitForChatToCreate(false);
                 }, 2500);
             }
-
-            // await queryClient.invalidateQueries('gatherChats');
 
             setTimeout(() => {
                 setWaitForChatToCreate(false);

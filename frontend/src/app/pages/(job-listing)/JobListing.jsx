@@ -18,15 +18,16 @@ import { Skeleton } from '@/app/components/ui/skeleton';
 
 import { Search, MapPin } from "lucide-react"
 
+const currentColor = '#e8562d';
 const inputFields = [
     {
         name: 'jobTitle', placeholder: 'Job Title', icon: <Search className='mx-3 size-5' />, styleProps: `
-        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[#ed6c39de]
+        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[${currentColor}]
         focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text
     `},
     {
         name: 'location', placeholder: 'Location', icon: <MapPin className='mx-3 size-5' />, styleProps: `
-        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-r-2 focus-within:border-[#ed6c39de] 
+        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-r-2 focus-within:border-[${currentColor}] 
         focus-within:rounded-br-lg focus-within:rounded-tr-lg focus-within:rounded-bl-sm focus-within:rounded-tl-sm focus-within:border-b-4 hover:cursor-text
     `}
 ]
@@ -97,8 +98,11 @@ const JobListing = () => {
         enabled: !!user && isLoaded && isSignedIn
     });
 
-    const queryParams = new URLSearchParams(location.search);
-    const currentJobIdFromSearch = queryParams.get('currentJobId');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentJobIdFromSearch = searchParams.get('currentJobId');
+
+    const locationFromSearch = searchParams.get('location');
+    const jobTitleFromSearch = searchParams.get('jobTitle');
 
     const [searchInput, setSearchInput] = useState({ jobTitle: '', location: '' });
     const [searchResults, setSearchResults] = useState([]);
@@ -113,12 +117,31 @@ const JobListing = () => {
             ...searchInput,
             [inputName]: e.target.value
         });
+
+        setSearchParams(prevSearchInput => {
+            const newSearchParams = new URLSearchParams(prevSearchInput);
+
+            if (e.target.value === '') {
+                newSearchParams.delete(inputName);
+                return newSearchParams.toString();
+            }
+
+            newSearchParams.set(inputName, e.target.value);
+            return newSearchParams.toString();
+        });
     }
 
     const handleDeleteInput = (inputName) => {
         setSearchInput({
             ...searchInput,
             [inputName]: ''
+        });
+
+        setSearchParams(prevSearchInput => {
+            const newSearchParams = new URLSearchParams(prevSearchInput);
+            newSearchParams.delete(inputName);
+
+            return newSearchParams.toString();
         });
     }
 
@@ -178,10 +201,11 @@ const JobListing = () => {
         const data = await response.json();
         if (data.chatExists) {
             toast.error('Chat already exists, moving to the chat');
-            return true;
+            return data.data;
         }
 
-        return response;
+        await queryClient.invalidateQueries('gatherChats');
+        return data.data;
     });
 
     const handleChat = async (e, jobId) => {
@@ -207,8 +231,6 @@ const JobListing = () => {
                     setWaitForChatToCreate(false);
                 }, 2500);
             }
-
-            // await queryClient.invalidateQueries('gatherChats');
 
             setTimeout(() => {
                 setWaitForChatToCreate(false);
@@ -312,6 +334,25 @@ const JobListing = () => {
         }
     }, [currentJobId, jobListingStatus]);
 
+    useEffect(() => {
+        if (jobListingStatus !== 'success') return;
+
+        const jobListingLength = jobListings.filter(job =>
+            (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
+            (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+        )
+
+        if (jobListingLength.length === 0 && currentJobId) {
+            setCurrentJobIds(null);
+            setSearchParams(prevSearchInput => {
+                const newSearchParams = new URLSearchParams(prevSearchInput);
+                newSearchParams.delete('currentJobId');
+
+                return newSearchParams.toString();
+            });
+        }
+    }, [locationFromSearch, jobTitleFromSearch, jobListingStatus]);
+
     const [newHeight, setNewHeight] = useState(930);
     useLayoutEffect(() => {
         const handleEvent = () => {
@@ -365,7 +406,6 @@ const JobListing = () => {
     }, [jobListings, userFromJobId, currentJobIdFromSearch]);
 
     const elementJobListingAdvertisementRef = useRef(null);
-
     useLayoutEffect(() => {
         const handleScroll = () => {
             const scrollPosition = window.pageYOffset;
@@ -451,7 +491,7 @@ const JobListing = () => {
                                         return (
                                             <React.Fragment key={index}>
                                                 <div className='h-full w-[400px] max-extraSm:w-[300px]'>
-                                                    <label className='flex items-center border border-slate-600 text-slate-600 w-full h-[60px] px-2 rounded-lg focus-within:outline-none focus-within:border focus-within:border-violet-700 focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text'>
+                                                    <label className={`flex items-center border border-slate-600 text-slate-600 w-full h-[60px] px-2 rounded-lg focus-within:outline-none focus-within:border focus-within:border-[${currentColor}] focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text`}>
                                                         <div className='flex items-center text-slate-600 w-full'>
                                                             {input.icon && (
                                                                 input.icon
@@ -515,7 +555,11 @@ const JobListing = () => {
                                         </div>
                                     </div>
                                     :
-                                    (jobListings && jobListings.length === 0) ?
+                                    (jobListings && jobListings.length === 0 || (jobListings && jobListings
+                                        .filter(job =>
+                                            (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
+                                            (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+                                        ).length === 0)) ?
                                         <div className='flex items-center justify-center w-full h-full gap-2'>
                                             <div className='flex items-center justify-center gap-2 w-full'>
                                                 <div className='flex items-center justify-center w-full h-full gap-2'>
@@ -528,54 +572,59 @@ const JobListing = () => {
                                         : null
                             }
 
-                            {(jobListings && jobListings.length !== 0) && jobListings.map((job, index) => {
-                                const newIndex = index + 1;
-                                const jobId = job._id;
+                            {(jobListings && jobListings.length !== 0) && jobListings
+                                .filter(job =>
+                                    (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
+                                    (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+                                )
+                                .map((job, index) => {
+                                    const newIndex = index + 1;
+                                    const jobId = job._id;
 
-                                return (
-                                    <div
-                                        ref={elementJobListingAdvertisementRef}
-                                        key={newIndex}
-                                        onClick={(e) => handleCurrentJobId(e, jobId)}
-                                        onAuxClick={(e) => handleCurrentJobId(e, jobId)}
-                                        className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]'} ${currentJobId && currentJobId === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
+                                    return (
+                                        <div
+                                            ref={elementJobListingAdvertisementRef}
+                                            key={newIndex}
+                                            onClick={(e) => handleCurrentJobId(e, jobId)}
+                                            onAuxClick={(e) => handleCurrentJobId(e, jobId)}
+                                            className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]' : 'lg:w-[700px] md:w-[700px] sm:w-[400px] extraSm:w-[400px] max-extraSm:w-[300px]'} ${currentJobId && currentJobId === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
 
-                                        <div className='flex items-center justify-between m-5'>
-                                            <div className='w-full'>
+                                            <div className='flex items-center justify-between m-5'>
+                                                <div className='w-full'>
 
-                                                <div className='w-full inline-block break-words whitespace-normal'>
-                                                    <h1 className='text-xl font-bold text-slate-900 group-hover:underline'>{job.title}</h1>
-                                                    <p className='text-slate-600'>{job.location}</p>
-                                                    <p className='text-slate-600 text-sm line-clamp-2'>{job.description}</p>
-                                                </div>
+                                                    <div className='w-full inline-block break-words whitespace-normal'>
+                                                        <h1 className='text-xl font-bold text-slate-900 group-hover:underline'>{job.title}</h1>
+                                                        <p className='text-slate-600'>{job.location}</p>
+                                                        <p className='text-slate-600 text-sm line-clamp-2'>{job.description}</p>
+                                                    </div>
 
-                                                <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
-                                                    {Object.entries(job.tags)
-                                                        .filter(([key, value]) => value !== '' && key.startsWith('Tag_'))
-                                                        .map(([key, value], index) => {
-                                                            return (
-                                                                <div key={index} className='bg-slate-100 px-2 py-1 h-full rounded-md text-ellipsis overflow-hidden flex items-center justify-center'>
-                                                                    <p className='text-xs'>{value}</p>
-                                                                </div>
-                                                            )
-                                                        })
-                                                    }
-                                                </div>
+                                                    <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
+                                                        {Object.entries(job.tags)
+                                                            .filter(([key, value]) => value !== '' && key.startsWith('Tag_'))
+                                                            .map(([key, value], index) => {
+                                                                return (
+                                                                    <div key={index} className='bg-slate-100 px-2 py-1 h-full rounded-md text-ellipsis overflow-hidden flex items-center justify-center'>
+                                                                        <p className='text-xs'>{value}</p>
+                                                                    </div>
+                                                                )
+                                                            })
+                                                        }
+                                                    </div>
 
-                                                <div className='flex items-center mt-3'>
-                                                    <p className='text-slate-600 text-sm'>Posted on {job.posted_at}</p>
+                                                    <div className='flex items-center mt-3'>
+                                                        <p className='text-slate-600 text-sm'>Posted on {job.posted_at}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
 
-                            {(jobListings && jobListings.length !== 0) && (
+                            {/* {(jobListings && jobListings.length !== 0) && (
                                 <div className='flex items-center justify-center my-2 w-1/2'>
                                     <Button className='w-full'>Load More</Button>
                                 </div>
-                            )}
+                            )} */}
                         </div>
 
                         {currentJobId && (
@@ -667,7 +716,7 @@ const JobListing = () => {
                 </div>
 
             </section>
-        </Suspense>
+        </Suspense >
     )
 }
 

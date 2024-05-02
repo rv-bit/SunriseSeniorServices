@@ -388,6 +388,7 @@ const Chat = () => {
 
     useEffect(() => {
         if (chatsDataStatus !== 'success') return;
+        if (!chats || chats.length === 0) return;
 
         if (currentChatIdFromSearch && selectedChatId && currentChatIdFromSearch === selectedChatId) {
             const chatIdIndex = chats.find((chat) => chat._id === selectedChatId);
