@@ -54,10 +54,10 @@ exports.getJobListingsFromId = asyncHandler(async (req, res) => {
     }
 
     jobListing.person = {
-        id: jobListing.person.id,
-        firstName: jobListing.person.firstName,
-        lastName: jobListing.person.lastName,
-        fullName: jobListing.person.fullName
+        id: clerkUser.id,
+        firstName: clerkUser.firstName,
+        lastName: clerkUser.lastName,
+        fullName: clerkUser.fullName,
     }
 
     res.status(200).json({
