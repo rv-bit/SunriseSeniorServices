@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from 'react-query';
 import useUserAuth from '@/hooks/useUserAuth';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 
-import { Get, Post, formatTags } from '@/lib/utils';
+import { Get, Post, formatTags, formatDate } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -274,8 +274,22 @@ const JobListing = () => {
     useEffect(() => {
         if (jobListingStatus !== 'success') return;
 
+        const jobFound = jobListings.find((job) => job._id === currentJobIdFromSearch);
+        if (!jobFound) {
+            setCurrentJobIds(null);
+            setSearchParams(prevSearchInput => {
+                const newSearchParams = new URLSearchParams(prevSearchInput);
+                newSearchParams.delete('currentJobId');
+
+                return newSearchParams.toString();
+            });
+
+            return;
+        }
+
         if (currentJobIdFromSearch && currentJobIdFromSearch !== currentJobId) {
             const jobIndex = jobListings.findIndex((job) => job._id === currentJobIdFromSearch);
+
             if (jobIndex !== -1) {
                 setCurrentJobIds(jobListings[jobIndex]._id);
                 return;
@@ -296,6 +310,8 @@ const JobListing = () => {
         let timeoutId = null;
 
         const getUserByIdFromJob = async (userId) => {
+            if (!userId) return;
+
             setWaitingForUser(true);
             setUserFromJobId(null);
 
@@ -325,7 +341,7 @@ const JobListing = () => {
             }, 2500);
         };
 
-        getUserByIdFromJob(jobListings[jobListings.findIndex((job) => job._id === currentJobId)].user_id);
+        getUserByIdFromJob(jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.user_id);
 
         return () => {
             if (timeoutId) {
@@ -576,10 +592,23 @@ const JobListing = () => {
                                 .filter(job =>
                                     (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
                                     (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
-                                )
-                                .map((job, index) => {
+                                ).sort((a, b) => {
+                                    const formattedDateA = a.posted_at?.replace(/-/g, (match, index, original) => {
+                                        return (original.indexOf(match) === 4 || original.indexOf(match) === 7) ? '-' : ' ';
+                                    }).replace(':', ':');
+
+                                    const formattedDateB = b.posted_at?.replace(/-/g, (match, index, original) => {
+                                        return (original.indexOf(match) === 4 || original.indexOf(match) === 7) ? '-' : ' ';
+                                    }).replace(':', ':');
+
+                                    const dateA = a.posted_at ? new Date(formattedDateA) : 0;
+                                    const dateB = b.posted_at ? new Date(formattedDateB) : 0;
+
+                                    return dateB - dateA;
+                                }).map((job, index) => {
                                     const newIndex = index + 1;
                                     const jobId = job._id;
+                                    const formattedDate = formatDate(job.posted_at);
 
                                     return (
                                         <div
@@ -612,7 +641,7 @@ const JobListing = () => {
                                                     </div>
 
                                                     <div className='flex items-center mt-3'>
-                                                        <p className='text-slate-600 text-sm'>Posted on {job.posted_at}</p>
+                                                        <p className='text-slate-600 text-sm'>Posted on {formattedDate}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -652,7 +681,7 @@ const JobListing = () => {
                                             </div>
                                         </React.Fragment>
                                         :
-                                        (jobListingStatus === 'success') ?
+                                        (jobListingStatus === 'success' && (jobListings && jobListings.length > 0 && jobListings[jobListings.findIndex((job) => job._id === currentJobId)])) ?
                                             <React.Fragment>
                                                 <div className='flex items-center'>
                                                     <div ref={elementCurrentJobHeaderRef} className='shadow-md w-full rounded-sm'>

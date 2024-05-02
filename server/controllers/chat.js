@@ -248,7 +248,6 @@ exports.deleteChat = asyncHandler(async (req, res) => {
         });
     }
 
-
     res.status(200).json({
         message: 'Chat deleted'
     });
