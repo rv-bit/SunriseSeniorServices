@@ -104,7 +104,12 @@ const JobListing = () => {
     const locationFromSearch = searchParams.get('location');
     const jobTitleFromSearch = searchParams.get('jobTitle');
 
-    const [searchInput, setSearchInput] = useState({ jobTitle: '', location: '' });
+    const [searchInput, setSearchInput] = useState(
+        {
+            jobTitle: jobTitleFromSearch ? jobTitleFromSearch : '',
+            location: locationFromSearch ? locationFromSearch : ''
+        }
+    );
     const [searchResults, setSearchResults] = useState([]);
 
     const [currentJobId, setCurrentJobIds] = useState(null);
@@ -483,7 +488,7 @@ const JobListing = () => {
                                                         input.icon
                                                     )}
 
-                                                    <input name={input.name} onChange={(e) => handleInputChange(e, input.name)} className='outline-none w-3/4' type='text' placeholder={input.placeholder} value={searchInput[input.name]} />
+                                                    <input name={input.name} onChange={(e) => handleInputChange(e, input.name)} className='outline-none w-3/4' type='text' placeholder={input.placeholder} value={searchParams.get(input.name) ? searchParams.get(input.name) : searchInput[input.name]} />
 
                                                     {searchInput[input.name] && (
                                                         <Button onClick={() => { handleDeleteInput(input.name) }} className='ml-1 bg-white hover:bg-[#a0a0a06e]'>

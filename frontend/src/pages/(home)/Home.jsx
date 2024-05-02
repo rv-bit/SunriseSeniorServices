@@ -47,46 +47,47 @@ const Home = () => {
 
     const [searchingPostCode, setSearchingPostCode] = useState(false);
     const [addresses, setAddresses] = useState([]);
+    const [searchPostCode, setSearchPostCode] = useState('');
 
-    const searchPostCodeRef = useRef();
+    const handleInputChange = (e) => {
+        const value = e.target.value.trim();
+        setSearchPostCode(value);
+    };
 
-    const grabPostCode = () => {
-        const postCodes = document.querySelectorAll('#searchPostCode');
-
-        postCodes.forEach((postCode) => {
-            if (postCode.value.length > 0) {
-                searchPostCodeRef.current = postCode;
-            }
-        })
-
-        return searchPostCodeRef.current;
-    }
-
-    const handlePostCodeSearch = async (e) => {
+    const handleLocation = (e, postCode) => {
         e.preventDefault();
 
-        // if (user && isSignedIn) {
-        //     navigate('/job-listings');
-        //     return
-        // }
+        handleSearchListingForPostCode(e);
+        setAddresses([]);
+    }
+
+    const handleSearchListingForPostCode = async (e) => {
+        e.preventDefault();
 
         if (searchingPostCode) return;
 
-        const searchPostCode = grabPostCode();
-        if (!searchPostCodeRef.current.value) {
-            if (addresses && addresses.length > 0) {
-                setAddresses([]);
-            }
-
+        if (!searchPostCode || searchPostCode.length === 0) {
+            toast.error('Please provide a post code');
             return;
-        };
-
-        var newAddresses = await getAddresses(searchPostCodeRef.current.value);
-        if (newAddresses.length > 0) {
-            setAddresses(newAddresses);
         }
 
-        setSearchingPostCode(false);
+        if (searchPostCode.length < 5) {
+            toast.error('Post code must be at least 5 characters');
+            return;
+        }
+
+        if (searchPostCode.length > 8) {
+            toast.error('Post code must be at most 8 characters');
+            return;
+        }
+
+        if (user && isSignedIn) {
+            const newValue = searchPostCode.replace(' ', '');
+            navigate(`/job-listings/?location=${newValue}`,);
+            return
+        }
+
+        navigate('/signup');
     }
 
     const [alertDialog, setAlertDialog] = useState({
@@ -120,9 +121,8 @@ const Home = () => {
         handleAlertDialog('Are you a carer or a person seeking care?');
 
         const options = {}
-        const searchPostCode = grabPostCode();
-        if (searchPostCodeRef.current && searchPostCodeRef.current.value) {
-            options.postCode = searchPostCodeRef.current.value;
+        if (searchPostCode && searchPostCode.length > 0) {
+            options.postCode = searchPostCode;
         }
 
         options.preferences = option;
@@ -137,9 +137,8 @@ const Home = () => {
         }
 
         const options = {}
-        const searchPostCode = grabPostCode();
-        if (searchPostCodeRef.current && searchPostCodeRef.current.value) {
-            options.postCode = searchPostCodeRef.current.value;
+        if (searchPostCode && searchPostCode.length > 0) {
+            options.postCode = searchPostCode;
         }
 
         options.preferences = 'option_helper';
@@ -148,13 +147,29 @@ const Home = () => {
         navigate('/signup')
     }
 
-    const handleLocation = (e, postCode) => {
-        e.preventDefault();
+    useEffect(() => {
+        const handleSearchAddresses = async () => {
+            if (!searchPostCode || searchPostCode.length === 0) {
+                if (addresses && addresses.length > 0) {
+                    setAddresses([]);
+                    setSearchPostCode('');
+                }
 
-        searchPostCodeRef.current.value = postCode;
+                setSearchingPostCode(false);
+                return;
+            };
 
-        setAddresses([]);
-    }
+            setSearchingPostCode(true);
+
+            var newAddresses = await getAddresses(searchPostCode);
+
+            setAddresses(newAddresses);
+            setSearchingPostCode(false);
+        }
+
+        handleSearchAddresses();
+        return () => { }
+    }, [searchPostCode]);
 
     useEffect(() => {
         if (!alertDialog.open) {
@@ -234,25 +249,25 @@ const Home = () => {
 
                                         <div className="flex flex-col items-start justify-center gap-2">
                                             <div className='flex flex-col items-center justify-center w-full border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200 mb-2'>
-                                                <label
-                                                    onChange={(e) => {
-                                                        if (searchingPostCode) return;
-                                                        setTimeout(() => handlePostCodeSearch(e), 1000)
-                                                    }}
-                                                    onKeyDown={(e) => {
-                                                        if (searchingPostCode) return;
+                                                <label className='flex items-center text-slate-600 w-full h-full focus-within:outline-none hover:cursor-text'>
 
-                                                        e.key === 'Enter' && handlePostCodeSearch(e)
-                                                    }}
-                                                    className='flex items-center text-slate-600 w-full h-full focus-within:outline-none hover:cursor-text'>
-
-                                                    <input type='text' id='searchPostCode' className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a post code' />
+                                                    <input
+                                                        value={searchPostCode}
+                                                        onChange={handleInputChange}
+                                                        onKeyDown={(e) => {
+                                                            if (searchingPostCode) return;
+                                                            e.key === 'Enter' && handleInputChange(e)
+                                                        }}
+                                                        type='text'
+                                                        className='w-[95%] outline-none bg-inherit mx-5'
+                                                        placeholder='Type a post code'
+                                                    />
 
                                                     <Button
                                                         onClick={(e) => {
                                                             if (searchingPostCode) return;
 
-                                                            handlePostCodeSearch(e)
+                                                            handleSearchListingForPostCode(e)
                                                         }}
                                                         disabled={searchingPostCode}
                                                         className='mr-5 bg-inherit hover:bg-inherit'> <Search size={20} color="black" />
@@ -292,26 +307,25 @@ const Home = () => {
 
                                     <div className="flex flex-col items-start justify-center gap-2">
                                         <div className='flex flex-col items-center justify-center w-full border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200 mb-2'>
-                                            <label
-                                                onChange={(e) => {
-                                                    if (searchingPostCode) return;
+                                            <label className='flex items-center text-slate-600 w-full h-full focus-within:outline-none hover:cursor-text'>
 
-                                                    setTimeout(() => handlePostCodeSearch(e), 1000)
-                                                }}
-                                                onKeyDown={(e) => {
-                                                    if (searchingPostCode) return;
-
-                                                    e.key === 'Enter' && handlePostCodeSearch(e)
-                                                }}
-                                                className='flex items-center text-slate-600 w-full h-full focus-within:outline-none hover:cursor-text'>
-
-                                                <input type='text' id='searchPostCode' className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a post code' />
+                                                <input
+                                                    value={searchPostCode}
+                                                    onChange={handleInputChange}
+                                                    onKeyDown={(e) => {
+                                                        if (searchingPostCode) return;
+                                                        e.key === 'Enter' && handleInputChange(e)
+                                                    }}
+                                                    type='text'
+                                                    className='w-[95%] outline-none bg-inherit mx-5'
+                                                    placeholder='Type a post code'
+                                                />
 
                                                 <Button
                                                     onClick={(e) => {
                                                         if (searchingPostCode) return;
 
-                                                        handlePostCodeSearch(e)
+                                                        handleSearchListingForPostCode(e)
                                                     }}
                                                     disabled={searchingPostCode}
                                                     className='mr-5 bg-inherit hover:bg-inherit'> <Search size={20} color="black" />

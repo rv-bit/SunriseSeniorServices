@@ -56,10 +56,15 @@ export const getAddresses = async (query) => {
     const res = await Get(`https://api.postcodes.io/postcodes?query=${query}`)
 
     if (!res.ok) {
-        throw new Error(res.statusText)
+        return [];
     }
 
     const data = await res.json()
+
+    if (!data.result) {
+        return [];
+    }
+
     const newAddresses = data.result.map((address) => {
         const { postcode, postal_town, country, region, admin_ward } = address;
         const addressPostCodeLastPart = splitPostcode(postcode);
