@@ -437,7 +437,6 @@ const Chat = () => {
                 return;
             }
 
-
             const data = await response.json();
             setChatMessages(data.data);
 
@@ -598,13 +597,13 @@ const Chat = () => {
                                                                 onAuxClick={(e) => handleChatOpen(e, chat._id)}
                                                                 className='flex w-full h-[100px] hover:bg-[#dd673cfd] hover:opacity-70 hover:cursor-pointer'>
 
-                                                                <div className='flex align-middle items-center px-5 w-full'>
+                                                                <div className='flex align-middle items-center px-5 w-[80%]'>
                                                                     <div className='flex'>
                                                                         <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
 
-                                                                        <div className='flex flex-col md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
+                                                                        <div className='flex flex-col justify-center md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
                                                                             <div className='align-top'>
-                                                                                <h1 className='line-clamp-2'>{chat.name}</h1>
+                                                                                <h1 className='w-[80%] truncate'>{chat.name}</h1>
                                                                             </div>
 
                                                                             <div className='align-bottom text-sm'>
@@ -615,9 +614,7 @@ const Chat = () => {
                                                                 </div>
 
                                                                 <div className='flex items-center justify-center mx-5 w-[40%] lg:w-[30%]'>
-                                                                    <div className='align-middle'>
-                                                                        <span className='text-xs'>{dateFormatedLastMessage}</span>
-                                                                    </div>
+                                                                    <span className='text-xs'>{dateFormatedLastMessage}</span>
                                                                 </div>
                                                             </div>
                                                         )
@@ -649,10 +646,10 @@ const Chat = () => {
 
                                 {selectedChatId && (chats && chats.length > 0) && (
                                     <div className='w-full h-full'>
-                                        <div className='flex items-center justify-between max-extraSm:w-[90%] w-full h-[10%] px-5'>
+                                        <div className='flex items-center justify-between max-extraSm:w-[90%] w-full h-[10%] max-lg:h-[7%] px-5 rounded-b-md border-b-2 drop-shadow-lg'>
                                             <div
                                                 onClick={(e) => handleChatClose(e, selectedChatId)}
-                                                className='w-[75%] flex justify-center items-center hover:cursor-pointer'>
+                                                className='w-[70%] flex justify-center items-center hover:cursor-pointer'>
 
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
                                                 <h1 className='text-lg w-full truncate'>Chat with {chats.find((chat) => chat._id === selectedChatId)?.name}</h1>

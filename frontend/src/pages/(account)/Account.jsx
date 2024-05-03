@@ -7,7 +7,7 @@ import { useQuery } from 'react-query';
 
 import { SignedIn, UserProfile, useAuth } from '@clerk/clerk-react'
 
-import { Post, Get } from '@/lib/utils' // Common functions
+import { Post, Get, calculateAge } from '@/lib/utils' // Common functions
 
 import { DatePicker } from "antd"
 import dayjs from "dayjs"
@@ -144,19 +144,6 @@ const Account = () => {
 
         const data = await response.json();
         setUserDetails(data.data);
-    }
-
-    const calculateAge = (birthday) => {
-        birthday = new Date(birthday);
-
-        const ageDifMs = Date.now() - birthday.getTime();
-        const ageDate = new Date(ageDifMs);
-        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-
-        if (isNaN(age)) return null;
-        if (age < 21) return null;
-
-        return age;
     }
 
     useEffect(() => {

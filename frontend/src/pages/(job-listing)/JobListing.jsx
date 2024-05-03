@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from 'react-query';
 import useUserAuth from '@/hooks/useUserAuth';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 
-import { Get, Post, formatTags, formatDate, handleOpenInNewTab } from '@/lib/utils';
+import { Get, Post, formatTags, formatDate, handleOpenInNewTab, calculateAge } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,7 +78,6 @@ const getJobListings = async (user, fetchUsersPostsOnly) => {
     });
 
     if (fetchUsersPostsOnly) {
-        console.log(newData.filter((job) => job.user_id === user.id), 'newData', user.id);
         return newData.filter((job) => job.user_id === user.id);
     }
 
@@ -116,18 +115,19 @@ const ActiveJobListings = (props) => {
 
         if (user.id !== jobListing.user_id) {
             toast.error('You cannot delete a post that is not yours');
-        } else {
-            const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/joblisting/deleteListing/${jobId}`);
-
-            if (!response.ok) {
-                toast.error('Failed to delete job listing');
-            } else {
-                toast.success('Job listing deleted successfully');
-                navigate('/job-listings');
-            }
-
-            return response;
+            return;
         }
+
+        const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/joblisting/deleteListing/${jobId}`);
+
+        if (!response.ok) {
+            toast.error('Failed to delete job listing');
+            return;
+        }
+
+        toast.success('Job listing deleted successfully');
+        navigate('/job-listings');
+        return response;
     }
 
     const handleCurrentJobId = (e, jobId) => {
@@ -353,12 +353,13 @@ const AllJobListings = (props) => {
 
             if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
                 handleOpenInNewTab(e, `/chat?currentChatId=${chatCreated._id}`);
+                return;
+            }
+
+            if (window.innerWidth < 1180) {
+                navigate(`/chat?currentChatId=${chatCreated._id}`)
             } else {
-                if (window.innerWidth < 1180) {
-                    navigate(`/chat?currentChatId=${chatCreated._id}`)
-                } else {
-                    navigate(`/chat?currentChatId=${chatCreated._id}`)
-                }
+                navigate(`/chat?currentChatId=${chatCreated._id}`)
             }
         }, 2500);
     }
@@ -745,6 +746,8 @@ const AllJobListings = (props) => {
 const JobListing = () => {
     useDocumentTitle('Job Listings');
 
+    const navigate = useNavigate();
+
     const { isLoaded, isSignedIn, user } = useUserAuth();
     const [userDetails, setUserDetails] = useState(null);
 
@@ -876,13 +879,13 @@ const JobListing = () => {
                         </div>
                     </div>
 
-                    <div className='hidden max-md:block'>
+                    <div className='hidden max-md:block w-full'>
                         <div className='flex items-center justify-center gap-2 h-max'>
                             <div className='flex flex-col items-center gap-2 w-full'>
                                 {inputFields.map((input, index) => {
                                     return (
                                         <React.Fragment key={index}>
-                                            <div className='h-full w-[400px] max-sm:w-full'>
+                                            <div className='h-full w-[400px] max-md:w-full'>
                                                 <label className={`flex items-center border border-slate-600 text-slate-600 w-full h-[60px] px-2 rounded-lg focus-within:outline-none focus-within:border focus-within:border-[${currentColor}] focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text`}>
                                                     <div className='flex items-center text-slate-600 w-full'>
                                                         {input.icon && (
@@ -910,13 +913,11 @@ const JobListing = () => {
                         </div>
                     </div>
 
-                    <div className='my-5'>
-                        {userDetails && userDetails.account_type === 'option_requester' && (
-                            <div className='flex items-center justify-center'>
-                                <h1 onClick={() => { navigate('/job-listings/new') }} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
-                            </div>
-                        )}
-                    </div>
+                    {userDetails && userDetails.account_type === 'option_requester' && calculateAge(userDetails.option_age_user) >= 21 && (
+                        <div className='flex items-center justify-center my-5'>
+                            <h1 onClick={() => { navigate('/job-listings/new') }} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
+                        </div>
+                    )}
 
                     <div className='flex items-center justify-center w-full gap-2'>
                         <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'All' ? `border-[${currentColor}] border-b-4` : ''}`} value="All" onClick={handleChangeTab}>All</Button>
