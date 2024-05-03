@@ -18,6 +18,10 @@ const chatRouter = require('./routes/chat');
 if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") {
     app.use(cors({ origin: 'https://sunriseseniorservices.fun' }));
     app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
+    });
 } else {
     app.use(cors())
 }
@@ -26,12 +30,13 @@ app.use('/joblisting', jobListingRouter);
 app.use('/user', userRouter);
 app.use('/chats', chatRouter);
 
-if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") {
-    app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
-    });
-}
+// if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") {
+//     app.get('*', (req, res) => {
+//         res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
+//     });
+// }
 
 server.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
+    console.log(path.resolve(__dirname, '../frontend/dist', 'index.html'));
 });

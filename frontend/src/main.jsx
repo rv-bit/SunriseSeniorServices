@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom/client'
 
 import App from './App.jsx'
 
-import { HashRouter as Router } from 'react-router-dom'
+import { BrowserRouter as Router } from 'react-router-dom'
 import { ClerkProvider } from '@clerk/clerk-react'
 import { QueryClient, QueryClientProvider } from 'react-query'
 
