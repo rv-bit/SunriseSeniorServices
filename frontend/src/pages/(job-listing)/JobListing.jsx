@@ -2,7 +2,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useContext, Suspense, lazy } from 'react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from 'react-query';
 
 import useUserAuth from '@/hooks/useUserAuth';
@@ -130,12 +130,6 @@ const ActiveJobListings = (props) => {
         return response;
     }
 
-    const handleCurrentJobId = (e, jobId) => {
-        e.preventDefault();
-
-        handleOpenInNewTab(e, `/job-listings/viewjob/${jobId}`);
-    }
-
     return (
         <div className='flex items-center justify-center w-full'>
             <div className='flex justify-center my-5 max-md:w-full max-md:px-2 w-[900px]'>
@@ -202,10 +196,9 @@ const ActiveJobListings = (props) => {
                             const formattedDate = formatDate(job.posted_at);
 
                             return (
-                                <div
+                                <Link
+                                    to={`/job-listings/viewjob/${jobId}`}
                                     key={newIndex}
-                                    onClick={(e) => handleCurrentJobId(e, jobId)}
-                                    onAuxClick={(e) => handleCurrentJobId(e, jobId)}
                                     className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobIdFromSearch ? 'lg:w-[500px] md:w-[700px] max-md:w-full' : 'lg:w-[700px] md:w-[700px] max-md:w-full'} ${currentJobIdFromSearch && currentJobIdFromSearch === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
 
                                     <div className='flex items-center justify-between m-5'>
@@ -235,7 +228,7 @@ const ActiveJobListings = (props) => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             );
                         })}
                 </div>
@@ -287,16 +280,11 @@ const AllJobListings = (props) => {
     const handleCurrentJobId = (e, jobId) => {
         e.preventDefault();
 
-        if (e.altKey === true && e.type === 'click' || e.type === 'auxclick') {
-            handleOpenInNewTab(e, `/job-listings/viewjob/${jobId}`);
+        setCurrentJobId(jobId);
+        if (window.innerWidth < 1180) {
+            navigate(`/job-listings/viewjob/${jobId}`)
         } else {
-            setCurrentJobId(jobId);
-
-            if (window.innerWidth < 1180) {
-                navigate(`/job-listings/viewjob/${jobId}`)
-            } else {
-                navigate(`/job-listings?currentJobId=${jobId}`)
-            }
+            navigate(`/job-listings?currentJobId=${jobId}`)
         }
     }
 
@@ -614,11 +602,20 @@ const AllJobListings = (props) => {
                             const formattedDate = formatDate(job.posted_at);
 
                             return (
-                                <div
+                                <Link
                                     ref={elementJobListingAdvertisementRef}
                                     key={newIndex}
-                                    onClick={(e) => handleCurrentJobId(e, jobId)}
-                                    onAuxClick={(e) => handleCurrentJobId(e, jobId)}
+                                    to={`/job-listings/viewjob/${jobId}`}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleCurrentJobId(e, jobId);
+                                    }}
+                                    onAuxClick={(e) => {
+                                        if (e.button !== 1) {
+                                            handleCurrentJobId(e, jobId);
+                                        }
+                                    }}
+
                                     className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] max-md:w-full' : 'lg:w-[700px] md:w-[700px] max-md:w-full'} ${currentJobId && currentJobId === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
 
                                     <div className='flex items-center justify-between m-5'>
@@ -648,7 +645,7 @@ const AllJobListings = (props) => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             );
                         })}
                 </div>

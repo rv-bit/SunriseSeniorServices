@@ -81,7 +81,8 @@ export default function App() {
                             <Route path='/signup' element={<Signup />} />
                             <Route path='/account' element={<Account />} />
 
-                            <Route path='/chat' element={<Chat />} />
+                            <Route path='/chat/:chatId' element={<Chat />} />
+                            <Route path='/chat/' element={<Chat />} />
 
                             <Route path='/job-listings' element={<JobListing />} />
                             <Route path='/job-listings/viewjob/:jobId' element={<ViewJobListing />} />

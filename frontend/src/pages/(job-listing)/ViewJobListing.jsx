@@ -36,7 +36,8 @@ const getJobListing = async (jobId) => {
     const response = await Get(`${import.meta.env.VITE_API_PREFIX}/joblisting/viewjob/${jobId}`);
 
     if (!response.ok) {
-        throw new Error('An error occurred while trying to fetch the job');
+        // throw new Error('An error occurred while trying to fetch the job');
+        return null;
     }
 
     const data = await response.json();

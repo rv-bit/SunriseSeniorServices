@@ -2,7 +2,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useCallback, useRef, useContext, useEffect, useState, useLayoutEffect, lazy, Suspense } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from 'react-query'
 
 import SocketioProvider from '@/providers/SocketioProvider'
@@ -242,7 +242,10 @@ const Chat = () => {
     useDocumentTitle('Chat')
 
     const navigate = useNavigate();
-    const location = useLocation();
+    // const location = useLocation();
+
+    const { chatId } = useParams();
+
     const queryClient = useQueryClient();
 
     const { socket } = useContext(SocketioProvider);
@@ -252,8 +255,7 @@ const Chat = () => {
         enabled: !!user && isLoaded && isSignedIn
     });
 
-    const queryParams = new URLSearchParams(location.search);
-    const currentChatIdFromSearch = queryParams.get('currentChatId');
+    const currentChatIdFromSearch = chatId;
 
     const [chats, setChats] = useState([]);
     const [chatMessages, setChatMessages] = useState([]);
@@ -262,15 +264,13 @@ const Chat = () => {
     const [showEditChat, setShowEditChat] = useState(false);
 
     const [chatOpen, setChatOpen] = useState(true);
-    const [selectedChatId, setSelectedChatId] = useState({});
+    const [selectedChatId, setSelectedChatId] = useState(null);
 
     const chatBoxRef = useRef(null);
     const scrollChatArea = useRef(null);
 
     const handleChatOpen = (e, chatId) => {
-        e.preventDefault();
-
-        if (selectedChatId !== chatId && selectedChatId !== null && selectedChatId.length > 0) {
+        if (selectedChatId !== chatId && selectedChatId !== null && socket) {
             socket.emit('disconnectChat', {
                 chat_id: selectedChatId,
                 memberDisconnect: user.id,
@@ -281,17 +281,7 @@ const Chat = () => {
             });
         }
 
-        if (e.altKey === true && e.type === 'click' || e.type === 'auxclick') {
-            handleOpenInNewTab(e, `/chat?currentChatId=${chatId}`);
-        } else {
-            setSelectedChatId(chatId);
-
-            if (window.innerWidth < 1180) {
-                navigate(`/chat?currentChatId=${chatId}`)
-            } else {
-                navigate(`/chat?currentChatId=${chatId}`)
-            }
-        }
+        setSelectedChatId(chatId);
     }
 
     const handleChatClose = (e, chatId) => {
@@ -444,6 +434,10 @@ const Chat = () => {
                 scrollChatArea.current.scrollTop = scrollChatArea.current.scrollHeight;
             }
 
+            if (!currentChatIdFromSearch) {
+                return;
+            }
+
             socket.emit('connectChat', {
                 chat_id: selectedChatId,
                 members: chats[chats.findIndex((chat) => chat._id === currentChatIdFromSearch)].members,
@@ -566,9 +560,17 @@ const Chat = () => {
 
                                                         if (!lastMessage || lastMessage.length === 0) {
                                                             return (
-                                                                <div key={index}
-                                                                    onClick={(e) => handleChatOpen(e, chat._id)}
-                                                                    onAuxClick={(e) => handleChatOpen(e, chat._id)}
+                                                                <Link
+                                                                    to={`/chat/${chat._id}`}
+                                                                    key={index}
+                                                                    onClick={(e) => {
+                                                                        handleChatOpen(e, chat._id)
+                                                                    }}
+                                                                    onAuxClick={(e) => {
+                                                                        if (e.button !== 1) {
+                                                                            handleChatOpen(e, chat._id);
+                                                                        }
+                                                                    }}
                                                                     className='flex w-full h-[100px] hover:bg-[#dd673cfd] hover:opacity-70 hover:cursor-pointer'>
 
                                                                     <div className='flex align-middle items-center px-5 w-full'>
@@ -586,15 +588,23 @@ const Chat = () => {
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
+                                                                </Link>
                                                             )
                                                         }
 
                                                         const dateFormatedLastMessage = formatDate(chat.last_message_date);
                                                         return (
-                                                            <div key={index}
-                                                                onClick={(e) => handleChatOpen(e, chat._id)}
-                                                                onAuxClick={(e) => handleChatOpen(e, chat._id)}
+                                                            <Link
+                                                                to={`/chat/${chat._id}`}
+                                                                key={index}
+                                                                onClick={(e) => {
+                                                                    handleChatOpen(e, chat._id)
+                                                                }}
+                                                                onAuxClick={(e) => {
+                                                                    if (e.button !== 1) {
+                                                                        handleChatOpen(e, chat._id);
+                                                                    }
+                                                                }}
                                                                 className='flex w-full h-[100px] hover:bg-[#dd673cfd] hover:opacity-70 hover:cursor-pointer'>
 
                                                                 <div className='flex align-middle items-center px-5 w-[80%]'>
@@ -616,7 +626,7 @@ const Chat = () => {
                                                                 <div className='flex items-center justify-center mx-5 w-[40%] lg:w-[30%]'>
                                                                     <span className='text-xs'>{dateFormatedLastMessage}</span>
                                                                 </div>
-                                                            </div>
+                                                            </Link>
                                                         )
                                                     })
                                                 }
