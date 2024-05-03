@@ -147,18 +147,19 @@ const ViewJobListing = () => {
 
         if (user.id !== jobListing.user_id) {
             toast.error('You cannot delete a post that is not yours');
-        } else {
-            const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/joblisting/deleteListing/${jobId}`);
-
-            if (!response.ok) {
-                toast.error('Failed to delete job listing');
-            } else {
-                toast.success('Job listing deleted successfully');
-                navigate('/job-listings');
-            }
-
-            return response;
+            return;
         }
+
+        const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/joblisting/deleteListing/${jobId}`);
+
+        if (!response.ok) {
+            toast.error('Failed to delete job listing');
+            return;
+        }
+
+        toast.success('Job listing deleted successfully');
+        navigate('/job-listings');
+        return response;
     }
 
     useEffect(() => {

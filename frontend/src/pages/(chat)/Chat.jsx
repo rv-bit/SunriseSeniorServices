@@ -738,8 +738,6 @@ const Chat = () => {
                                 )}
 
                             </section>
-
-                            {/* This is going to be the location for the opened chats section */}
                         </div>
                     </div>
                 </div>

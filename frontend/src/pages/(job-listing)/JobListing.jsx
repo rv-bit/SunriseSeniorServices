@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from 'react-query';
 import useUserAuth from '@/hooks/useUserAuth';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 
-import { Get, Post, formatTags, formatDate, handleOpenInNewTab, calculateAge } from '@/lib/utils';
+import { Get, Post, Delete, formatTags, formatDate, handleOpenInNewTab, calculateAge } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { Search, MapPin } from "lucide-react"
+import { Search, MapPin, Trash2 } from "lucide-react"
 
 const currentColor = '#e8562d';
 const inputFields = [
@@ -113,7 +113,7 @@ const ActiveJobListings = (props) => {
             navigate('/login', { state: { info: 'You must be logged in to delete a post!' } });
         }
 
-        if (user.id !== jobListing.user_id) {
+        if (user.id !== jobListings.find((job) => job._id === jobId).user_id) {
             toast.error('You cannot delete a post that is not yours');
             return;
         }
@@ -127,7 +127,10 @@ const ActiveJobListings = (props) => {
 
         toast.success('Job listing deleted successfully');
         navigate('/job-listings');
-        return response;
+
+        queryClient.invalidateQueries('activeJobListings');
+        queryClient.invalidateQueries('allActiveJobListings');
+        queryClient.invalidateQueries('jobListings');
     }
 
     return (
@@ -199,11 +202,10 @@ const ActiveJobListings = (props) => {
                                 <Link
                                     to={`/job-listings/viewjob/${jobId}`}
                                     key={newIndex}
-                                    className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobIdFromSearch ? 'lg:w-[500px] md:w-[700px] max-md:w-full' : 'lg:w-[700px] md:w-[700px] max-md:w-full'} ${currentJobIdFromSearch && currentJobIdFromSearch === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
+                                    className={`mx-5 h-auto mb-2 bg-white border-2 rounded-lg ${currentJobIdFromSearch ? 'lg:w-[500px] md:w-[700px] max-md:w-full' : 'lg:w-[700px] md:w-[700px] max-md:w-full'} ${currentJobIdFromSearch && currentJobIdFromSearch === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
 
                                     <div className='flex items-center justify-between m-5'>
-                                        <div className='w-full'>
-
+                                        <div className='group flex flex-col items-start justify-start w-full hover:cursor-pointer'>
                                             <div className='w-full inline-block break-words whitespace-normal'>
                                                 <h1 className='text-xl font-bold text-slate-900 group-hover:underline'>{job.title}</h1>
                                                 <p className='text-slate-600'>{job.location}</p>
@@ -226,6 +228,14 @@ const ActiveJobListings = (props) => {
                                             <div className='flex items-center mt-3'>
                                                 <p className='text-slate-600 text-sm'>Posted on {formattedDate}</p>
                                             </div>
+                                        </div>
+
+                                        <div className='flex items-center justify-end'>
+                                            <Button
+                                                onClick={(e) => handleDeletePost(e, jobId)}
+                                                className='w-auto h-auto p-0 bg-inherit hover:bg-inherit text-black'>
+                                                <Trash2 />
+                                            </Button>
                                         </div>
                                     </div>
                                 </Link>
@@ -766,7 +776,7 @@ const JobListing = () => {
             jobTitle: jobTitleFromSearch ? jobTitleFromSearch : '',
             location: locationFromSearch ? locationFromSearch : ''
         }
-    );
+    )
     const [searchResults, setSearchResults] = useState([]);
     const [currentTab, setCurrentTab] = useState('All');
 
