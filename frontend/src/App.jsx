@@ -1,5 +1,4 @@
 import { Suspense, lazy, useState, useEffect, useMemo } from 'react'
-import { HashRouter as MainRouter, BrowserRouter as SecondRouter, Routes, Route } from 'react-router-dom'
 
 import { useUser } from "@clerk/clerk-react";
 
