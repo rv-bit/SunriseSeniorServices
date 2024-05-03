@@ -130,12 +130,6 @@ const ActiveJobListings = (props) => {
         }
     }
 
-    const handleCurrentJobId = (e, jobId) => {
-        e.preventDefault();
-
-        handleOpenInNewTab(e, `/job-listings/viewjob?currentJobId=${jobId}`);
-    }
-
     return (
         <div className='flex items-center justify-center w-full'>
             <div className='flex justify-center my-5 max-md:w-full max-md:px-2 w-[900px]'>
