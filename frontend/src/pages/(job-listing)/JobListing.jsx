@@ -133,7 +133,7 @@ const ActiveJobListings = (props) => {
     const handleCurrentJobId = (e, jobId) => {
         e.preventDefault();
 
-        handleOpenInNewTab(e, `/job-listings/viewjob/${jobId}`);
+        handleOpenInNewTab(e, `/job-listings/viewjob?currentJobId=${jobId}`);
     }
 
     return (
@@ -288,7 +288,7 @@ const AllJobListings = (props) => {
         e.preventDefault();
 
         if (e.altKey === true && e.type === 'click' || e.type === 'auxclick') {
-            handleOpenInNewTab(e, `/job-listings/viewjob/${jobId}`);
+            handleOpenInNewTab(e, `/job-listings/viewjob?currentJobId=${jobId}`);
         } else {
             setCurrentJobId(jobId);
 

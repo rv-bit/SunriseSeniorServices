@@ -93,7 +93,7 @@ export const getAddresses = async (query) => {
 export const handleOpenInNewTab = (e, locationTab) => {
     e.preventDefault();
 
-    const newWindow = window.open(`${window.location.origin}${locationTab}`, '_blank', 'noopener,noreferrer');
+    const newWindow = window.open(`${window.location.origin}/#${locationTab}`, '_blank', 'noopener,noreferrer');
 
     if (newWindow) {
         newWindow.opener = null;
