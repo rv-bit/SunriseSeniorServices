@@ -133,7 +133,31 @@ exports.createJobListing = asyncHandler(async (req, res) => {
         });
     }
 
-    res.json({
+    res.status(200).json({
         message: 'POST job listing'
     });
 });
+
+exports.deleteJobListing = asyncHandler(async (req, res) => {
+    const jobId = req.params.id;
+
+    if (!jobId) {
+        return res.status(400).json({
+            message: 'Missing job id'
+        });
+    }
+
+    const deleteListing = await db.collection('jobListings').deleteOne({
+        _id: jobId
+    });
+
+    if (!deleteListing) {
+        return res.status(500).json({
+            message: 'Failed to delete job listing'
+        });
+    }
+
+    res.status(200).json({
+        message: 'DELETE job listing'
+    });
+})

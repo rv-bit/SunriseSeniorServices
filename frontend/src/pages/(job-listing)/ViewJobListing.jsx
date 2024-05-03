@@ -8,10 +8,25 @@ import { useQuery, useQueryClient } from 'react-query';
 import useUserAuth from '@/hooks/useUserAuth';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 
-import { Post, Get, formatTags, formatDate, handleOpenInNewTab } from '@/lib/utils';
+import { Post, Get, formatTags, formatDate, handleOpenInNewTab, Delete } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from "lucide-react";
+
+const fetchUserAdditionalInfo = async (user) => {
+    if (!user) {
+        throw new Error('User is not defined');
+    }
+
+    const response = await Get(`${import.meta.env.VITE_API_PREFIX}/user/${user.id}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error);
+    }
+
+    return data.data;
+}
 
 const getJobListing = async (jobId) => {
     if (!jobId) {
@@ -36,6 +51,11 @@ const ViewJobListing = () => {
     const queryClient = useQueryClient();
 
     const { isLoaded, isSignedIn, user } = useUserAuth();
+    const [userDetails, setUserDetails] = useState(null);
+
+    const { data: userAdditionalInfo, isLoading: userInfoIsLoading, isError: userInfoIsError, error: userInfoError, status: userInfoStatus } = useQuery(['userAdditionalInfo', user], () => fetchUserAdditionalInfo(user), {
+        enabled: !!user && isLoaded && isSignedIn
+    });
 
     const queryParams = new URLSearchParams(location.search);
     const currentJobIdFromSearch = queryParams.get('currentJobId');
@@ -44,13 +64,13 @@ const ViewJobListing = () => {
         enabled: !!currentJobIdFromSearch,
     });
 
+    const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
+
     const handleCloseCurrentJobId = (e, currentJobId) => {
         e.preventDefault();
 
         navigate(`/job-listings?currentJobId=${currentJobId}`);
     }
-
-    const [waitForChatToCreate, setWaitForChatToCreate] = useState(false);
 
     const createChats = useCallback(async () => {
         const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/createChat`, {
@@ -117,6 +137,39 @@ const ViewJobListing = () => {
         }
     }
 
+    const handleDeletePost = async (e, jobId) => {
+        e.preventDefault();
+
+        if (!user) {
+            navigate('/login', { state: { info: 'You must be logged in to delete a post!' } });
+        }
+
+        if (user.id !== jobListing.user_id) {
+            toast.error('You cannot delete a post that is not yours');
+        } else {
+            const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/joblisting/deleteListing/${jobId}`);
+
+            if (!response.ok) {
+                toast.error('Failed to delete job listing');
+            } else {
+                toast.success('Job listing deleted successfully');
+                navigate('/job-listings');
+            }
+
+            return response;
+        }
+    }
+
+    useEffect(() => {
+        if (isLoaded && isSignedIn) {
+            if (userAdditionalInfo) {
+                setUserDetails(userAdditionalInfo);
+            }
+        }
+
+        return () => { };
+    }, [isSignedIn, isLoaded, userInfoStatus]);
+
     useEffect(() => {
         if (!currentJobIdFromSearch || jobsDataError) {
             navigate('/job-listings');
@@ -169,12 +222,23 @@ const ViewJobListing = () => {
 
                                         <div className='lg:hidden md:block sm:block extraSm:block max-extraSm:block'>
                                             <div className='flex justify-start mt-5'>
-                                                <Button
-                                                    disabled={waitForChatToCreate}
-                                                    onClick={(e) => handleChat(e, currentJobIdFromSearch)}
-                                                    onAuxClick={(e) => handleChat(e, currentJobIdFromSearch)}
-                                                    className='w-[300px] bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]'>Message
-                                                </Button>
+                                                {userDetails && userDetails._id === jobListing?.person.id ?
+                                                    <Button
+                                                        onClick={(e) => handleDeletePost(e, currentJobIdFromSearch)}
+                                                        onAuxClick={(e) => handleDeletePost(e, currentJobIdFromSearch)}
+                                                    >
+                                                        Delete Post
+                                                    </Button>
+                                                    :
+                                                    <Button
+                                                        disabled={waitForChatToCreate}
+                                                        onClick={(e) => handleChat(e, currentJobIdFromSearch)}
+                                                        onAuxClick={(e) => handleChat(e, currentJobIdFromSearch)}
+                                                        className='w-[300px] bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]'
+                                                    >
+                                                        Message
+                                                    </Button>
+                                                }
                                             </div>
                                         </div>
 
@@ -220,12 +284,23 @@ const ViewJobListing = () => {
 
                                 <div className='hidden lg:flex md:hidden sm:hidden extraSm:hidden max-extraSm:hidden'>
                                     <div className='ml-32 w-[300px]'>
-                                        <Button
-                                            disabled={waitForChatToCreate}
-                                            onClick={(e) => handleChat(e, currentJobIdFromSearch)}
-                                            onAuxClick={(e) => handleChat(e, currentJobIdFromSearch)}
-                                            className='w-full mt-5 bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]'>Message
-                                        </Button>
+                                        {userDetails && userDetails._id === jobListing?.person.id ?
+                                            <Button
+                                                onClick={(e) => handleDeletePost(e, currentJobIdFromSearch)}
+                                                onAuxClick={(e) => handleDeletePost(e, currentJobIdFromSearch)}
+                                            >
+                                                Delete Post
+                                            </Button>
+                                            :
+                                            <Button
+                                                disabled={waitForChatToCreate}
+                                                onClick={(e) => handleChat(e, currentJobIdFromSearch)}
+                                                onAuxClick={(e) => handleChat(e, currentJobIdFromSearch)}
+                                                className='w-[300px] bg-[#d06139c5] bg-opacity-80 hover:bg-[#e8432dea]'
+                                            >
+                                                Message
+                                            </Button>
+                                        }
 
                                         <div className='flex items-center justify-center mt-5'>
                                             <div role='tags' className='grid grid-flow-row-dense grid-cols-3 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>

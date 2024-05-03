@@ -47,7 +47,7 @@ const fetchUserAdditionalInfo = async (user) => {
     return data.data;
 }
 
-const getJobListings = async () => {
+const getJobListings = async (user, fetchUsersPostsOnly) => {
     const response = await Get(`${import.meta.env.VITE_API_PREFIX}/joblisting`);
 
     if (!response.ok) {
@@ -77,7 +77,12 @@ const getJobListings = async () => {
         }
     });
 
-    return newData;
+    if (fetchUsersPostsOnly) {
+        console.log(newData.filter((job) => job.user_id === user.id), 'newData', user.id);
+        return newData.filter((job) => job.user_id === user.id);
+    }
+
+    return newData.filter((job) => job.user_id !== user.id);
 }
 
 const ActiveJobListings = (props) => {
@@ -86,10 +91,156 @@ const ActiveJobListings = (props) => {
         isLoaded,
         isSignedIn,
         userDetails,
+
+        locationFromSearch,
+        jobTitleFromSearch
     } = props;
 
+    const navigate = useNavigate();
+    const location = useLocation();
+    const queryClient = useQueryClient();
+
+    const { data: jobListings, isLoading: jobListingsIsLoading, isError: jobListingsIsError, error: jobListingsError, status: jobListingStatus } = useQuery(['activeJobListings'], () => getJobListings(user, true), {
+        enabled: !!user && isLoaded && isSignedIn
+    });
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentJobIdFromSearch = searchParams.get('currentJobId');
+
+    const handleDeletePost = async (e, jobId) => {
+        e.preventDefault();
+
+        if (!user) {
+            navigate('/login', { state: { info: 'You must be logged in to delete a post!' } });
+        }
+
+        if (user.id !== jobListing.user_id) {
+            toast.error('You cannot delete a post that is not yours');
+        } else {
+            const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/joblisting/deleteListing/${jobId}`);
+
+            if (!response.ok) {
+                toast.error('Failed to delete job listing');
+            } else {
+                toast.success('Job listing deleted successfully');
+                navigate('/job-listings');
+            }
+
+            return response;
+        }
+    }
+
+    const handleCurrentJobId = (e, jobId) => {
+        e.preventDefault();
+
+        handleOpenInNewTab(e, `/job-listings/viewjob?currentJobId=${jobId}`);
+    }
+
     return (
-        <h1>Da</h1>
+        <div className='flex items-center justify-center w-full'>
+            <div className='flex justify-center my-5 max-md:w-full max-md:px-2 w-[900px]'>
+                <div className='flex items-center flex-col mt-5 w-full'>
+                    {
+                        jobListingsIsLoading ?
+                            <div className='mx-5 h-auto mb-2 bg-white border-2 border-black rounded-lg lg:w-[700px] md:w-[700px] max-md:w-full'>
+                                <div className='flex items-center justify-between m-5'>
+                                    <div className='w-full'>
+                                        <div className="space-y-2 p-5">
+                                            <Skeleton className="h-4 w-[250px] md:w-[350px] lg:w-[350px]" />
+                                            <Skeleton className="h-4 w-[200px]" />
+
+                                            <div className='flex flex-row items-center gap-2'>
+                                                <Skeleton className="h-2 w-[50px]" />
+                                                <Skeleton className="h-2 w-[50px]" />
+                                                <Skeleton className="h-2 w-[50px]" />
+                                                <Skeleton className="h-2 w-[50px]" />
+                                            </div>
+
+                                            <Skeleton className="h-4 w-[100px]" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            :
+                            (jobListings && jobListings.length === 0 || (jobListings && jobListings
+                                .filter(job =>
+                                    (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
+                                    (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+                                ).length === 0)) ?
+                                <div className='flex items-center justify-center w-full h-full gap-2'>
+                                    <div className='flex items-center justify-center gap-2 w-full'>
+                                        <div className='flex items-center justify-center w-full h-full gap-2'>
+                                            <div className='flex items-center justify-center w-full h-full gap-2'>
+                                                <h1 className='text-xl font-bold text-slate-900'>No job listings found</h1>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                : null
+                    }
+
+                    {(jobListings && jobListings.length !== 0) && jobListings
+                        .filter(job =>
+                            (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
+                            (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+                        ).sort((a, b) => {
+                            const formattedDateA = a.posted_at?.replace(/-/g, (match, index, original) => {
+                                return (original.indexOf(match) === 4 || original.indexOf(match) === 7) ? '-' : ' ';
+                            }).replace(':', ':');
+
+                            const formattedDateB = b.posted_at?.replace(/-/g, (match, index, original) => {
+                                return (original.indexOf(match) === 4 || original.indexOf(match) === 7) ? '-' : ' ';
+                            }).replace(':', ':');
+
+                            const dateA = a.posted_at ? new Date(formattedDateA) : 0;
+                            const dateB = b.posted_at ? new Date(formattedDateB) : 0;
+
+                            return dateB - dateA;
+                        }).map((job, index) => {
+                            const newIndex = index + 1;
+                            const jobId = job._id;
+                            const formattedDate = formatDate(job.posted_at);
+
+                            return (
+                                <div
+                                    key={newIndex}
+                                    onClick={(e) => handleCurrentJobId(e, jobId)}
+                                    onAuxClick={(e) => handleCurrentJobId(e, jobId)}
+                                    className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobIdFromSearch ? 'lg:w-[500px] md:w-[700px] max-md:w-full' : 'lg:w-[700px] md:w-[700px] max-md:w-full'} ${currentJobIdFromSearch && currentJobIdFromSearch === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
+
+                                    <div className='flex items-center justify-between m-5'>
+                                        <div className='w-full'>
+
+                                            <div className='w-full inline-block break-words whitespace-normal'>
+                                                <h1 className='text-xl font-bold text-slate-900 group-hover:underline'>{job.title}</h1>
+                                                <p className='text-slate-600'>{job.location}</p>
+                                                <p className='text-slate-600 text-sm line-clamp-2'>{job.description}</p>
+                                            </div>
+
+                                            <div role='tags' className='grid grid-flow-row-dense grid-cols-4 items-center mt-2 gap-1 text-center text-black text-opacity-70 group-hover:text-opacity-90'>
+                                                {Object.entries(job.tags)
+                                                    .filter(([key, value]) => value !== '' && key.startsWith('Tag_'))
+                                                    .map(([key, value], index) => {
+                                                        return (
+                                                            <div key={index} className='bg-slate-100 px-2 py-1 h-full rounded-md text-ellipsis overflow-hidden flex items-center justify-center'>
+                                                                <p className='text-xs'>{value}</p>
+                                                            </div>
+                                                        )
+                                                    })
+                                                }
+                                            </div>
+
+                                            <div className='flex items-center mt-3'>
+                                                <p className='text-slate-600 text-sm'>Posted on {formattedDate}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                </div>
+            </div>
+        </div>
     )
 }
 
@@ -108,7 +259,7 @@ const AllJobListings = (props) => {
     const location = useLocation();
     const queryClient = useQueryClient();
 
-    const { data: jobListings, isLoading: jobListingsIsLoading, isError: jobListingsIsError, error: jobListingsError, status: jobListingStatus } = useQuery(['jobListings'], () => getJobListings(), {
+    const { data: jobListings, isLoading: jobListingsIsLoading, isError: jobListingsIsError, error: jobListingsError, status: jobListingStatus } = useQuery(['jobListings'], () => getJobListings(user), {
         enabled: !!user && isLoaded && isSignedIn
     });
 
@@ -601,6 +752,10 @@ const JobListing = () => {
         enabled: !!user && isLoaded && isSignedIn
     });
 
+    const { data: jobListings, isLoading: jobListingsIsLoading, isError: jobListingsIsError, error: jobListingsError, status: jobListingStatus } = useQuery(['allActiveJobListings'], () => getJobListings(user, true), {
+        enabled: !!user && isLoaded && isSignedIn
+    })
+
     const [searchParams, setSearchParams] = useSearchParams();
 
     const locationFromSearch = searchParams.get('location');
@@ -765,14 +920,13 @@ const JobListing = () => {
 
                     <div className='flex items-center justify-center w-full gap-2'>
                         <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'All' ? `border-[${currentColor}] border-b-4` : ''}`} value="All" onClick={handleChangeTab}>All</Button>
-                        <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'Active' ? `border-[${currentColor}] border-b-4` : ''}`} value="Active" onClick={handleChangeTab}>Active</Button>
+                        <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'Active' ? `border-[${currentColor}] border-b-4` : ''}`} value="Active" onClick={handleChangeTab}>Active ({jobListings ? jobListings.length : 0})</Button>
                     </div>
                 </div>
 
-
                 <hr className='w-full opacity-30 border-t border-slate-400' />
 
-                {currentTab === 'All' && (
+                {currentTab === 'All' ?
                     <AllJobListings
                         user={user}
                         isLoaded={isLoaded}
@@ -782,16 +936,17 @@ const JobListing = () => {
                         locationFromSearch={locationFromSearch}
                         jobTitleFromSearch={jobTitleFromSearch}
                     />
-                )}
-
-                {currentTab === 'Active' && (
+                    :
                     <ActiveJobListings
                         user={user}
                         isLoaded={isLoaded}
                         isSignedIn={isSignedIn}
                         userDetails={userDetails}
+
+                        locationFromSearch={locationFromSearch}
+                        jobTitleFromSearch={jobTitleFromSearch}
                     />
-                )}
+                }
 
             </section>
         </Suspense >
