@@ -1,6 +1,5 @@
 import { Suspense, lazy, useState, useEffect, useMemo } from 'react'
 import { Routes, Route } from 'react-router-dom'
-
 import { useUser } from "@clerk/clerk-react";
 
 import SocketioProvider from '@/providers/SocketioProvider'
@@ -85,7 +84,7 @@ export default function App() {
                             <Route path='/chat' element={<Chat />} />
 
                             <Route path='/job-listings' element={<JobListing />} />
-                            <Route path='/job-listings/viewjob/:jobId' element={<ViewJobListing />} />
+                            <Route path='/job-listings/viewjob' element={<ViewJobListing />} />
                             <Route path='/job-listings/new' element={<FormNewJobListing />} />
 
                             <Route path='/about' element={<About />} />

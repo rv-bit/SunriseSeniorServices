@@ -2,7 +2,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useCallback, useEffect, useState, useContext } from 'react'
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from 'react-query';
 
 import useUserAuth from '@/hooks/useUserAuth';
@@ -47,9 +47,8 @@ const ViewJobListing = () => {
     useDocumentTitle('View Job Listing');
 
     const navigate = useNavigate();
+    const location = useLocation();
     const queryClient = useQueryClient();
-
-    const { jobId } = useParams();
 
     const { isLoaded, isSignedIn, user } = useUserAuth();
     const [userDetails, setUserDetails] = useState(null);
@@ -58,7 +57,8 @@ const ViewJobListing = () => {
         enabled: !!user && isLoaded && isSignedIn
     });
 
-    const currentJobIdFromSearch = jobId;
+    const queryParams = new URLSearchParams(location.search);
+    const currentJobIdFromSearch = queryParams.get('currentJobId');
 
     const { data: jobListing, status: jobsDataStatus, isLoading: jobsDataIsLoading, error: jobsDataError } = useQuery(['jobListing', currentJobIdFromSearch], () => getJobListing(currentJobIdFromSearch), {
         enabled: !!currentJobIdFromSearch,
