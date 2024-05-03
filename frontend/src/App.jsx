@@ -85,7 +85,7 @@ export default function App() {
                             <Route path='/chat' element={<Chat />} />
 
                             <Route path='/job-listings' element={<JobListing />} />
-                            <Route path='/job-listings/viewjob' element={<ViewJobListing />} />
+                            <Route path='/job-listings/viewjob/:jobId' element={<ViewJobListing />} />
                             <Route path='/job-listings/new' element={<FormNewJobListing />} />
 
                             <Route path='/about' element={<About />} />
