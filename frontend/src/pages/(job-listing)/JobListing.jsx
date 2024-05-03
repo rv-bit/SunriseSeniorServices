@@ -288,12 +288,12 @@ const AllJobListings = (props) => {
         e.preventDefault();
 
         if (e.altKey === true && e.type === 'click' || e.type === 'auxclick') {
-            handleOpenInNewTab(e, `/job-listings/viewjob?currentJobId=${jobId}`);
+            handleOpenInNewTab(e, `/job-listings/viewjob/${jobId}`);
         } else {
             setCurrentJobId(jobId);
 
             if (window.innerWidth < 1180) {
-                navigate(`/job-listings/viewjob?currentJobId=${jobId}`)
+                navigate(`/job-listings/viewjob/${jobId}`)
             } else {
                 navigate(`/job-listings?currentJobId=${jobId}`)
             }
