@@ -188,6 +188,56 @@ exports.getChatMessagesFromId = asyncHandler(async (req, res) => {
     });
 });
 
+exports.getPossibleMembers = asyncHandler(async (req, res) => {
+    const userId = req.params.userId;
+    const chatId = req.params.chatId;
+
+    if (!chatId || !userId) {
+        return res.status(400).json({
+            message: 'Invalid chat ID'
+        });
+    }
+
+    const chat = await db.collection('chats').findOne({ _id: chatId, created_by: userId });
+
+    if (!chat) {
+        return res.status(500).json({
+            message: 'Failed to get chat'
+        });
+    }
+
+    const possibleMembers = await db.collection('users').find({
+        _id: { $ne: userId },
+        account_type: 'option_requester'
+    }).toArray();
+
+    for (let i = 0; i < possibleMembers.length; i++) {
+        let possibleMemberInformation;
+        try {
+            possibleMemberInformation = await clerkClient.users.getUser(possibleMembers[i]._id);
+        } catch (error) {
+            console.log(error);
+        }
+
+        if (possibleMemberInformation) {
+            possibleMembers[i].fullName = possibleMemberInformation.fullName;
+            possibleMembers[i].email = possibleMemberInformation.emailAddresses ? possibleMemberInformation.emailAddresses[0].emailAddress : null;
+        }
+    }
+
+    const newPossibleMembers = possibleMembers.filter(member => member.fullName !== undefined);
+
+    if (!possibleMembers) {
+        return res.status(500).json({
+            message: 'Failed to get possible members'
+        });
+    }
+
+    res.status(200).json({
+        data: newPossibleMembers
+    });
+});
+
 exports.createChat = asyncHandler(async (req, res) => {
     const chat = req.body.data;
 

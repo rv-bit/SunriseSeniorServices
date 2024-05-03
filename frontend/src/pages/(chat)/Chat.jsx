@@ -33,6 +33,21 @@ const fetchChats = async (user) => {
     return data.data;
 };
 
+const fetchPossibleMembers = async (user) => {
+    if (!user) {
+        throw new Error('User is not authenticated');
+    }
+
+    const response = await Get(`${import.meta.env.VITE_API_PREFIX}/users/possibleMembers/${user.id}`);
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch possible members');
+    }
+
+    const data = await response.json();
+    return data.data;
+};
+
 const EditChat = (props) => {
     const { chatInfo, onClose, onDelete, userInfo } = props;
 
@@ -43,6 +58,9 @@ const EditChat = (props) => {
         action: ''
     });
     const [userOptions, setUserOptions] = useState(false);
+
+    const [possibleMembers, setPossibleMembers] = useState([]);
+    const [searchPossibleMembers, setSearchPossibleMembers] = useState('');
 
     const userOptionsRef = useRef(null);
 
@@ -90,6 +108,21 @@ const EditChat = (props) => {
             title: '',
             message: ''
         });
+    }
+
+    const handleSearchPossibleMembers = async (e) => {
+        e.preventDefault();
+
+        const response = await Get(`${import.meta.env.VITE_API_PREFIX}/chats/possibleMembers/${userInfo.id}/${chatInfo._id}?search=${searchPossibleMembers}`);
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        const data = await response.json();
+        setPossibleMembers(data.data);
     }
 
     useEffect(() => {
@@ -222,8 +255,23 @@ const EditChat = (props) => {
                                 chatInfo.created_by && (
                                     chatInfo.created_by === userInfo.id ?
                                         <React.Fragment>
-                                            <Button onClick={(e) => handleDelete(e)}>Delete Chat</Button>
-                                            <Button>Add Person</Button>
+                                            <div className="flex flex-col items-center w-full">
+                                                <div className="w-[285px] max-extraSm:w-full h-auto max-h-[300px] relative gap-5 mb-2 bg-slate-100 rounded-lg max-extraSm:mx-5 overflow-y-auto">
+                                                    {possibleMembers.map((member, index) => {
+                                                        const { fullName, email } = member;
+                                                        return (
+                                                            <div key={index} className="w-full h-12 flex items-center justify-center hover:bg-slate-200 rounded-lg mb-2 px-2 last:mb-0">
+                                                                <button className="text-center">dwadawsddwa</button>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+
+                                                <div className='flex items-center justify-center gap-2 w-full'>
+                                                    <Button className='w-full' onClick={(e) => handleDelete(e)}>Delete Chat</Button>
+                                                    <Button className='w-full' onClick={(e) => handleSearchPossibleMembers(e)}>Add Person</Button>
+                                                </div>
+                                            </div>
                                         </React.Fragment>
                                         :
                                         <Button>Leave Chat</Button>
@@ -656,7 +704,7 @@ const Chat = () => {
 
                                 {selectedChatId && (chats && chats.length > 0) && (
                                     <div className='w-full h-full'>
-                                        <div className='flex items-center justify-between max-extraSm:w-[90%] w-full h-[10%] max-lg:h-[7%] px-5 rounded-b-md border-b-2 drop-shadow-lg'>
+                                        <div className='flex items-center justify-between max-extraSm:w-full w-full h-[10%] max-lg:h-[7%] px-5 rounded-b-md border-b-2 drop-shadow-lg'>
                                             <div
                                                 onClick={(e) => handleChatClose(e, selectedChatId)}
                                                 className='w-[70%] flex justify-center items-center hover:cursor-pointer'>
