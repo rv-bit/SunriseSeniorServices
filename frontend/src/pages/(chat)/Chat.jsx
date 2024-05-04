@@ -196,6 +196,25 @@ const EditChat = (props) => {
         queryClient.refetchQueries('gatherChats');
     }
 
+    const handleRemoveSelf = async (e) => {
+        e.preventDefault();
+
+        const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/chats/removeMember/${chatInfo._id}`, {
+            user_id: userInfo.id,
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        const data = await response.json();
+        toast.success(data.message);
+        queryClient.refetchQueries('gatherChats');
+        onClose();
+    }
+
     useEffect(() => {
         const body = document.querySelector('body');
         body.style.overflow = 'hidden';
@@ -417,7 +436,7 @@ const EditChat = (props) => {
                                             </div>
                                         </React.Fragment>
                                         :
-                                        <Button>Leave Chat</Button>
+                                        <Button onClick={handleRemoveSelf}>Leave Chat</Button>
                                 )
                             }
                         </div>
