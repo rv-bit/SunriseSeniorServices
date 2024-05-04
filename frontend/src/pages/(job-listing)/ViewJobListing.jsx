@@ -188,7 +188,7 @@ const ViewJobListing = () => {
                 newestOnTop
                 closeOnClick
                 rtl={false}
-                pauseOnFocusLoss
+                pauseOnFocusLoss={false}
                 draggable
                 pauseOnHover
                 theme="light"

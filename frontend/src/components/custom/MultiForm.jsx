@@ -103,7 +103,7 @@ const MultiForm = (props) => {
                 newestOnTop
                 closeOnClick
                 rtl={false}
-                pauseOnFocusLoss
+                pauseOnFocusLoss={false}
                 draggable
                 pauseOnHover
                 theme="light"

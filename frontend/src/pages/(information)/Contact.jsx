@@ -1,5 +1,9 @@
-import React, { useState } from 'react'
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
+
+import React, { useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom';
+import emailjs from '@emailjs/browser';
 
 import PagesData from '@/data/PagesData';
 
@@ -26,16 +30,24 @@ import { z } from 'zod';
 const formDataInputs = [
     {
         name: 'emailFrom',
-        label: 'Email',
+        label: 'Email From',
         placeholder: 'Enter the email',
         optional: false,
         type: 'email',
     },
     {
+        name: 'emailFromName',
+        label: 'From Name',
+        placeholder: 'Enter the name',
+        optional: false,
+        type: 'text',
+    },
+    {
         name: 'emailTo',
-        label: 'Email',
+        label: 'Email To',
         placeholder: 'Enter the email',
         optional: false,
+        info: 'Click on a team member to send an email',
         type: 'email',
     },
     {
@@ -61,11 +73,13 @@ const Contact = () => {
     const form = useForm({
         defaultValues: {
             emailFrom: '',
+            emailFromName: '',
             emailTo: '',
             messageBody: '',
             subject: '',
         },
     });
+    const formRef = useRef();
 
     const onSubmit = (event, data) => {
         event.preventDefault();
@@ -73,6 +87,7 @@ const Contact = () => {
         let currentValidationSchema = z.object({
             subject: z.string().nonempty('Subject is required').min(5, 'Subject is too little').max(50, 'Subject is too long'),
             emailFrom: z.string().email({ message: "Must be a valid email address." }),
+            emailFromName: z.string().nonempty('Name is required').min(5, 'Name is too little').max(50, 'Name is too long'),
             emailTo: z.string().email({ message: "Must be a valid email address." }),
             messageBody: z.string().nonempty('Message is required').min(25, 'Message is too little').max(250, 'Message is too long'),
         });
@@ -94,17 +109,53 @@ const Contact = () => {
             return "Error";
         }
 
+        const isEmailValid = PagesData.Team.some((teamMember) => teamMember.mail === data.emailTo);
+        if (!isEmailValid) {
+            setErrors({
+                emailTo: ['Email is not valid, please select a team member from the list.'],
+            });
+
+            return "Error";
+        }
+
         setErrors(null);
 
-        return "Success"
-    }
+        emailjs
+            .sendForm(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, formRef.current, {
+                publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+            })
+            .then(
+                () => {
+                    toast.success('Email sent successfully!');
+                    setTimeout(() => {
+                        navigate('/');
+                    }, 3000);
+                },
+                (error) => {
+                    toast.error('Failed to send email!');
+                },
+            );
 
-    const handleEmailSend = (email) => {
-        form.setValue('emailTo', email);
+        form.reset();
     }
 
     return (
         <React.Fragment>
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                limit={3}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss={false}
+                draggable
+                pauseOnHover
+                theme="light"
+                stacked={true}
+            />
+
             <div className='flex flex-col gap-5 items-center justify-center my-5'>
 
                 <div className='w-[500px] max-sm:w-[350px] max-extraSm:w-[260px] h-full'>
@@ -112,20 +163,7 @@ const Contact = () => {
                     <p className='text-center font-bold mb-5'>Our Managers Email is:A.Ciocan@wlv.ac.uk</p>
 
                     <Form {...form}>
-                        <form onSubmit={(event) => {
-                            const formSubmittedWithSuccess = onSubmit(event, form.getValues())
-
-                            if (formSubmittedWithSuccess === "Success") {
-                                const newWindow = window.open(`mailto:${form.getValues()['emailTo']}?subject=${form.getValues()['subject']}&body=${JSON.stringify(form.getValues()['messageBody'])}`);
-
-                                if (newWindow) {
-                                    newWindow.opener = null;
-                                }
-
-                                form.reset();
-                            }
-
-                        }} className="flex flex-col gap-5 items-center justify-center bg-slate-100 bg-opacity-55 rounded-2xl w-full mb-5 p-5">
+                        <form ref={formRef} onSubmit={(event) => { onSubmit(event, form.getValues()) }} className="flex flex-col gap-5 items-center justify-center bg-slate-100 bg-opacity-55 rounded-2xl w-full mb-5 p-5">
                             {formDataInputs.map((formDataInput, index) => {
                                 return (
                                     <FormField
@@ -143,6 +181,8 @@ const Contact = () => {
                                                         <Input type={formDataInput.type || "text"} placeholder={formDataInput.placeholder} {...field} />
                                                     )}
                                                 </FormControl>
+
+                                                {formDataInput.info && <FormDescription>{formDataInput.info}</FormDescription>}
 
                                                 {errors && errors[formDataInput.name] && errors[formDataInput.name].map((error, errorIndex) => (
                                                     <FormMessage key={errorIndex}>
@@ -168,7 +208,7 @@ const Contact = () => {
                             return (
                                 <div
                                     key={index}
-                                    onClick={() => handleEmailSend(mail)}
+                                    onClick={() => form.setValue('emailTo', mail)}
                                     className='size-12 rounded-full bg-muted flex-shrink-0 text-black flex justify-center items-center hover:cursor-pointer'>{nameInitials}
                                 </div>
                             )

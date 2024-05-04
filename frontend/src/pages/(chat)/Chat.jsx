@@ -725,7 +725,7 @@ const Chat = () => {
                     newestOnTop
                     closeOnClick
                     rtl={false}
-                    pauseOnFocusLoss
+                    pauseOnFocusLoss={false}
                     draggable
                     pauseOnHover
                     theme="light"

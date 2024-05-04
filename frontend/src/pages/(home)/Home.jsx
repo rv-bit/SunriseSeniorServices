@@ -224,7 +224,7 @@ const Home = () => {
                     newestOnTop
                     closeOnClick
                     rtl={false}
-                    pauseOnFocusLoss
+                    pauseOnFocusLoss={false}
                     draggable
                     pauseOnHover
                     theme="light"
