@@ -230,7 +230,7 @@ const ActiveJobListings = (props) => {
                                             </div>
                                         </div>
 
-                                        <div className='flex items-center justify-end'>
+                                        <div className='flex items-center justify-end mx-5'>
                                             <Button
                                                 onClick={(e) => handleDeletePost(e, jobId)}
                                                 className='w-auto h-auto p-0 bg-inherit hover:bg-inherit text-black'>
@@ -847,7 +847,7 @@ const JobListing = () => {
                 newestOnTop
                 closeOnClick
                 rtl={false}
-                pauseOnFocusLoss
+                pauseOnFocusLoss={false}
                 draggable
                 pauseOnHover
                 theme="light"
