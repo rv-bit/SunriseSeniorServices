@@ -921,12 +921,12 @@ const JobListing = () => {
                     </div>
 
                     {userDetails && userDetails.account_type === 'option_requester' && calculateAge(userDetails.option_age_user) >= 21 && (
-                        <div className='flex items-center justify-center my-5'>
+                        <div className='flex items-center justify-center mt-5'>
                             <h1 onClick={() => { navigate('/job-listings/new') }} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
                         </div>
                     )}
 
-                    <div className='flex items-center justify-center w-full gap-2'>
+                    <div className='flex items-center justify-center w-full gap-2 mt-5'>
                         <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'All' ? `border-[${currentColor}] border-b-4` : ''}`} value="All" onClick={handleChangeTab}>All</Button>
                         <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'Active' ? `border-[${currentColor}] border-b-4` : ''}`} value="Active" onClick={handleChangeTab}>Active ({jobListings ? jobListings.length : 0})</Button>
                     </div>

@@ -49,18 +49,25 @@ const fetchPossibleMembers = async (user) => {
 };
 
 const EditChat = (props) => {
-    const { chatInfo, onClose, onDelete, userInfo } = props;
+    const { chatInfo, onClose, onDelete, userInfo, currentChatIdFromSearch } = props;
+
+    const queryClient = useQueryClient();
 
     const [showAlert, setShowAlert] = useState({
         show: false,
         title: '',
         message: '',
-        action: ''
+        action: '',
+        func: () => { },
     });
     const [userOptions, setUserOptions] = useState(false);
 
     const [possibleMembers, setPossibleMembers] = useState([]);
     const [searchPossibleMembers, setSearchPossibleMembers] = useState('');
+    const [isSearching, setIsSearching] = useState({
+        searchingUsers: false,
+        addingUsers: false,
+    });
 
     const userOptionsRef = useRef(null);
 
@@ -80,15 +87,18 @@ const EditChat = (props) => {
             show: true,
             action: 'delete',
             title: 'Delete Chat',
-            message: 'Are you sure you want to delete this chat?'
+            message: 'Are you sure you want to delete this chat?',
+            func(e) {
+                onDelete(e, chatInfo._id);
+            }
         });
     }
 
     const onSubmit = (e) => {
         e.preventDefault();
 
-        if (showAlert.action === 'delete') {
-            onDelete(e, chatInfo._id);
+        if (showAlert.func) {
+            showAlert.func(e);
         }
 
         setShowAlert({
@@ -111,9 +121,19 @@ const EditChat = (props) => {
     }
 
     const handleSearchPossibleMembers = async (e) => {
-        e.preventDefault();
+        if (isSearching.searchingUsers) return;
+
+        setIsSearching(previousData => ({
+            ...previousData,
+            searchingUsers: true,
+        }));
 
         const response = await Get(`${import.meta.env.VITE_API_PREFIX}/chats/possibleMembers/${userInfo.id}/${chatInfo._id}?search=${searchPossibleMembers}`);
+
+        setIsSearching(previousData => ({
+            ...previousData,
+            searchingUsers: false,
+        }));
 
         if (!response.ok) {
             const data = await response.json();
@@ -123,6 +143,57 @@ const EditChat = (props) => {
 
         const data = await response.json();
         setPossibleMembers(data.data);
+    }
+
+    const handleAddMember = async (e, user) => {
+        e.preventDefault();
+
+        setIsSearching({
+            searchingUsers: false,
+            addingUsers: false,
+        });
+        setSearchPossibleMembers('');
+
+        if (!user) {
+            toast.error('No user selected');
+            return;
+        }
+
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/addMember/${chatInfo._id}`, {
+            user_id: user._id,
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        const data = await response.json();
+        toast.success(data.message);
+        chatInfo.members.push(user);
+
+        queryClient.refetchQueries('gatherChats');
+    }
+
+    const handleRemoveMembers = async (e, userId) => {
+        e.preventDefault();
+
+        const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/chats/removeMember/${chatInfo._id}`, {
+            user_id: userId,
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        const data = await response.json();
+        toast.success(data.message);
+        chatInfo.members = chatInfo.members.filter((member) => member.id !== userId);
+
+        queryClient.refetchQueries('gatherChats');
     }
 
     useEffect(() => {
@@ -148,6 +219,29 @@ const EditChat = (props) => {
             }
         }
     }, [userOptions, userOptionsRef]);
+
+    useEffect(() => {
+        if (isSearching.searchingUsers) return;
+        if (searchPossibleMembers.length === 0) {
+            setPossibleMembers([]);
+            setSearchPossibleMembers('');
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            handleSearchPossibleMembers();
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchPossibleMembers]);
+
+    useEffect(() => {
+        if (currentChatIdFromSearch && !chatInfo) {
+            onClose();
+        }
+
+        return () => { };
+    }, [chatInfo]);
 
     return (
         <Suspense fallback={
@@ -187,7 +281,7 @@ const EditChat = (props) => {
                         <ScrollArea className='flex flex-col items-start justify-start gap-2 h-[80%]'>
                             <ul className='flex flex-col items-start justify-start gap-2'>
                                 {
-                                    Object.entries(chatInfo.members)
+                                    chatInfo && Object.entries(chatInfo.members)
                                         .sort(([keyA, valueA], [keyB, valueB]) => {
                                             if ('created_by' in valueA && 'created_by' in valueB) {
                                                 return valueA.created_by.localeCompare(valueB.created_by);
@@ -235,7 +329,7 @@ const EditChat = (props) => {
 
                                                                 <Button className='bg-inherit hover:bg-gray-200 text-black p-0'>Profile</Button>
                                                                 {chatInfo.created_by && (chatInfo.created_by === userInfo.id && value.id !== userInfo.id) && (
-                                                                    <Button className='bg-inherit hover:bg-gray-200 text-black p-0' onClick={(e) => handleDelete(e)}>Remove</Button>
+                                                                    <Button className='bg-inherit hover:bg-gray-200 text-black p-0' onClick={(e) => handleRemoveMembers(e, value.id)}>Remove</Button>
                                                                 )}
                                                             </div>
                                                         }
@@ -252,24 +346,73 @@ const EditChat = (props) => {
 
                         <div className='flex justify-center gap-2 max-sm:flex-col mb-16'>
                             {
-                                chatInfo.created_by && (
+                                chatInfo && chatInfo.created_by && (
                                     chatInfo.created_by === userInfo.id ?
                                         <React.Fragment>
                                             <div className="flex flex-col items-center w-full">
-                                                <div className="w-[285px] max-extraSm:w-full h-auto max-h-[300px] relative gap-5 mb-2 bg-slate-100 rounded-lg max-extraSm:mx-5 overflow-y-auto">
-                                                    {possibleMembers.map((member, index) => {
-                                                        const { fullName, email } = member;
-                                                        return (
-                                                            <div key={index} className="w-full h-12 flex items-center justify-center hover:bg-slate-200 rounded-lg mb-2 px-2 last:mb-0">
-                                                                <button className="text-center">dwadawsddwa</button>
+
+                                                {isSearching.addingUsers && (
+                                                    <div className="w-[285px] max-extraSm:w-full h-auto max-h-[300px] relative gap-5 mb-2 bg-slate-100 rounded-lg max-extraSm:mx-5 overflow-y-auto">
+                                                        {(possibleMembers && possibleMembers.length > 0) && possibleMembers.map((member, index) => {
+                                                            const { fullName } = member;
+
+                                                            if (isSearching.searchingUsers) {
+                                                                return (
+                                                                    <div key={index} className='flex items-center justify-center w-full h-12'>
+                                                                        <h1 className='text-lg'>Searching...</h1>
+                                                                    </div>
+                                                                )
+                                                            }
+
+                                                            return (
+                                                                <Button key={index} className="w-full h-12 flex items-center justify-center hover:bg-slate-200 rounded-lg mb-2 px-2 last:mb-0 group hover:text-orange-500 text-center text-white" onClick={(e) => handleAddMember(e, member)}>{fullName}
+                                                                </Button>
+                                                            )
+                                                        })}
+
+                                                        {possibleMembers.length === 0 && (
+                                                            <div className='flex items-center justify-center w-full h-12'>
+                                                                <h1 className='text-lg'>No possible members found</h1>
                                                             </div>
-                                                        )
-                                                    })}
-                                                </div>
+                                                        )}
+                                                    </div>
+                                                )}
 
                                                 <div className='flex items-center justify-center gap-2 w-full'>
-                                                    <Button className='w-full' onClick={(e) => handleDelete(e)}>Delete Chat</Button>
-                                                    <Button className='w-full' onClick={(e) => handleSearchPossibleMembers(e)}>Add Person</Button>
+
+                                                    {isSearching.addingUsers ?
+                                                        <div className='flex items-center justify-center w-full border border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200'>
+                                                            <label
+                                                                className='flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[#ed6c39de] focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text'>
+                                                                <input
+                                                                    onKeyDown={(e) => {
+                                                                        e.key === 'Enter' ? (setSearchPossibleMembers(e.target.value)) : null
+                                                                    }}
+                                                                    onChange={(e) => {
+                                                                        setSearchPossibleMembers(e.target.value)
+                                                                    }}
+                                                                    type='text' className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a message...' />
+                                                            </label>
+
+                                                            <div className='flex items-center justify-center mx-2'>
+                                                                <Button onClick={(e) => {
+                                                                    setIsSearching({
+                                                                        searchingUsers: false,
+                                                                        addingUsers: false,
+                                                                    })
+                                                                    setSearchPossibleMembers('')
+                                                                }}>Cancel</Button>
+                                                            </div>
+                                                        </div>
+                                                        :
+                                                        <>
+                                                            <Button className='w-full' onClick={(e) => setIsSearching({
+                                                                searchingUsers: false,
+                                                                addingUsers: true,
+                                                            })}>Add Person</Button>
+                                                            <Button className='w-full' onClick={(e) => handleDelete(e)}>Delete Chat</Button>
+                                                        </>
+                                                    }
                                                 </div>
                                             </div>
                                         </React.Fragment>
@@ -282,7 +425,7 @@ const EditChat = (props) => {
 
                 </div>
             </div>
-        </Suspense>
+        </Suspense >
     )
 }
 
@@ -290,7 +433,6 @@ const Chat = () => {
     useDocumentTitle('Chat')
 
     const navigate = useNavigate();
-    // const location = useLocation();
 
     const { chatId } = useParams();
 
@@ -571,7 +713,7 @@ const Chat = () => {
                     stacked={true}
                 />
 
-                {showEditChat && <EditChat chatInfo={chats.find(chat => chat._id === selectedChatId)} onClose={handleEditChat} userInfo={user} onDelete={handleDelete} />}
+                {showEditChat && <EditChat chatInfo={chats.find(chat => chat._id === selectedChatId)} onClose={handleEditChat} userInfo={user} onDelete={handleDelete} currentChatIdFromSearch={currentChatIdFromSearch} />}
 
                 <div className='flex items-center justify-center w-full'>
                     <div className='mx-5 max-w-[1400px] w-full'>
