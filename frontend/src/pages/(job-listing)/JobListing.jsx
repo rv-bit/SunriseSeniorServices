@@ -2,13 +2,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useContext, Suspense, lazy } from 'react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from 'react-query';
 
 import useUserAuth from '@/hooks/useUserAuth';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 
-import { Get, Post, formatTags, formatDate, handleOpenInNewTab } from '@/lib/utils';
+import { Get, Post, Delete, formatTags, formatDate, handleOpenInNewTab, calculateAge } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { Search, MapPin } from "lucide-react"
+import { Search, MapPin, Trash2 } from "lucide-react"
 
 const currentColor = '#e8562d';
 const inputFields = [
@@ -78,7 +78,6 @@ const getJobListings = async (user, fetchUsersPostsOnly) => {
     });
 
     if (fetchUsersPostsOnly) {
-        console.log(newData.filter((job) => job.user_id === user.id), 'newData', user.id);
         return newData.filter((job) => job.user_id === user.id);
     }
 
@@ -114,26 +113,24 @@ const ActiveJobListings = (props) => {
             navigate('/login', { state: { info: 'You must be logged in to delete a post!' } });
         }
 
-        if (user.id !== jobListing.user_id) {
+        if (user.id !== jobListings.find((job) => job._id === jobId).user_id) {
             toast.error('You cannot delete a post that is not yours');
-        } else {
-            const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/joblisting/deleteListing/${jobId}`);
-
-            if (!response.ok) {
-                toast.error('Failed to delete job listing');
-            } else {
-                toast.success('Job listing deleted successfully');
-                navigate('/job-listings');
-            }
-
-            return response;
+            return;
         }
-    }
 
-    const handleCurrentJobId = (e, jobId) => {
-        e.preventDefault();
+        const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/joblisting/deleteListing/${jobId}`);
 
-        handleOpenInNewTab(e, `/job-listings/viewjob/${jobId}`);
+        if (!response.ok) {
+            toast.error('Failed to delete job listing');
+            return;
+        }
+
+        toast.success('Job listing deleted successfully');
+        navigate('/job-listings');
+
+        queryClient.invalidateQueries('activeJobListings');
+        queryClient.invalidateQueries('allActiveJobListings');
+        queryClient.invalidateQueries('jobListings');
     }
 
     return (
@@ -202,15 +199,13 @@ const ActiveJobListings = (props) => {
                             const formattedDate = formatDate(job.posted_at);
 
                             return (
-                                <div
+                                <Link
+                                    to={`/job-listings/viewjob/${jobId}`}
                                     key={newIndex}
-                                    onClick={(e) => handleCurrentJobId(e, jobId)}
-                                    onAuxClick={(e) => handleCurrentJobId(e, jobId)}
-                                    className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobIdFromSearch ? 'lg:w-[500px] md:w-[700px] max-md:w-full' : 'lg:w-[700px] md:w-[700px] max-md:w-full'} ${currentJobIdFromSearch && currentJobIdFromSearch === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
+                                    className={`mx-5 h-auto mb-2 bg-white border-2 rounded-lg ${currentJobIdFromSearch ? 'lg:w-[500px] md:w-[700px] max-md:w-full' : 'lg:w-[700px] md:w-[700px] max-md:w-full'} ${currentJobIdFromSearch && currentJobIdFromSearch === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
 
                                     <div className='flex items-center justify-between m-5'>
-                                        <div className='w-full'>
-
+                                        <div className='group flex flex-col items-start justify-start w-full hover:cursor-pointer'>
                                             <div className='w-full inline-block break-words whitespace-normal'>
                                                 <h1 className='text-xl font-bold text-slate-900 group-hover:underline'>{job.title}</h1>
                                                 <p className='text-slate-600'>{job.location}</p>
@@ -234,8 +229,16 @@ const ActiveJobListings = (props) => {
                                                 <p className='text-slate-600 text-sm'>Posted on {formattedDate}</p>
                                             </div>
                                         </div>
+
+                                        <div className='flex items-center justify-end'>
+                                            <Button
+                                                onClick={(e) => handleDeletePost(e, jobId)}
+                                                className='w-auto h-auto p-0 bg-inherit hover:bg-inherit text-black'>
+                                                <Trash2 />
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
+                                </Link>
                             );
                         })}
                 </div>
@@ -287,16 +290,11 @@ const AllJobListings = (props) => {
     const handleCurrentJobId = (e, jobId) => {
         e.preventDefault();
 
-        if (e.altKey === true && e.type === 'click' || e.type === 'auxclick') {
-            handleOpenInNewTab(e, `/job-listings/viewjob/${jobId}`);
+        setCurrentJobId(jobId);
+        if (window.innerWidth < 1180) {
+            navigate(`/job-listings/viewjob/${jobId}`)
         } else {
-            setCurrentJobId(jobId);
-
-            if (window.innerWidth < 1180) {
-                navigate(`/job-listings/viewjob/${jobId}`)
-            } else {
-                navigate(`/job-listings?currentJobId=${jobId}`)
-            }
+            navigate(`/job-listings?currentJobId=${jobId}`)
         }
     }
 
@@ -353,12 +351,13 @@ const AllJobListings = (props) => {
 
             if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
                 handleOpenInNewTab(e, `/chat?currentChatId=${chatCreated._id}`);
+                return;
+            }
+
+            if (window.innerWidth < 1180) {
+                navigate(`/chat?currentChatId=${chatCreated._id}`)
             } else {
-                if (window.innerWidth < 1180) {
-                    navigate(`/chat?currentChatId=${chatCreated._id}`)
-                } else {
-                    navigate(`/chat?currentChatId=${chatCreated._id}`)
-                }
+                navigate(`/chat?currentChatId=${chatCreated._id}`)
             }
         }, 2500);
     }
@@ -613,11 +612,20 @@ const AllJobListings = (props) => {
                             const formattedDate = formatDate(job.posted_at);
 
                             return (
-                                <div
+                                <Link
                                     ref={elementJobListingAdvertisementRef}
                                     key={newIndex}
-                                    onClick={(e) => handleCurrentJobId(e, jobId)}
-                                    onAuxClick={(e) => handleCurrentJobId(e, jobId)}
+                                    to={`/job-listings/viewjob/${jobId}`}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleCurrentJobId(e, jobId);
+                                    }}
+                                    onAuxClick={(e) => {
+                                        if (e.button !== 1) {
+                                            handleCurrentJobId(e, jobId);
+                                        }
+                                    }}
+
                                     className={`mx-5 group h-auto mb-2 bg-white border-2 rounded-lg hover:cursor-pointer ${currentJobId ? 'lg:w-[500px] md:w-[700px] max-md:w-full' : 'lg:w-[700px] md:w-[700px] max-md:w-full'} ${currentJobId && currentJobId === jobId ? 'border-[#e8562d]' : 'border-black'}`}>
 
                                     <div className='flex items-center justify-between m-5'>
@@ -647,7 +655,7 @@ const AllJobListings = (props) => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             );
                         })}
                 </div>
@@ -745,6 +753,8 @@ const AllJobListings = (props) => {
 const JobListing = () => {
     useDocumentTitle('Job Listings');
 
+    const navigate = useNavigate();
+
     const { isLoaded, isSignedIn, user } = useUserAuth();
     const [userDetails, setUserDetails] = useState(null);
 
@@ -766,7 +776,7 @@ const JobListing = () => {
             jobTitle: jobTitleFromSearch ? jobTitleFromSearch : '',
             location: locationFromSearch ? locationFromSearch : ''
         }
-    );
+    )
     const [searchResults, setSearchResults] = useState([]);
     const [currentTab, setCurrentTab] = useState('All');
 
@@ -876,13 +886,13 @@ const JobListing = () => {
                         </div>
                     </div>
 
-                    <div className='hidden max-md:block'>
+                    <div className='hidden max-md:block w-full'>
                         <div className='flex items-center justify-center gap-2 h-max'>
                             <div className='flex flex-col items-center gap-2 w-full'>
                                 {inputFields.map((input, index) => {
                                     return (
                                         <React.Fragment key={index}>
-                                            <div className='h-full w-[400px] max-sm:w-full'>
+                                            <div className='h-full w-[400px] max-md:w-full'>
                                                 <label className={`flex items-center border border-slate-600 text-slate-600 w-full h-[60px] px-2 rounded-lg focus-within:outline-none focus-within:border focus-within:border-[${currentColor}] focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text`}>
                                                     <div className='flex items-center text-slate-600 w-full'>
                                                         {input.icon && (
@@ -910,15 +920,13 @@ const JobListing = () => {
                         </div>
                     </div>
 
-                    <div className='my-5'>
-                        {userDetails && userDetails.account_type === 'option_requester' && (
-                            <div className='flex items-center justify-center'>
-                                <h1 onClick={() => { navigate('/job-listings/new') }} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
-                            </div>
-                        )}
-                    </div>
+                    {userDetails && userDetails.account_type === 'option_requester' && calculateAge(userDetails.option_age_user) >= 21 && (
+                        <div className='flex items-center justify-center mt-5'>
+                            <h1 onClick={() => { navigate('/job-listings/new') }} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
+                        </div>
+                    )}
 
-                    <div className='flex items-center justify-center w-full gap-2'>
+                    <div className='flex items-center justify-center w-full gap-2 mt-5'>
                         <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'All' ? `border-[${currentColor}] border-b-4` : ''}`} value="All" onClick={handleChangeTab}>All</Button>
                         <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'Active' ? `border-[${currentColor}] border-b-4` : ''}`} value="Active" onClick={handleChangeTab}>Active ({jobListings ? jobListings.length : 0})</Button>
                     </div>

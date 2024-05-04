@@ -90,6 +90,18 @@ export const getAddresses = async (query) => {
     return newAddresses;
 }
 
+export const calculateAge = (date) => {
+    const birthday = new Date(date);
+    const ageDifMs = Date.now() - birthday.getTime();
+    const ageDate = new Date(ageDifMs);
+    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+
+    if (isNaN(age)) return null;
+    if (age < 21) return null;
+
+    return age;
+}
+
 export const handleOpenInNewTab = (e, locationTab) => {
     e.preventDefault();
 

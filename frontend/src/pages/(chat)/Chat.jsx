@@ -2,7 +2,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useCallback, useRef, useContext, useEffect, useState, useLayoutEffect, lazy, Suspense } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from 'react-query'
 
 import SocketioProvider from '@/providers/SocketioProvider'
@@ -33,16 +33,41 @@ const fetchChats = async (user) => {
     return data.data;
 };
 
+const fetchPossibleMembers = async (user) => {
+    if (!user) {
+        throw new Error('User is not authenticated');
+    }
+
+    const response = await Get(`${import.meta.env.VITE_API_PREFIX}/users/possibleMembers/${user.id}`);
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch possible members');
+    }
+
+    const data = await response.json();
+    return data.data;
+};
+
 const EditChat = (props) => {
-    const { chatInfo, onClose, onDelete, userInfo } = props;
+    const { chatInfo, onClose, onDelete, userInfo, currentChatIdFromSearch } = props;
+
+    const queryClient = useQueryClient();
 
     const [showAlert, setShowAlert] = useState({
         show: false,
         title: '',
         message: '',
-        action: ''
+        action: '',
+        func: () => { },
     });
     const [userOptions, setUserOptions] = useState(false);
+
+    const [possibleMembers, setPossibleMembers] = useState([]);
+    const [searchPossibleMembers, setSearchPossibleMembers] = useState('');
+    const [isSearching, setIsSearching] = useState({
+        searchingUsers: false,
+        addingUsers: false,
+    });
 
     const userOptionsRef = useRef(null);
 
@@ -62,15 +87,18 @@ const EditChat = (props) => {
             show: true,
             action: 'delete',
             title: 'Delete Chat',
-            message: 'Are you sure you want to delete this chat?'
+            message: 'Are you sure you want to delete this chat?',
+            func(e) {
+                onDelete(e, chatInfo._id);
+            }
         });
     }
 
     const onSubmit = (e) => {
         e.preventDefault();
 
-        if (showAlert.action === 'delete') {
-            onDelete(e, chatInfo._id);
+        if (showAlert.func) {
+            showAlert.func(e);
         }
 
         setShowAlert({
@@ -90,6 +118,82 @@ const EditChat = (props) => {
             title: '',
             message: ''
         });
+    }
+
+    const handleSearchPossibleMembers = async (e) => {
+        if (isSearching.searchingUsers) return;
+
+        setIsSearching(previousData => ({
+            ...previousData,
+            searchingUsers: true,
+        }));
+
+        const response = await Get(`${import.meta.env.VITE_API_PREFIX}/chats/possibleMembers/${userInfo.id}/${chatInfo._id}?search=${searchPossibleMembers}`);
+
+        setIsSearching(previousData => ({
+            ...previousData,
+            searchingUsers: false,
+        }));
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        const data = await response.json();
+        setPossibleMembers(data.data);
+    }
+
+    const handleAddMember = async (e, user) => {
+        e.preventDefault();
+
+        setIsSearching({
+            searchingUsers: false,
+            addingUsers: false,
+        });
+        setSearchPossibleMembers('');
+
+        if (!user) {
+            toast.error('No user selected');
+            return;
+        }
+
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/addMember/${chatInfo._id}`, {
+            user_id: user._id,
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        const data = await response.json();
+        toast.success(data.message);
+        chatInfo.members.push(user);
+
+        queryClient.refetchQueries('gatherChats');
+    }
+
+    const handleRemoveMembers = async (e, userId) => {
+        e.preventDefault();
+
+        const response = await Delete(`${import.meta.env.VITE_API_PREFIX}/chats/removeMember/${chatInfo._id}`, {
+            user_id: userId,
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        const data = await response.json();
+        toast.success(data.message);
+        chatInfo.members = chatInfo.members.filter((member) => member.id !== userId);
+
+        queryClient.refetchQueries('gatherChats');
     }
 
     useEffect(() => {
@@ -115,6 +219,29 @@ const EditChat = (props) => {
             }
         }
     }, [userOptions, userOptionsRef]);
+
+    useEffect(() => {
+        if (isSearching.searchingUsers) return;
+        if (searchPossibleMembers.length === 0) {
+            setPossibleMembers([]);
+            setSearchPossibleMembers('');
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            handleSearchPossibleMembers();
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchPossibleMembers]);
+
+    useEffect(() => {
+        if (currentChatIdFromSearch && !chatInfo) {
+            onClose();
+        }
+
+        return () => { };
+    }, [chatInfo]);
 
     return (
         <Suspense fallback={
@@ -154,7 +281,7 @@ const EditChat = (props) => {
                         <ScrollArea className='flex flex-col items-start justify-start gap-2 h-[80%]'>
                             <ul className='flex flex-col items-start justify-start gap-2'>
                                 {
-                                    Object.entries(chatInfo.members)
+                                    chatInfo && Object.entries(chatInfo.members)
                                         .sort(([keyA, valueA], [keyB, valueB]) => {
                                             if ('created_by' in valueA && 'created_by' in valueB) {
                                                 return valueA.created_by.localeCompare(valueB.created_by);
@@ -202,7 +329,7 @@ const EditChat = (props) => {
 
                                                                 <Button className='bg-inherit hover:bg-gray-200 text-black p-0'>Profile</Button>
                                                                 {chatInfo.created_by && (chatInfo.created_by === userInfo.id && value.id !== userInfo.id) && (
-                                                                    <Button className='bg-inherit hover:bg-gray-200 text-black p-0' onClick={(e) => handleDelete(e)}>Remove</Button>
+                                                                    <Button className='bg-inherit hover:bg-gray-200 text-black p-0' onClick={(e) => handleRemoveMembers(e, value.id)}>Remove</Button>
                                                                 )}
                                                             </div>
                                                         }
@@ -219,11 +346,75 @@ const EditChat = (props) => {
 
                         <div className='flex justify-center gap-2 max-sm:flex-col mb-16'>
                             {
-                                chatInfo.created_by && (
+                                chatInfo && chatInfo.created_by && (
                                     chatInfo.created_by === userInfo.id ?
                                         <React.Fragment>
-                                            <Button onClick={(e) => handleDelete(e)}>Delete Chat</Button>
-                                            <Button>Add Person</Button>
+                                            <div className="flex flex-col items-center w-full">
+
+                                                {isSearching.addingUsers && (
+                                                    <div className="w-[285px] max-extraSm:w-full h-auto max-h-[300px] relative gap-5 mb-2 bg-slate-100 rounded-lg max-extraSm:mx-5 overflow-y-auto">
+                                                        {(possibleMembers && possibleMembers.length > 0) && possibleMembers.map((member, index) => {
+                                                            const { fullName } = member;
+
+                                                            if (isSearching.searchingUsers) {
+                                                                return (
+                                                                    <div key={index} className='flex items-center justify-center w-full h-12'>
+                                                                        <h1 className='text-lg'>Searching...</h1>
+                                                                    </div>
+                                                                )
+                                                            }
+
+                                                            return (
+                                                                <Button key={index} className="w-full h-12 flex items-center justify-center hover:bg-slate-200 rounded-lg mb-2 px-2 last:mb-0 group hover:text-orange-500 text-center text-white" onClick={(e) => handleAddMember(e, member)}>{fullName}
+                                                                </Button>
+                                                            )
+                                                        })}
+
+                                                        {possibleMembers.length === 0 && (
+                                                            <div className='flex items-center justify-center w-full h-12'>
+                                                                <h1 className='text-lg'>No possible members found</h1>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                <div className='flex items-center justify-center gap-2 w-full'>
+
+                                                    {isSearching.addingUsers ?
+                                                        <div className='flex items-center justify-center w-full border border-slate-600 rounded-lg h-[60px] shadow-2xl bg-slate-200'>
+                                                            <label
+                                                                className='flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[#ed6c39de] focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text'>
+                                                                <input
+                                                                    onKeyDown={(e) => {
+                                                                        e.key === 'Enter' ? (setSearchPossibleMembers(e.target.value)) : null
+                                                                    }}
+                                                                    onChange={(e) => {
+                                                                        setSearchPossibleMembers(e.target.value)
+                                                                    }}
+                                                                    type='text' className='w-[95%] outline-none bg-inherit mx-5' placeholder='Type a message...' />
+                                                            </label>
+
+                                                            <div className='flex items-center justify-center mx-2'>
+                                                                <Button onClick={(e) => {
+                                                                    setIsSearching({
+                                                                        searchingUsers: false,
+                                                                        addingUsers: false,
+                                                                    })
+                                                                    setSearchPossibleMembers('')
+                                                                }}>Cancel</Button>
+                                                            </div>
+                                                        </div>
+                                                        :
+                                                        <>
+                                                            <Button className='w-full' onClick={(e) => setIsSearching({
+                                                                searchingUsers: false,
+                                                                addingUsers: true,
+                                                            })}>Add Person</Button>
+                                                            <Button className='w-full' onClick={(e) => handleDelete(e)}>Delete Chat</Button>
+                                                        </>
+                                                    }
+                                                </div>
+                                            </div>
                                         </React.Fragment>
                                         :
                                         <Button>Leave Chat</Button>
@@ -234,7 +425,7 @@ const EditChat = (props) => {
 
                 </div>
             </div>
-        </Suspense>
+        </Suspense >
     )
 }
 
@@ -242,7 +433,9 @@ const Chat = () => {
     useDocumentTitle('Chat')
 
     const navigate = useNavigate();
-    const location = useLocation();
+
+    const { chatId } = useParams();
+
     const queryClient = useQueryClient();
 
     const { socket } = useContext(SocketioProvider);
@@ -252,8 +445,7 @@ const Chat = () => {
         enabled: !!user && isLoaded && isSignedIn
     });
 
-    const queryParams = new URLSearchParams(location.search);
-    const currentChatIdFromSearch = queryParams.get('currentChatId');
+    const currentChatIdFromSearch = chatId;
 
     const [chats, setChats] = useState([]);
     const [chatMessages, setChatMessages] = useState([]);
@@ -262,15 +454,13 @@ const Chat = () => {
     const [showEditChat, setShowEditChat] = useState(false);
 
     const [chatOpen, setChatOpen] = useState(true);
-    const [selectedChatId, setSelectedChatId] = useState({});
+    const [selectedChatId, setSelectedChatId] = useState(null);
 
     const chatBoxRef = useRef(null);
     const scrollChatArea = useRef(null);
 
     const handleChatOpen = (e, chatId) => {
-        e.preventDefault();
-
-        if (selectedChatId !== chatId && selectedChatId !== null && selectedChatId.length > 0) {
+        if (selectedChatId !== chatId && selectedChatId !== null && socket) {
             socket.emit('disconnectChat', {
                 chat_id: selectedChatId,
                 memberDisconnect: user.id,
@@ -281,17 +471,7 @@ const Chat = () => {
             });
         }
 
-        if (e.altKey === true && e.type === 'click' || e.type === 'auxclick') {
-            handleOpenInNewTab(e, `/chat?currentChatId=${chatId}`);
-        } else {
-            setSelectedChatId(chatId);
-
-            if (window.innerWidth < 1180) {
-                navigate(`/chat?currentChatId=${chatId}`)
-            } else {
-                navigate(`/chat?currentChatId=${chatId}`)
-            }
-        }
+        setSelectedChatId(chatId);
     }
 
     const handleChatClose = (e, chatId) => {
@@ -437,12 +617,15 @@ const Chat = () => {
                 return;
             }
 
-
             const data = await response.json();
             setChatMessages(data.data);
 
             if (scrollChatArea.current) {
                 scrollChatArea.current.scrollTop = scrollChatArea.current.scrollHeight;
+            }
+
+            if (!currentChatIdFromSearch) {
+                return;
             }
 
             socket.emit('connectChat', {
@@ -530,7 +713,7 @@ const Chat = () => {
                     stacked={true}
                 />
 
-                {showEditChat && <EditChat chatInfo={chats.find(chat => chat._id === selectedChatId)} onClose={handleEditChat} userInfo={user} onDelete={handleDelete} />}
+                {showEditChat && <EditChat chatInfo={chats.find(chat => chat._id === selectedChatId)} onClose={handleEditChat} userInfo={user} onDelete={handleDelete} currentChatIdFromSearch={currentChatIdFromSearch} />}
 
                 <div className='flex items-center justify-center w-full'>
                     <div className='mx-5 max-w-[1400px] w-full'>
@@ -567,9 +750,17 @@ const Chat = () => {
 
                                                         if (!lastMessage || lastMessage.length === 0) {
                                                             return (
-                                                                <div key={index}
-                                                                    onClick={(e) => handleChatOpen(e, chat._id)}
-                                                                    onAuxClick={(e) => handleChatOpen(e, chat._id)}
+                                                                <Link
+                                                                    to={`/chat/${chat._id}`}
+                                                                    key={index}
+                                                                    onClick={(e) => {
+                                                                        handleChatOpen(e, chat._id)
+                                                                    }}
+                                                                    onAuxClick={(e) => {
+                                                                        if (e.button !== 1) {
+                                                                            handleChatOpen(e, chat._id);
+                                                                        }
+                                                                    }}
                                                                     className='flex w-full h-[100px] hover:bg-[#dd673cfd] hover:opacity-70 hover:cursor-pointer'>
 
                                                                     <div className='flex align-middle items-center px-5 w-full'>
@@ -587,24 +778,32 @@ const Chat = () => {
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
+                                                                </Link>
                                                             )
                                                         }
 
                                                         const dateFormatedLastMessage = formatDate(chat.last_message_date);
                                                         return (
-                                                            <div key={index}
-                                                                onClick={(e) => handleChatOpen(e, chat._id)}
-                                                                onAuxClick={(e) => handleChatOpen(e, chat._id)}
+                                                            <Link
+                                                                to={`/chat/${chat._id}`}
+                                                                key={index}
+                                                                onClick={(e) => {
+                                                                    handleChatOpen(e, chat._id)
+                                                                }}
+                                                                onAuxClick={(e) => {
+                                                                    if (e.button !== 1) {
+                                                                        handleChatOpen(e, chat._id);
+                                                                    }
+                                                                }}
                                                                 className='flex w-full h-[100px] hover:bg-[#dd673cfd] hover:opacity-70 hover:cursor-pointer'>
 
-                                                                <div className='flex align-middle items-center px-5 w-full'>
+                                                                <div className='flex align-middle items-center px-5 w-[80%]'>
                                                                     <div className='flex'>
                                                                         <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
 
-                                                                        <div className='flex flex-col md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
+                                                                        <div className='flex flex-col justify-center md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
                                                                             <div className='align-top'>
-                                                                                <h1 className='line-clamp-2'>{chat.name}</h1>
+                                                                                <h1 className='w-[80%] truncate'>{chat.name}</h1>
                                                                             </div>
 
                                                                             <div className='align-bottom text-sm'>
@@ -615,11 +814,9 @@ const Chat = () => {
                                                                 </div>
 
                                                                 <div className='flex items-center justify-center mx-5 w-[40%] lg:w-[30%]'>
-                                                                    <div className='align-middle'>
-                                                                        <span className='text-xs'>{dateFormatedLastMessage}</span>
-                                                                    </div>
+                                                                    <span className='text-xs'>{dateFormatedLastMessage}</span>
                                                                 </div>
-                                                            </div>
+                                                            </Link>
                                                         )
                                                     })
                                                 }
@@ -649,10 +846,10 @@ const Chat = () => {
 
                                 {selectedChatId && (chats && chats.length > 0) && (
                                     <div className='w-full h-full'>
-                                        <div className='flex items-center justify-between max-extraSm:w-[90%] w-full h-[10%] px-5'>
+                                        <div className='flex items-center justify-between max-extraSm:w-full w-full h-[10%] max-lg:h-[7%] px-5 rounded-b-md border-b-2 drop-shadow-lg'>
                                             <div
                                                 onClick={(e) => handleChatClose(e, selectedChatId)}
-                                                className='w-[75%] flex justify-center items-center hover:cursor-pointer'>
+                                                className='w-[70%] flex justify-center items-center hover:cursor-pointer'>
 
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
                                                 <h1 className='text-lg w-full truncate'>Chat with {chats.find((chat) => chat._id === selectedChatId)?.name}</h1>
@@ -731,8 +928,6 @@ const Chat = () => {
                                 )}
 
                             </section>
-
-                            {/* This is going to be the location for the opened chats section */}
                         </div>
                     </div>
                 </div>

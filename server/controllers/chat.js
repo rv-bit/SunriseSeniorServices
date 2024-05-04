@@ -188,6 +188,94 @@ exports.getChatMessagesFromId = asyncHandler(async (req, res) => {
     });
 });
 
+exports.getPossibleMembers = asyncHandler(async (req, res) => {
+    const userId = req.params.userId;
+    const chatId = req.params.chatId;
+
+    const search = req.query.search;
+
+    if (!chatId || !userId) {
+        return res.status(400).json({
+            message: 'Invalid chat ID'
+        });
+    }
+
+    if (!search) {
+        return res.status(400).json({
+            message: 'Invalid search'
+        });
+    }
+
+    const chat = await db.collection('chats').findOne({ _id: chatId, created_by: userId });
+
+    if (!chat) {
+        return res.status(500).json({
+            message: 'Failed to get chat'
+        });
+    }
+
+    const possibleMembers = await db.collection('users').find({
+        _id: { $ne: userId, $nin: chat.members },
+        account_type: 'option_helper',
+    }).toArray();
+
+    console.log(possibleMembers);
+
+    for (let i = 0; i < possibleMembers.length; i++) {
+        let possibleMemberInformation;
+        try {
+            possibleMemberInformation = await clerkClient.users.getUser(possibleMembers[i]._id);
+        } catch (error) {
+
+            if (error.errors && error.errors.find(clerkError => clerkError.message === 'not found')) {
+                console.log('User not found', possibleMembers[i]._id);
+
+                const result = await db.collection('users').deleteOne({ _id: possibleMembers[i]._id });
+
+                if (!result) {
+                    return res.status(500).json({
+                        message: 'Failed to delete user'
+                    });
+                }
+
+                continue;
+            }
+
+            console.log(error);
+        }
+
+        if (possibleMemberInformation) {
+            possibleMembers[i].firstName = possibleMemberInformation.firstName;
+            possibleMembers[i].lastName = possibleMemberInformation.lastName;
+            possibleMembers[i].fullName = possibleMemberInformation.fullName;
+            possibleMembers[i].email = possibleMemberInformation.emailAddresses ? possibleMemberInformation.emailAddresses[0].emailAddress : null;
+        }
+    }
+
+    const newPossibleMembers = possibleMembers.filter(member => {
+        if (!member.fullName || !member.email) {
+            return false;
+        }
+
+        if (member.fullName.toLowerCase().includes(search.toLowerCase()) ||
+            member.firstName.toLowerCase().includes(search.toLowerCase()) ||
+            member.lastName.toLowerCase().includes(search.toLowerCase()) ||
+            member.email.toLowerCase().includes(search.toLowerCase())) {
+            return true;
+        }
+    });
+
+    if (!possibleMembers) {
+        return res.status(500).json({
+            message: 'Failed to get possible members'
+        });
+    }
+
+    res.status(200).json({
+        data: newPossibleMembers
+    });
+});
+
 exports.createChat = asyncHandler(async (req, res) => {
     const chat = req.body.data;
 
@@ -227,6 +315,77 @@ exports.createChat = asyncHandler(async (req, res) => {
 
     res.status(200).json({
         data: chatDocument
+    });
+});
+
+exports.addMember = asyncHandler(async (req, res) => {
+    const chatId = req.params.id;
+    const member = req.body.user_id;
+
+    console.log(chatId, member);
+
+    if (!chatId || !member) {
+        return res.status(400).json({
+            message: 'Invalid chat ID or members'
+        });
+    }
+
+    const chat = await db.collection('chats').findOne({ _id: chatId });
+
+    if (!chat) {
+        return res.status(500).json({
+            message: 'Failed to get chat'
+        });
+    }
+
+    const newMembers = chat.members;
+    newMembers.push(member);
+
+    const result = await db.collection('chats').updateOne({ _id: chatId }, { $set: { members: newMembers } });
+
+    if (!result) {
+        return res.status(500).json({
+            message: 'Failed to add members'
+        });
+    }
+
+    res.status(200).json({
+        message: 'Members added'
+    });
+})
+
+exports.removeMember = asyncHandler(async (req, res) => {
+    const chatId = req.params.id;
+    const member = req.body.user_id;
+
+    console.log(chatId, member);
+
+    if (!chatId || !member) {
+        return res.status(400).json({
+            message: 'Invalid chat ID or members'
+        });
+    }
+
+    const chat = await db.collection('chats').findOne({ _id: chatId });
+
+    if (!chat) {
+        return res.status(500).json({
+            message: 'Failed to get chat'
+        });
+    }
+
+    const newMembers = chat.members.filter(chatMember => chatMember !== member);
+
+    const result = await db.collection('chats').updateOne({ _id: chatId }, { $set: { members: newMembers } });
+
+    if (!result) {
+        return res.status(500).json({
+            message: 'Failed to remove members'
+        });
+    }
+
+    res.status(200).json({
+        message: 'Members removed'
     });
 });
 
