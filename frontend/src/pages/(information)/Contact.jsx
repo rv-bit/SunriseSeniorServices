@@ -115,8 +115,6 @@ const Contact = () => {
                         <form onSubmit={(event) => {
                             const formSubmittedWithSuccess = onSubmit(event, form.getValues())
 
-                            console.log(formSubmittedWithSuccess);
-
                             if (formSubmittedWithSuccess === "Success") {
                                 const newWindow = window.open(`mailto:${form.getValues()['emailTo']}?subject=${form.getValues()['subject']}&body=${JSON.stringify(form.getValues()['messageBody'])}`);
 

@@ -34,5 +34,4 @@ if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") 
 
 server.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
-    console.log(path.resolve(__dirname, '../frontend/dist', 'index.html'));
 });

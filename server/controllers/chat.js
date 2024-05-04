@@ -219,8 +219,6 @@ exports.getPossibleMembers = asyncHandler(async (req, res) => {
         account_type: 'option_helper',
     }).toArray();
 
-    console.log(possibleMembers);
-
     for (let i = 0; i < possibleMembers.length; i++) {
         let possibleMemberInformation;
         try {
@@ -228,8 +226,6 @@ exports.getPossibleMembers = asyncHandler(async (req, res) => {
         } catch (error) {
 
             if (error.errors && error.errors.find(clerkError => clerkError.message === 'not found')) {
-                console.log('User not found', possibleMembers[i]._id);
-
                 const result = await db.collection('users').deleteOne({ _id: possibleMembers[i]._id });
 
                 if (!result) {
@@ -322,8 +318,6 @@ exports.addMember = asyncHandler(async (req, res) => {
     const chatId = req.params.id;
     const member = req.body.user_id;
 
-    console.log(chatId, member);
-
     if (!chatId || !member) {
         return res.status(400).json({
             message: 'Invalid chat ID or members'
@@ -357,8 +351,6 @@ exports.addMember = asyncHandler(async (req, res) => {
 exports.removeMember = asyncHandler(async (req, res) => {
     const chatId = req.params.id;
     const member = req.body.user_id;
-
-    console.log(chatId, member);
 
     if (!chatId || !member) {
         return res.status(400).json({
