@@ -331,7 +331,7 @@ const AllJobListings = (props) => {
         }
 
         setWaitForChatToCreate(true);
-        if (user.id === jobListing.user_id) {
+        if (user.id === jobListings.user_id) {
             toast.error('You cannot message yourself');
             setWaitForChatToCreate(false);
             return;
