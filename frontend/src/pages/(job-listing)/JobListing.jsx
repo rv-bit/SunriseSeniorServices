@@ -922,7 +922,7 @@ const JobListing = () => {
 
                     {userDetails && userDetails.account_type === 'option_requester' && calculateAge(userDetails.option_age_user) >= 21 && (
                         <div className='flex items-center justify-center mt-5'>
-                            <h1 onClick={() => { navigate('/job-listings/new') }} className='w-fit text-center hover:underline hover:cursor-pointer text-[#e8562ddd] font-bold'>Post a help enquiry</h1>
+                            <Link to={'/job-listings/new'} className='w-fit h-fit text-center hover:underline bg-[#e8562ddd] hover:bg-[#d26547] font-bold px-5 py-4 text-white rounded-lg'>Post a help enquiry</Link>
                         </div>
                     )}
 

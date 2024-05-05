@@ -282,10 +282,27 @@ exports.createChat = asyncHandler(async (req, res) => {
     }
 
     const _id = crypto.randomBytes(16).toString('hex');
+
+    const userNotLeaderOfChat = chat.members.find(member => member !== chat.created_by);
+    if (userNotLeaderOfChat) {
+        let userInformation;
+
+        try {
+            userInformation = await clerkClient.users.getUser(userNotLeaderOfChat);
+        } catch (error) {
+            console.log(error);
+        }
+
+        if (userInformation) {
+            chat.avatar = userInformation.imageUrl;
+        }
+    }
+
     const newChat = {
         _id: _id,
         members: chat.members,
         name: chat.name,
+        avatar: chat.avatar || null,
         created_by: chat.created_by,
         created_at: new Date().toDateString()
     }

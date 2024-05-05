@@ -784,7 +784,14 @@ const Chat = () => {
 
                                                                     <div className='flex align-middle items-center px-5 w-full'>
                                                                         <div className='flex'>
-                                                                            <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
+
+                                                                            {chat.avatar ?
+                                                                                <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'>
+                                                                                    <img src={chat.avatar} alt={chat.name} className='rounded-full' />
+                                                                                </div>
+                                                                                :
+                                                                                <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
+                                                                            }
 
                                                                             <div className='flex flex-col md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
                                                                                 <div className='align-top'>
@@ -818,7 +825,13 @@ const Chat = () => {
 
                                                                 <div className='flex align-middle items-center px-5 w-[80%]'>
                                                                     <div className='flex'>
-                                                                        <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
+                                                                        {chat.avatar ?
+                                                                            <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'>
+                                                                                <img src={chat.avatar} alt={chat.name} className='rounded-full' />
+                                                                            </div>
+                                                                            :
+                                                                            <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
+                                                                        }
 
                                                                         <div className='flex flex-col justify-center md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
                                                                             <div className='align-top'>
