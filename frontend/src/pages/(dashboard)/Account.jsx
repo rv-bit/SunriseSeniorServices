@@ -123,10 +123,7 @@ const Account = () => {
         const age = calculateAge(dateString);
 
         if (!age) {
-            toast.error('You must be at least 21 years old to use this service', {
-                position: "bottom-right",
-                autoClose: 5000,
-            });
+            toast.error('You must be at least 21 years old to use this service');
             return;
         };
 
@@ -138,7 +135,6 @@ const Account = () => {
         });
 
         if (!response.ok) {
-            const data = await response.json();
             return;
         }
 
@@ -191,6 +187,8 @@ const Account = () => {
             <div className="flex items-center justify-center">
                 <SignedIn>
                     <UserProfile>
+                        <UserProfile.Page label="account" />
+                        <UserProfile.Page label="security" />
 
                         <UserProfile.Page
                             label="Edit Profile"
@@ -290,7 +288,9 @@ const Account = () => {
                                 <Logout />
                             }
                         />
+
                     </UserProfile>
+
                 </SignedIn>
             </div>
         </>
