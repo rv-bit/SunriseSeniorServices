@@ -192,11 +192,9 @@ const ViewJobListing = () => {
 
             <hr className='w-full opacity-30 border-t border-slate-400' />
 
-            <div className='flex items-center justify-center w-full h-full gap-2 my-10 px-10'>
+            <div className='flex items-center justify-center w-full h-full gap-2 my-10 px-10 max-md:px-5'>
                 <div className='flex items-center justify-center w-full h-full'>
-                    <div className='flex justify-center flex-row w-full h-full'>
-
-
+                    <div className='flex justify-center flex-row w-full h-full max-md:justify-start'>
                         {jobsDataIsLoading ?
                             <React.Fragment>
                                 <div className='flex items-center justify-center w-full h-full'>
@@ -205,7 +203,7 @@ const ViewJobListing = () => {
                             </React.Fragment>
                             :
                             <React.Fragment>
-                                <div className='flex flex-col gap-3 w-full lg:w-[500px] md:w-10/12'>
+                                <div className='flex flex-col gap-3 w-full lg:w-[500px] md:w-10/12 max-md:w-full'>
                                     <span
                                         onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}
                                         className='flex items-center gap-1 -mt-5 hover:underline hover:cursor-pointer'>
