@@ -51,6 +51,7 @@ const fetchPossibleMembers = async (user) => {
 const EditChat = (props) => {
     const { chatInfo, onClose, onDelete, userInfo, currentChatIdFromSearch } = props;
 
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
 
     const [showAlert, setShowAlert] = useState({
@@ -212,7 +213,9 @@ const EditChat = (props) => {
         const data = await response.json();
         toast.success(data.message);
         queryClient.refetchQueries('gatherChats');
-        onClose();
+
+        navigate('/chat');
+        handleCloseEditing(e);
     }
 
     useEffect(() => {

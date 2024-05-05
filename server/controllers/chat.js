@@ -96,6 +96,18 @@ const membersInformation = async (members) => {
         try {
             memberInformation = await clerkClient.users.getUser(members[i]);
         } catch (error) {
+            if (error.errors && error.errors.find(clerkError => clerkError.message === 'not found')) {
+                const result = await db.collection('users').deleteOne({ _id: members[i] });
+
+                if (!result) {
+                    return res.status(500).json({
+                        message: 'Failed to delete user'
+                    });
+                }
+
+                continue;
+            }
+
             console.log(error);
         }
 
@@ -171,6 +183,42 @@ exports.getChatMessagesFromId = asyncHandler(async (req, res) => {
         try {
             senderInformation = await clerkClient.users.getUser(sender.sender_id);
         } catch (error) {
+            if (error.errors && error.errors.find(clerkError => clerkError.message === 'not found')) {
+                const result = await db.collection('users').deleteOne({ _id: sender.sender_id });
+                const resultMessage = await db.collection('messages').deleteMany({ sender_id: sender.sender_id });
+                const membersInChat = await db.collection('chats').findOne({ _id: chatId });
+
+                if (membersInChat.length === 1) {
+                    const resultChat = await db.collection('chats').deleteOne({ _id: chatId });
+
+                    if (!resultChat) {
+                        return res.status(500).json({
+                            message: 'Failed to delete chat'
+                        });
+                    }
+
+                    return res.status(200).json({
+                        data: []
+                    });
+                }
+
+                if (!result) {
+                    return res.status(500).json({
+                        message: 'Failed to delete user'
+                    });
+                }
+
+                if (!resultMessage) {
+                    return res.status(500).json({
+                        message: 'Failed to delete messages'
+                    });
+                }
+
+                return res.status(200).json({
+                    data: []
+                });
+            }
+
             console.log(error);
         }
 
