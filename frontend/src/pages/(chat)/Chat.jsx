@@ -10,7 +10,7 @@ import SocketioProvider from '@/providers/SocketioProvider'
 import useUserAuth from '@/hooks/useUserAuth'
 import useDocumentTitle from '@/hooks/useDocumentTitle'
 
-import { Get, Post, Delete, formatDate, handleOpenInNewTab } from '@/lib/utils' // Common functions 
+import { Get, Post, Delete, formatDate } from '@/lib/utils' // Common functions 
 
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button'

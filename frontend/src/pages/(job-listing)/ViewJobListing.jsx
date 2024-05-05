@@ -94,7 +94,6 @@ const ViewJobListing = () => {
             return data.data;
         }
 
-        await queryClient.invalidateQueries('gatherChats');
         return data.data;
     });
 
@@ -103,38 +102,34 @@ const ViewJobListing = () => {
 
         if (!user) {
             navigate('/login', { state: { info: 'You must be logged in to send a message!' } });
+            return;
+        }
+
+        setWaitForChatToCreate(true);
+        if (user.id === jobListing.user_id) {
+            toast.error('You cannot message yourself');
+            setWaitForChatToCreate(false);
+            return;
+        }
+
+        const chatCreated = await createChats();
+        if (!chatCreated) {
+            setWaitForChatToCreate(false);
+            return;
+        }
+
+        await queryClient.refetchQueries('gatherChats');
+
+        setWaitForChatToCreate(false);
+        if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
+            handleOpenInNewTab(e, `/chat/${chatCreated._id}`);
+            return;
+        }
+
+        if (window.innerWidth < 1180) {
+            navigate(`/chat/${chatCreated._id}`)
         } else {
-            setWaitForChatToCreate(true);
-
-            if (user.id === jobListing.user_id) {
-                toast.error('You cannot message yourself');
-
-                return setTimeout(() => {
-                    setWaitForChatToCreate(false);
-                }, 2500);
-            }
-
-            const chatCreated = await createChats();
-
-            if (!chatCreated) {
-                return setTimeout(() => {
-                    setWaitForChatToCreate(false);
-                }, 2500);
-            }
-
-            setTimeout(() => {
-                setWaitForChatToCreate(false);
-
-                if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
-                    handleOpenInNewTab(e, `/chat?currentChatId=${chatCreated._id}`);
-                } else {
-                    if (window.innerWidth < 1180) {
-                        navigate(`/chat?currentChatId=${chatCreated._id}`)
-                    } else {
-                        navigate(`/chat?currentChatId=${chatCreated._id}`)
-                    }
-                }
-            }, 2500);
+            navigate(`/chat/${chatCreated._id}`)
         }
     }
 
