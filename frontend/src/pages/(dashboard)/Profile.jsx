@@ -208,7 +208,11 @@ const Profile = () => {
                                         </Button>
 
                                         {user && user.id.replace('user_', '') === profileId && (
-                                            <Link onClick={() => navigate('/account#/edit-profile')} className='max-md:w-full h-fit bg-primary text-white px-5 py-2 rounded-md'>Edit Profile</Link>
+                                            <Link to={`/account#/edit-profile`} className='max-md:w-full h-fit'>
+                                                <Button className='max-md:w-full bg-primary text-white'>
+                                                    Edit Profile
+                                                </Button>
+                                            </Link>
                                         )}
                                     </div>
                                 </div>
