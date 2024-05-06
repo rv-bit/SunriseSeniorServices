@@ -262,6 +262,8 @@ const EditChat = (props) => {
             onClose();
         }
 
+        console.log(chatInfo);
+
         return () => { };
     }, [chatInfo]);
 
@@ -428,10 +430,15 @@ const EditChat = (props) => {
                                                         </div>
                                                         :
                                                         <>
-                                                            <Button className='w-full' onClick={(e) => setIsSearching({
-                                                                searchingUsers: false,
-                                                                addingUsers: true,
-                                                            })}>Add Person</Button>
+                                                            {
+                                                                chatInfo.fromJobListing && chatInfo.fromJobListing !== false ?
+                                                                    <Button className='w-full' onClick={(e) => setIsSearching({
+                                                                        searchingUsers: false,
+                                                                        addingUsers: true,
+                                                                    })}>Add Person</Button>
+                                                                    :
+                                                                    null
+                                                            }
                                                             <Button className='w-full' onClick={(e) => handleDelete(e)}>Delete Chat</Button>
                                                         </>
                                                     }
@@ -790,7 +797,7 @@ const Chat = () => {
 
                                                                             {chat.avatar ?
                                                                                 <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'>
-                                                                                    <img src={chat.avatar} alt={chat.name} className='rounded-full' />
+                                                                                    <img src={chat.avatar} alt={chat._id} className='rounded-full' />
                                                                                 </div>
                                                                                 :
                                                                                 <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
@@ -798,7 +805,9 @@ const Chat = () => {
 
                                                                             <div className='flex flex-col md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
                                                                                 <div className='align-top'>
-                                                                                    <h1 className='line-clamp-2'>{chat.name}</h1>
+                                                                                    <h1 className='line-clamp-2'>{
+                                                                                        chat.fromJobListing ? chat.name : chat.members.find((member) => member.id !== user.id).fullName
+                                                                                    }</h1>
                                                                                 </div>
 
                                                                                 <div className='align-bottom text-sm'>
@@ -830,7 +839,7 @@ const Chat = () => {
                                                                     <div className='flex'>
                                                                         {chat.avatar ?
                                                                             <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'>
-                                                                                <img src={chat.avatar} alt={chat.name} className='rounded-full' />
+                                                                                <img src={chat.avatar} alt={chat._id} className='rounded-full' />
                                                                             </div>
                                                                             :
                                                                             <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
@@ -838,7 +847,9 @@ const Chat = () => {
 
                                                                         <div className='flex flex-col justify-center md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
                                                                             <div className='align-top'>
-                                                                                <h1 className='w-[80%] truncate'>{chat.name}</h1>
+                                                                                <h1 className='w-[80%] truncate'>{
+                                                                                    chat.fromJobListing ? chat.name : chat.members.find((member) => member.id !== user.id).fullName
+                                                                                }</h1>
                                                                             </div>
 
                                                                             <div className='align-bottom text-sm'>
@@ -887,7 +898,9 @@ const Chat = () => {
                                                 className='w-[70%] flex justify-center items-center hover:cursor-pointer'>
 
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
-                                                <h1 className='text-lg w-full truncate'>Chat with {chats.find((chat) => chat._id === selectedChatId)?.name}</h1>
+                                                <h1 className='text-lg w-full truncate'>Chat with {
+                                                    chats.find((chat) => chat._id === selectedChatId)?.fromJobListing ? chats.find((chat) => chat._id === selectedChatId)?.name : chats.find((chat) => chat._id === selectedChatId)?.members.find((member) => member.id !== user.id).fullName
+                                                }</h1>
                                             </div>
 
                                             <div className='flex items-center justify-end'>

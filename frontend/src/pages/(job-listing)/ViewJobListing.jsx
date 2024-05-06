@@ -2,7 +2,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useCallback, useEffect, useState, useContext } from 'react'
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from 'react-query';
 
 import useUserAuth from '@/hooks/useUserAuth';
@@ -79,6 +79,7 @@ const ViewJobListing = () => {
                 'members': [user.id, jobListing.user_id],
                 'created_by': user.id,
                 'name': jobListing.title,
+                'fromJobListing': true
             }
         });
 
@@ -237,7 +238,7 @@ const ViewJobListing = () => {
                                             </div>
                                         </div>
 
-                                        <div className='mt-5'>
+                                        <div className='my-5'>
                                             <p className='text-3xl font-bold text-slate-900'>Full Job Description</p>
                                             <p className='font-normal text-slate-600'>{jobListing?.description}</p>
                                         </div>
@@ -260,7 +261,7 @@ const ViewJobListing = () => {
                                             </div>
                                         </div>
 
-                                        <p className='my-5 text-slate-600 text-opacity-75'>Posted by <span className='text-slate-900 underline'>{jobListing?.person.fullName}</span></p>
+                                        <Link to={`/profile/${jobListing?.person.id.replace('user_', '')}`} className='text-slate-600 text-opacity-75'>Posted by <span className='text-slate-900 underline'>{jobListing?.person.fullName}</span></Link>
 
                                         <div className='mt-5'>
                                             <p className='text-slate-600 text-opacity-75'>Posted on <span className='text-slate-900'>{formatDate(jobListing?.posted_at)}</span></p>

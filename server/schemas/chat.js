@@ -1,8 +1,9 @@
 const NewChatSchema = {
     _id: { type: String, required: true },
-    name: { type: String, required: true },
+    name: { type: String, required: false },
     members: { type: Array, required: true },
     avatar: { type: String, required: false },
+    fromJobListing: { type: Boolean, required: true },
     created_by: { type: String, required: true },
     created_at: { type: String, required: true }
 }

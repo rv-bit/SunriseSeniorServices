@@ -350,8 +350,9 @@ exports.createChat = asyncHandler(async (req, res) => {
     const newChat = {
         _id: _id,
         members: chat.members,
-        name: chat.name,
+        name: chat.name || null,
         avatar: chat.avatar || null,
+        fromJobListing: chat.fromJobListing || false,
         created_by: chat.created_by,
         created_at: new Date().toDateString()
     }

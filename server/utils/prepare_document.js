@@ -2,21 +2,21 @@ const { getType } = require('./utils');
 
 const prepareDocument = (Schema, Document) => {
     Object.entries(Schema).forEach(([key, value]) => {
-        if (value.required && !Document[key]) {
+        if (value.required && !Document.hasOwnProperty(key)) {
             throw new Error(`Missing required key: ${key}`);
         }
     })
 
     Object.keys(Document).forEach((key) => {
-        if (!Schema[key]) {
+        if (!Schema[key] && Schema[key].required) {
             throw new Error(`Invalid key: ${key}`);
         }
 
-        if (getType(Document[key]) !== Schema[key].type) {
+        if (getType(Document[key]) !== Schema[key].type && Schema[key].required) {
             throw new Error(`Invalid type for key: ${key}`);
         }
 
-        if (Schema[key].type === 'Array' && !Array.isArray(Document[key])) {
+        if (Schema[key].type === 'Array' && !Array.isArray(Document[key]) && Schema[key].required) {
             throw new Error(`Invalid type for key: ${key}`);
         }
 

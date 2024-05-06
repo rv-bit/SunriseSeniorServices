@@ -346,6 +346,7 @@ const AllJobListings = (props) => {
                 'members': [user.id, userFromJobId.id],
                 'created_by': user.id,
                 'name': jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.title,
+                'fromJobListing': true
             }
         });
 
@@ -734,7 +735,7 @@ const AllJobListings = (props) => {
 
                                                     <div className='w-11/12 inline-block whitespace-normal break-words'>
                                                         <h1 className='text-2xl font-bold text-slate-900'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.title}</h1>
-                                                        <h1 className='w-fit text-md text-slate-900 underline hover:cursor-pointer'>by {userFromJobId ? userFromJobId.fullName : ''}</h1>
+                                                        <Link to={`/profile/${userFromJobId?.id.replace('user_', '')}`} className='w-fit text-md text-slate-900 underline hover:cursor-pointer'>by {userFromJobId ? userFromJobId.fullName : ''}</Link>
                                                         <p className='text-slate-600 text-opacity-75'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.location}</p>
                                                     </div>
 
