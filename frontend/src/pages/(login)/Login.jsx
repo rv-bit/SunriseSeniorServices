@@ -5,8 +5,8 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { SignIn, useAuth, useUser } from '@clerk/clerk-react'
 
-import useDocumentTitle from '@/hooks/useDocumentTitle' // Custom hooks
-import useUserAuth from '@/hooks/useUserAuth' // Custom hooks
+import useDocumentTitle from '@/hooks/useDocumentTitle'
+import useUserAuth from '@/hooks/useUserAuth'
 
 import { Post, Get } from '@/lib/utils' // Common functions
 

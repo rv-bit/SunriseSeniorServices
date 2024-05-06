@@ -1,7 +1,7 @@
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, lazy, Suspense, useRef } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 
@@ -83,6 +83,7 @@ const Account = () => {
     });
 
     const [userEditing, setUserEditing] = useState(null);
+    const [userAboutInfo, setUserAboutInfo] = useState('');
 
     const editOptions = (e, step) => {
         e.preventDefault();
@@ -123,10 +124,7 @@ const Account = () => {
         const age = calculateAge(dateString);
 
         if (!age) {
-            toast.error('You must be at least 21 years old to use this service', {
-                position: "bottom-right",
-                autoClose: 5000,
-            });
+            toast.error('You must be at least 21 years old to use this service');
             return;
         };
 
@@ -138,7 +136,26 @@ const Account = () => {
         });
 
         if (!response.ok) {
-            const data = await response.json();
+            return;
+        }
+
+        const data = await response.json();
+        setUserDetails(data.data);
+    }
+
+    const saveUserInfo = async () => {
+        if (!isSignedIn) return;
+
+        setUserEditing(null);
+
+        const response = await Post(`${import.meta.env.VITE_API_PREFIX}/user/update`, {
+            user: user.id,
+            data: {
+                option_about: userAboutInfo
+            }
+        });
+
+        if (!response.ok) {
             return;
         }
 
@@ -154,10 +171,23 @@ const Account = () => {
 
         if (status === 'success') {
             setUserDetails(data);
+
+            setUserAboutInfo(data.option_about || '');
         }
 
         return () => { };
     }, [isSignedIn, isLoaded, status]);
+
+    const textareaRef = useRef();
+    useEffect(() => {
+        if (textareaRef.current && userAboutInfo) {
+            textareaRef.current.focus();
+
+            const length = textareaRef.current.value.length;
+            textareaRef.current.selectionStart = length;
+            textareaRef.current.selectionEnd = length;
+        }
+    }, [userAboutInfo]);
 
     if (!isLoaded) {
         return (
@@ -191,6 +221,8 @@ const Account = () => {
             <div className="flex items-center justify-center">
                 <SignedIn>
                     <UserProfile>
+                        <UserProfile.Page label="account" />
+                        <UserProfile.Page label="security" />
 
                         <UserProfile.Page
                             label="Edit Profile"
@@ -202,13 +234,17 @@ const Account = () => {
                                     {Object.keys(formSteps).map((step, index) => {
                                         return (
                                             <div key={index} className="w-full flex justify-between items-center mx-5 gap-5">
-                                                <div className="flex flex-col justify-start items-start text-sm font-medium text-center">
+                                                <div className="flex flex-col justify-start items-start text-sm font-medium text-center w-[25%]">
                                                     <span className="text-xs text-gray-500">{step}</span>
 
-                                                    <span>
+                                                    <span className='max-w-full truncate'>
                                                         {
                                                             formSteps[step].reduce((label, form) => {
                                                                 if (!label && form.type === 'selector' && userDetails) {
+                                                                    if (!userDetails.account_type) {
+                                                                        return 'Account Type is Required';
+                                                                    }
+
                                                                     if (form.name === userDetails.account_type) {
                                                                         return form.label;
                                                                     }
@@ -224,10 +260,16 @@ const Account = () => {
                                                                     }
 
                                                                     return age.toString();
+                                                                } else if (!label && form.type === 'textarea' && userDetails) {
+                                                                    if (!userDetails.option_about) {
+                                                                        return 'Tell us about yourself';
+                                                                    }
+
+                                                                    return userDetails.option_about;
                                                                 }
 
                                                                 return label;
-                                                            }, null) || (userDetails && userDetails.account_type ? 'Account Type Not Found' : 'Account Type Is Required')
+                                                            }, null)
                                                         }
                                                     </span>
                                                 </div>
@@ -261,16 +303,37 @@ const Account = () => {
                                                                 <Button className="py-2 px-8 border border-gray-300 rounded-md" onClick={(e) => setUserEditing(null)}>Cancel</Button>
                                                             </div>
                                                             :
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <DatePicker
-                                                                    value={(userDetails && userDetails.age) ? dayjs(userDetails.age).format('YYYY-MM-DD') : ''}
-                                                                    onChange={
-                                                                        (date, dateString) => {
-                                                                            choseDate(date, dateString, formSteps[step].find(form => form.type === 'date')?.name)
-                                                                        }
-                                                                    } />
-                                                                <Button className="py-2 px-8 border border-gray-300 rounded-md" onClick={(e) => setUserEditing(null)}>Cancel</Button>
-                                                            </div>
+                                                            formSteps[userEditing].find(form => form.type === 'date')?.type === 'date' ?
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <DatePicker
+                                                                        value={(userDetails && userDetails.age) ? dayjs(userDetails.age).format('YYYY-MM-DD') : ''}
+                                                                        onChange={
+                                                                            (date, dateString) => {
+                                                                                choseDate(date, dateString, formSteps[step].find(form => form.type === 'date')?.name)
+                                                                            }
+                                                                        } />
+                                                                    <Button className="py-2 px-8 border border-gray-300 rounded-md" onClick={(e) => setUserEditing(null)}>Cancel</Button>
+                                                                </div>
+                                                                :
+                                                                formSteps[userEditing].find(form => form.type === 'textarea')?.type === 'textarea' ?
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <textarea
+                                                                            ref={textareaRef}
+                                                                            className="p-2 border border-gray-300 rounded-md"
+                                                                            value={userAboutInfo || ''}
+                                                                            onChange={(e) => {
+                                                                                e.preventDefault(e)
+                                                                                setUserAboutInfo(e.target.value)
+                                                                            }}
+                                                                        ></textarea>
+
+                                                                        <Button className="py-2 px-8 border border-gray-300 rounded-md" onClick={(e) => saveUserInfo()}>Save</Button>
+                                                                        <Button className="py-2 px-8 border border-gray-300 rounded-md" onClick={(e) => {
+                                                                            setUserAboutInfo('')
+                                                                            setUserEditing(null)
+                                                                        }}>Cancel</Button>
+                                                                    </div>
+                                                                    : null
                                                         : null
                                                     }
                                                 </div>
@@ -290,7 +353,9 @@ const Account = () => {
                                 <Logout />
                             }
                         />
+
                     </UserProfile>
+
                 </SignedIn>
             </div>
         </>

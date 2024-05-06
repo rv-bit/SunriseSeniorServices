@@ -24,7 +24,23 @@ exports.getJobListings = asyncHandler(async (req, res) => {
     });
 });
 
-exports.getJobListingsFromId = asyncHandler(async (req, res) => {
+exports.getJobListingsByUserId = asyncHandler(async (req, res) => {
+    const userId = req.params.id;
+
+    const jobListings = await db.collection('jobListings').find({ user_id: userId }).toArray();
+
+    if (!jobListings) {
+        return res.status(500).json({
+            message: 'Failed to get job listings'
+        });
+    }
+
+    res.status(200).json({
+        data: jobListings
+    });
+});
+
+exports.getJobListingsFromJobId = asyncHandler(async (req, res) => {
     const jobId = req.params.id;
     const jobListing = await db.collection('jobListings').findOne({ _id: jobId });
 

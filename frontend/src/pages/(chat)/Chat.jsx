@@ -10,7 +10,7 @@ import SocketioProvider from '@/providers/SocketioProvider'
 import useUserAuth from '@/hooks/useUserAuth'
 import useDocumentTitle from '@/hooks/useDocumentTitle'
 
-import { Get, Post, Delete, formatDate, handleOpenInNewTab } from '@/lib/utils' // Common functions 
+import { Get, Post, Delete, formatDate } from '@/lib/utils' // Common functions 
 
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button'
@@ -51,6 +51,7 @@ const fetchPossibleMembers = async (user) => {
 const EditChat = (props) => {
     const { chatInfo, onClose, onDelete, userInfo, currentChatIdFromSearch } = props;
 
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
 
     const [showAlert, setShowAlert] = useState({
@@ -212,7 +213,9 @@ const EditChat = (props) => {
         const data = await response.json();
         toast.success(data.message);
         queryClient.refetchQueries('gatherChats');
-        onClose();
+
+        navigate('/chat');
+        handleCloseEditing(e);
     }
 
     useEffect(() => {
@@ -258,6 +261,8 @@ const EditChat = (props) => {
         if (currentChatIdFromSearch && !chatInfo) {
             onClose();
         }
+
+        console.log(chatInfo);
 
         return () => { };
     }, [chatInfo]);
@@ -346,7 +351,7 @@ const EditChat = (props) => {
                                                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                                                                 </Button>
 
-                                                                <Button className='bg-inherit hover:bg-gray-200 text-black p-0'>Profile</Button>
+                                                                <Link to={`/profile/${value.id.replace('user_', '')}`} className='bg-inherit hover:bg-gray-200 text-black p-0'>Profile</Link>
                                                                 {chatInfo.created_by && (chatInfo.created_by === userInfo.id && value.id !== userInfo.id) && (
                                                                     <Button className='bg-inherit hover:bg-gray-200 text-black p-0' onClick={(e) => handleRemoveMembers(e, value.id)}>Remove</Button>
                                                                 )}
@@ -425,10 +430,15 @@ const EditChat = (props) => {
                                                         </div>
                                                         :
                                                         <>
-                                                            <Button className='w-full' onClick={(e) => setIsSearching({
-                                                                searchingUsers: false,
-                                                                addingUsers: true,
-                                                            })}>Add Person</Button>
+                                                            {
+                                                                chatInfo.fromJobListing && chatInfo.fromJobListing !== false ?
+                                                                    <Button className='w-full' onClick={(e) => setIsSearching({
+                                                                        searchingUsers: false,
+                                                                        addingUsers: true,
+                                                                    })}>Add Person</Button>
+                                                                    :
+                                                                    null
+                                                            }
                                                             <Button className='w-full' onClick={(e) => handleDelete(e)}>Delete Chat</Button>
                                                         </>
                                                     }
@@ -784,11 +794,20 @@ const Chat = () => {
 
                                                                     <div className='flex align-middle items-center px-5 w-full'>
                                                                         <div className='flex'>
-                                                                            <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
+
+                                                                            {chat.avatar ?
+                                                                                <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'>
+                                                                                    <img src={chat.avatar} alt={chat._id} className='rounded-full' />
+                                                                                </div>
+                                                                                :
+                                                                                <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
+                                                                            }
 
                                                                             <div className='flex flex-col md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
                                                                                 <div className='align-top'>
-                                                                                    <h1 className='line-clamp-2'>{chat.name}</h1>
+                                                                                    <h1 className='line-clamp-2'>{
+                                                                                        chat.fromJobListing ? chat.name : chat.members.find((member) => member.id !== user.id).fullName
+                                                                                    }</h1>
                                                                                 </div>
 
                                                                                 <div className='align-bottom text-sm'>
@@ -818,11 +837,19 @@ const Chat = () => {
 
                                                                 <div className='flex align-middle items-center px-5 w-[80%]'>
                                                                     <div className='flex'>
-                                                                        <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
+                                                                        {chat.avatar ?
+                                                                            <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'>
+                                                                                <img src={chat.avatar} alt={chat._id} className='rounded-full' />
+                                                                            </div>
+                                                                            :
+                                                                            <div className='size-[55px] rounded-full bg-muted mr-3 flex-shrink-0'></div>
+                                                                        }
 
                                                                         <div className='flex flex-col justify-center md:w-[200px] lg:w-[300px] max-extraSm:w-[80px] max-sm:w-[120px] max-md:w-[280px]'>
                                                                             <div className='align-top'>
-                                                                                <h1 className='w-[80%] truncate'>{chat.name}</h1>
+                                                                                <h1 className='w-[80%] truncate'>{
+                                                                                    chat.fromJobListing ? chat.name : chat.members.find((member) => member.id !== user.id).fullName
+                                                                                }</h1>
                                                                             </div>
 
                                                                             <div className='align-bottom text-sm'>
@@ -871,7 +898,9 @@ const Chat = () => {
                                                 className='w-[70%] flex justify-center items-center hover:cursor-pointer'>
 
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
-                                                <h1 className='text-lg w-full truncate'>Chat with {chats.find((chat) => chat._id === selectedChatId)?.name}</h1>
+                                                <h1 className='text-lg w-full truncate'>Chat with {
+                                                    chats.find((chat) => chat._id === selectedChatId)?.fromJobListing ? chats.find((chat) => chat._id === selectedChatId)?.name : chats.find((chat) => chat._id === selectedChatId)?.members.find((member) => member.id !== user.id).fullName
+                                                }</h1>
                                             </div>
 
                                             <div className='flex items-center justify-end'>

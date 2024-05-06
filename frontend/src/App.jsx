@@ -1,5 +1,5 @@
 import { Suspense, lazy, useState, useEffect, useMemo } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { useUser } from "@clerk/clerk-react";
 
 import SocketioProvider from '@/providers/SocketioProvider'
@@ -18,7 +18,9 @@ const Contact = lazy(() => import('./pages/(information)/Contact.jsx'))
 
 const Login = lazy(() => import('./pages/(login)/Login.jsx'))
 const Signup = lazy(() => import('./pages/(signup)/Signup.jsx'))
-const Account = lazy(() => import('./pages/(account)/Account.jsx'))
+
+const Account = lazy(() => import('./pages/(dashboard)/Account.jsx'))
+const Profile = lazy(() => import('./pages/(dashboard)/Profile.jsx'))
 
 const Chat = lazy(() => import('./pages/(chat)/Chat.jsx'))
 
@@ -26,7 +28,10 @@ const ViewJobListing = lazy(() => import('./pages/(job-listing)/ViewJobListing.j
 const JobListing = lazy(() => import('./pages/(job-listing)/JobListing.jsx'))
 const FormNewJobListing = lazy(() => import('./pages/(job-listing)/FormNewJobListing.jsx'))
 
+const hideFooterOnRoutes = ['/profile'];
+
 export default function App() {
+    const location = useLocation();
     const [socket, setSocket] = useState(null);
 
     useEffect(() => {
@@ -62,6 +67,8 @@ export default function App() {
 
     const valueSocket = useMemo(() => ({ socket }), [socket]);
 
+    const shouldHideFooter = hideFooterOnRoutes.some(route => location.pathname.startsWith(route));
+
     return (
         <div className="flex flex-col min-h-screen">
             <Suspense fallback={
@@ -80,6 +87,7 @@ export default function App() {
                             <Route path='/login' element={<Login />} />
                             <Route path='/signup' element={<Signup />} />
                             <Route path='/account' element={<Account />} />
+                            <Route path='/profile/:profileId' element={<Profile />} />
 
                             <Route path='/chat/:chatId' element={<Chat />} />
                             <Route path='/chat/' element={<Chat />} />
@@ -91,14 +99,13 @@ export default function App() {
                             <Route path='/about' element={<About />} />
                             <Route path='/contact' element={<Contact />} />
 
-                            {/* Create pages for not found then add a button for redirect */}
                             <Route path='/404' element={<NotFound />} />
                             <Route path='*' element={<NotFound />} />
                         </Routes>
                     </SocketioProvider.Provider>
                 </div>
 
-                <Footer className="mt-auto" />
+                {!shouldHideFooter && <Footer className="mt-auto" />}
             </Suspense>
         </div>
     )

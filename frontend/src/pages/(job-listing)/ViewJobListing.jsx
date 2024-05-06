@@ -2,7 +2,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
 import React, { useCallback, useEffect, useState, useContext } from 'react'
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from 'react-query';
 
 import useUserAuth from '@/hooks/useUserAuth';
@@ -79,6 +79,7 @@ const ViewJobListing = () => {
                 'members': [user.id, jobListing.user_id],
                 'created_by': user.id,
                 'name': jobListing.title,
+                'fromJobListing': true
             }
         });
 
@@ -94,7 +95,6 @@ const ViewJobListing = () => {
             return data.data;
         }
 
-        await queryClient.invalidateQueries('gatherChats');
         return data.data;
     });
 
@@ -103,38 +103,34 @@ const ViewJobListing = () => {
 
         if (!user) {
             navigate('/login', { state: { info: 'You must be logged in to send a message!' } });
+            return;
+        }
+
+        setWaitForChatToCreate(true);
+        if (user.id === jobListing.user_id) {
+            toast.error('You cannot message yourself');
+            setWaitForChatToCreate(false);
+            return;
+        }
+
+        const chatCreated = await createChats();
+        if (!chatCreated) {
+            setWaitForChatToCreate(false);
+            return;
+        }
+
+        await queryClient.refetchQueries('gatherChats');
+
+        setWaitForChatToCreate(false);
+        if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
+            handleOpenInNewTab(e, `/chat/${chatCreated._id}`);
+            return;
+        }
+
+        if (window.innerWidth < 1180) {
+            navigate(`/chat/${chatCreated._id}`)
         } else {
-            setWaitForChatToCreate(true);
-
-            if (user.id === jobListing.user_id) {
-                toast.error('You cannot message yourself');
-
-                return setTimeout(() => {
-                    setWaitForChatToCreate(false);
-                }, 2500);
-            }
-
-            const chatCreated = await createChats();
-
-            if (!chatCreated) {
-                return setTimeout(() => {
-                    setWaitForChatToCreate(false);
-                }, 2500);
-            }
-
-            setTimeout(() => {
-                setWaitForChatToCreate(false);
-
-                if (e.altKey && e.type === 'click' || e.type === 'auxclick') {
-                    handleOpenInNewTab(e, `/chat?currentChatId=${chatCreated._id}`);
-                } else {
-                    if (window.innerWidth < 1180) {
-                        navigate(`/chat?currentChatId=${chatCreated._id}`)
-                    } else {
-                        navigate(`/chat?currentChatId=${chatCreated._id}`)
-                    }
-                }
-            }, 2500);
+            navigate(`/chat/${chatCreated._id}`)
         }
     }
 
@@ -197,11 +193,9 @@ const ViewJobListing = () => {
 
             <hr className='w-full opacity-30 border-t border-slate-400' />
 
-            <div className='flex items-center justify-center w-full h-full gap-2 my-10 px-10'>
+            <div className='flex items-center justify-center w-full h-full gap-2 my-10 px-10 max-md:px-5'>
                 <div className='flex items-center justify-center w-full h-full'>
-                    <div className='flex justify-center flex-row w-full h-full'>
-
-
+                    <div className='flex justify-center flex-row w-full h-full max-md:justify-start'>
                         {jobsDataIsLoading ?
                             <React.Fragment>
                                 <div className='flex items-center justify-center w-full h-full'>
@@ -210,7 +204,7 @@ const ViewJobListing = () => {
                             </React.Fragment>
                             :
                             <React.Fragment>
-                                <div className='flex flex-col gap-3 w-full lg:w-[500px] md:w-10/12'>
+                                <div className='flex flex-col gap-3 w-full lg:w-[500px] md:w-10/12 max-md:w-full'>
                                     <span
                                         onClick={(e) => handleCloseCurrentJobId(e, currentJobIdFromSearch)}
                                         className='flex items-center gap-1 -mt-5 hover:underline hover:cursor-pointer'>
@@ -244,7 +238,7 @@ const ViewJobListing = () => {
                                             </div>
                                         </div>
 
-                                        <div className='mt-5'>
+                                        <div className='my-5'>
                                             <p className='text-3xl font-bold text-slate-900'>Full Job Description</p>
                                             <p className='font-normal text-slate-600'>{jobListing?.description}</p>
                                         </div>
@@ -267,7 +261,7 @@ const ViewJobListing = () => {
                                             </div>
                                         </div>
 
-                                        <p className='my-5 text-slate-600 text-opacity-75'>Posted by <span className='text-slate-900 underline'>{jobListing?.person.fullName}</span></p>
+                                        <Link to={`/profile/${jobListing?.person.id.replace('user_', '')}`} className='text-slate-600 text-opacity-75'>Posted by <span className='text-slate-900 underline'>{jobListing?.person.fullName}</span></Link>
 
                                         <div className='mt-5'>
                                             <p className='text-slate-600 text-opacity-75'>Posted on <span className='text-slate-900'>{formatDate(jobListing?.posted_at)}</span></p>

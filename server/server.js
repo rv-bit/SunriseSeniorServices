@@ -14,6 +14,7 @@ app.use(bodyParser.json());
 const jobListingRouter = require('./routes/joblisting');
 const userRouter = require('./routes/user');
 const chatRouter = require('./routes/chat');
+const profileRouter = require('./routes/profile');
 
 if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") {
     app.use(cors({ origin: 'https://sunriseseniorservices.fun' }));
@@ -25,6 +26,7 @@ if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") 
 app.use('/joblisting', jobListingRouter);
 app.use('/user', userRouter);
 app.use('/chats', chatRouter);
+app.use('/profile', profileRouter);
 
 if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") {
     app.get('*', (req, res) => {

@@ -5,7 +5,7 @@ import { Suspense, useState, useContext, useEffect, useRef, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser, useAuth } from "@clerk/clerk-react";
 
-import useDocumentTitle from '@/hooks/useDocumentTitle' // Custom hooks
+import useDocumentTitle from '@/hooks/useDocumentTitle'
 import { Post, Get, getAddresses } from '@/lib/utils' // Common functions
 
 import heroPhotoOfWoman from '@/assets/img-hero-page.jpg'
@@ -418,7 +418,7 @@ const Home = () => {
                                 return (
                                     <CarouselItem key={index} className="basis-1/3 max-md:basis-1/2 max-sm:basis-11/12">
                                         <Card>
-                                            <CardContent className="flex aspect-square items-center justify-center max-sm:items-start max-sm:justify-start max-md:size-27 max-sm:w-[4rem] max-sm:h-[12rem] max-extraSm:w-[2rem] max-extraSm:h-[10rem] lg:px-1 lg:pt-12 lg:pb-16 max-lg:p-2 max-md:-m-7 max-sm:m-3 max-extraSm:p-0 hover:cursor-grab">
+                                            <CardContent className="flex aspect-square items-center justify-center max-sm:items-start max-sm:justify-start max-md:size-27 max-sm:w-full  max-sm:h-[12rem] max-extraSm:h-[10rem] lg:px-1 lg:pt-12 lg:pb-16 max-lg:p-2 max-md:-m-7 max-sm:m-3 max-extraSm:p-0 hover:cursor-grab">
                                                 <div className="flex flex-col justify-center items-center max-sm:items-start max-sm:justify-start gap-2 h-full w-[90%] max-sm:w-[300px]">
 
                                                     <div className="max-sm:hidden contents">
@@ -457,7 +457,7 @@ const Home = () => {
                         <CarouselNext className="hidden" />
                     </Carousel>
 
-                    <div className="my-5 bg-orange-400 bg-opacity-15 p-5 lg:rounded-3xl max-lg:w-[calc(100dvw-15px)] lg:w-[1200px] h-[150px]">
+                    <div className="my-5 bg-orange-400 bg-opacity-15 p-5 lg:rounded-3xl max-lg:w-dvw lg:w-[1200px] h-auto">
                         <h1 className="text-2xl font-semibold text-center">Are you a <span className=" text-orange-500">Carer?</span></h1>
                         <h1 className="text-center">Join our team and start earning today!</h1>
 

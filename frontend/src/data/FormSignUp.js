@@ -18,7 +18,15 @@ const formSteps = {
             label: 'Birth date',
             type: 'date',
         }
-    ]
+    ],
+
+    'About': [
+        {
+            name: 'option_about',
+            label: 'About',
+            type: 'textarea',
+        }
+    ],
 }
 
 export default formSteps;

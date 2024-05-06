@@ -9,7 +9,7 @@ exports.getUser = asyncHandler(async (req, res) => {
 
     const data = await db.collection('users').findOneAndUpdate(
         { _id: user },
-        { $setOnInsert: { _id: user } },
+        { $setOnInsert: { _id: user, account_type: 'option_helper' } },
         { upsert: true, returnDocument: 'after' }
     );
 

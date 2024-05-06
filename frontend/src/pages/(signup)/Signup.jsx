@@ -5,7 +5,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SignUp, useAuth, useUser } from "@clerk/clerk-react";
 
-import useDocumentTitle from '@/hooks/useDocumentTitle' // Custom hooks
+import useDocumentTitle from '@/hooks/useDocumentTitle'
 
 import { Post, Get } from '@/lib/utils' // Common functions
 

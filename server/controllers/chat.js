@@ -40,6 +40,7 @@ socketIO.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log(`🔥: ${socket.id} user just disconnected!`);
+
         socket.disconnect();
     });
 });
@@ -95,6 +96,18 @@ const membersInformation = async (members) => {
         try {
             memberInformation = await clerkClient.users.getUser(members[i]);
         } catch (error) {
+            if (error.errors && error.errors.find(clerkError => clerkError.message === 'not found')) {
+                const result = await db.collection('users').deleteOne({ _id: members[i] });
+
+                if (!result) {
+                    return res.status(500).json({
+                        message: 'Failed to delete user'
+                    });
+                }
+
+                continue;
+            }
+
             console.log(error);
         }
 
@@ -170,6 +183,42 @@ exports.getChatMessagesFromId = asyncHandler(async (req, res) => {
         try {
             senderInformation = await clerkClient.users.getUser(sender.sender_id);
         } catch (error) {
+            if (error.errors && error.errors.find(clerkError => clerkError.message === 'not found')) {
+                const result = await db.collection('users').deleteOne({ _id: sender.sender_id });
+                const resultMessage = await db.collection('messages').deleteMany({ sender_id: sender.sender_id });
+                const membersInChat = await db.collection('chats').findOne({ _id: chatId });
+
+                if (membersInChat.length === 1) {
+                    const resultChat = await db.collection('chats').deleteOne({ _id: chatId });
+
+                    if (!resultChat) {
+                        return res.status(500).json({
+                            message: 'Failed to delete chat'
+                        });
+                    }
+
+                    return res.status(200).json({
+                        data: []
+                    });
+                }
+
+                if (!result) {
+                    return res.status(500).json({
+                        message: 'Failed to delete user'
+                    });
+                }
+
+                if (!resultMessage) {
+                    return res.status(500).json({
+                        message: 'Failed to delete messages'
+                    });
+                }
+
+                return res.status(200).json({
+                    data: []
+                });
+            }
+
             console.log(error);
         }
 
@@ -282,10 +331,28 @@ exports.createChat = asyncHandler(async (req, res) => {
     }
 
     const _id = crypto.randomBytes(16).toString('hex');
+
+    const userNotLeaderOfChat = chat.members.find(member => member !== chat.created_by);
+    if (userNotLeaderOfChat) {
+        let userInformation;
+
+        try {
+            userInformation = await clerkClient.users.getUser(userNotLeaderOfChat);
+        } catch (error) {
+            console.log(error);
+        }
+
+        if (userInformation) {
+            chat.avatar = userInformation.imageUrl;
+        }
+    }
+
     const newChat = {
         _id: _id,
         members: chat.members,
-        name: chat.name,
+        name: chat.name || null,
+        avatar: chat.avatar || null,
+        fromJobListing: chat.fromJobListing || false,
         created_by: chat.created_by,
         created_at: new Date().toDateString()
     }
