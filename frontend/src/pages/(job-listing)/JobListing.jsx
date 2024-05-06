@@ -47,7 +47,7 @@ const fetchUserAdditionalInfo = async (user) => {
     return data.data;
 }
 
-const getJobListings = async (user, fetchUsersPostsOnly) => {
+const getJobListings = async (user, options) => {
     const response = await Get(`${import.meta.env.VITE_API_PREFIX}/joblisting`);
 
     if (!response.ok) {
@@ -55,7 +55,6 @@ const getJobListings = async (user, fetchUsersPostsOnly) => {
     }
 
     const data = await response.json();
-
     const newData = data.data.flat().map((job, index) => {
         job.hours = job.hours || 0;
         job.location = job.location || 'Location not specified';
@@ -77,19 +76,26 @@ const getJobListings = async (user, fetchUsersPostsOnly) => {
         }
     });
 
-    if (fetchUsersPostsOnly) {
+    if (options && options.fetchUsersPostsOnly) {
         return newData.filter((job) => job.user_id === user.id);
     }
 
     return newData.filter((job) => job.user_id !== user.id);
 }
 
-const ActiveJobListings = (props) => {
+export const JobPostsComponent = (props) => {
     const {
         user,
         isLoaded,
         isSignedIn,
-        userDetails,
+
+        jobListings,
+        jobListingsIsLoading,
+        jobListingsIsError,
+        jobListingsError,
+        jobListingStatus,
+
+        currentJobIdFromSearch,
 
         locationFromSearch,
         jobTitleFromSearch
@@ -99,13 +105,6 @@ const ActiveJobListings = (props) => {
     const location = useLocation();
     const queryClient = useQueryClient();
 
-    const { data: jobListings, isLoading: jobListingsIsLoading, isError: jobListingsIsError, error: jobListingsError, status: jobListingStatus } = useQuery(['activeJobListings'], () => getJobListings(user, true), {
-        enabled: !!user && isLoaded && isSignedIn
-    });
-
-    const [searchParams, setSearchParams] = useSearchParams();
-    const currentJobIdFromSearch = searchParams.get('currentJobId');
-
     const handleDeletePost = async (e, jobId) => {
         e.preventDefault();
 
@@ -113,7 +112,7 @@ const ActiveJobListings = (props) => {
             navigate('/login', { state: { info: 'You must be logged in to delete a post!' } });
         }
 
-        if (user.id !== jobListings.find((job) => job._id === jobId).user_id) {
+        if (user !== jobListings.find((job) => job._id === jobId).user_id) {
             toast.error('You cannot delete a post that is not yours');
             return;
         }
@@ -161,8 +160,8 @@ const ActiveJobListings = (props) => {
                             :
                             (jobListings && jobListings.length === 0 || (jobListings && jobListings
                                 .filter(job =>
-                                    (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
-                                    (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+                                    (job.location && locationFromSearch ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
+                                    (job.title && jobTitleFromSearch ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
                                 ).length === 0)) ?
                                 <div className='flex items-center justify-center w-full h-full gap-2'>
                                     <div className='flex items-center justify-center gap-2 w-full'>
@@ -178,8 +177,8 @@ const ActiveJobListings = (props) => {
 
                     {(jobListings && jobListings.length !== 0) && jobListings
                         .filter(job =>
-                            (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
-                            (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+                            (job.location && locationFromSearch ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
+                            (job.title && jobTitleFromSearch ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
                         ).sort((a, b) => {
                             const formattedDateA = a.posted_at?.replace(/-/g, (match, index, original) => {
                                 return (original.indexOf(match) === 4 || original.indexOf(match) === 7) ? '-' : ' ';
@@ -230,13 +229,15 @@ const ActiveJobListings = (props) => {
                                             </div>
                                         </div>
 
-                                        <div className='flex items-center justify-end mx-5'>
-                                            <Button
-                                                onClick={(e) => handleDeletePost(e, jobId)}
-                                                className='w-auto h-auto p-0 bg-inherit hover:bg-inherit text-black'>
-                                                <Trash2 />
-                                            </Button>
-                                        </div>
+                                        {user && user.id === job.user_id && (
+                                            <div className='flex items-center justify-end mx-5'>
+                                                <Button
+                                                    onClick={(e) => handleDeletePost(e, jobId)}
+                                                    className='w-auto h-auto p-0 bg-inherit hover:bg-inherit text-black'>
+                                                    <Trash2 />
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
                                 </Link>
                             );
@@ -244,6 +245,47 @@ const ActiveJobListings = (props) => {
                 </div>
             </div>
         </div>
+    )
+}
+
+const ActiveJobListings = (props) => {
+    const {
+        user,
+        isLoaded,
+        isSignedIn,
+
+        locationFromSearch,
+        jobTitleFromSearch
+    } = props;
+
+    const navigate = useNavigate();
+    const location = useLocation();
+    const queryClient = useQueryClient();
+
+    const { data: jobListings, isLoading: jobListingsIsLoading, isError: jobListingsIsError, error: jobListingsError, status: jobListingStatus } = useQuery(['activeJobListings'], () => getJobListings(user, { fetchUsersPostsOnly: true }), {
+        enabled: !!user && isLoaded && isSignedIn
+    });
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentJobIdFromSearch = searchParams.get('currentJobId');
+
+    return (
+        <JobPostsComponent
+            user={user}
+            isLoaded={isLoaded}
+            isSignedIn={isSignedIn}
+
+            jobListings={jobListings}
+            jobListingsIsLoading={jobListingsIsLoading}
+            jobListingsIsError={jobListingsIsError}
+            jobListingsError={jobListingsError}
+            jobListingStatus={jobListingStatus}
+
+            currentJobIdFromSearch={currentJobIdFromSearch}
+
+            locationFromSearch={locationFromSearch}
+            jobTitleFromSearch={jobTitleFromSearch}
+        />
     )
 }
 
@@ -758,7 +800,7 @@ const JobListing = () => {
         enabled: !!user && isLoaded && isSignedIn
     });
 
-    const { data: jobListings, isLoading: jobListingsIsLoading, isError: jobListingsIsError, error: jobListingsError, status: jobListingStatus } = useQuery(['allActiveJobListings'], () => getJobListings(user, true), {
+    const { data: jobListings, isLoading: jobListingsIsLoading, isError: jobListingsIsError, error: jobListingsError, status: jobListingStatus } = useQuery(['allActiveJobListings'], () => getJobListings(user, { fetchUsersPostsOnly: true }), {
         enabled: !!user && isLoaded && isSignedIn
     })
 
@@ -935,7 +977,6 @@ const JobListing = () => {
                         user={user}
                         isLoaded={isLoaded}
                         isSignedIn={isSignedIn}
-                        userDetails={userDetails}
 
                         locationFromSearch={locationFromSearch}
                         jobTitleFromSearch={jobTitleFromSearch}
@@ -945,7 +986,6 @@ const JobListing = () => {
                         user={user}
                         isLoaded={isLoaded}
                         isSignedIn={isSignedIn}
-                        userDetails={userDetails}
 
                         locationFromSearch={locationFromSearch}
                         jobTitleFromSearch={jobTitleFromSearch}

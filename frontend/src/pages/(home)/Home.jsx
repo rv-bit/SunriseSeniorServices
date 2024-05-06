@@ -5,7 +5,7 @@ import { Suspense, useState, useContext, useEffect, useRef, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser, useAuth } from "@clerk/clerk-react";
 
-import useDocumentTitle from '@/hooks/useDocumentTitle' // Custom hooks
+import useDocumentTitle from '@/hooks/useDocumentTitle'
 import { Post, Get, getAddresses } from '@/lib/utils' // Common functions
 
 import heroPhotoOfWoman from '@/assets/img-hero-page.jpg'
