@@ -18,16 +18,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { Search, MapPin, Trash2 } from "lucide-react"
 
-const currentColor = '#e8562d';
 const inputFields = [
     {
         name: 'jobTitle', placeholder: 'Job Title', icon: <Search className='mx-3 size-5' />, styleProps: `
-        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-[${currentColor}]
+        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-mainColor
         focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text
     `},
     {
         name: 'location', placeholder: 'Location', icon: <MapPin className='mx-3 size-5' />, styleProps: `
-        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-r-2 focus-within:border-[${currentColor}] 
+        flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-r-2 focus-within:border-mainColor
         focus-within:rounded-br-lg focus-within:rounded-tr-lg focus-within:rounded-bl-sm focus-within:rounded-tl-sm focus-within:border-b-4 hover:cursor-text
     `}
 ]
@@ -932,7 +931,7 @@ const JobListing = () => {
                                     return (
                                         <React.Fragment key={index}>
                                             <div className='h-full w-[400px] max-md:w-full'>
-                                                <label className={`flex items-center border border-slate-600 text-slate-600 w-full h-[60px] px-2 rounded-lg focus-within:outline-none focus-within:border focus-within:border-[${currentColor}] focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text`}>
+                                                <label className={`flex items-center border border-slate-600 text-slate-600 w-full h-[60px] px-2 rounded-lg focus-within:outline-none focus-within:border focus-within:border-mainColor focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text`}>
                                                     <div className='flex items-center text-slate-600 w-full'>
                                                         {input.icon && (
                                                             input.icon
@@ -961,13 +960,13 @@ const JobListing = () => {
 
                     {userDetails && userDetails.account_type === 'option_requester' && calculateAge(userDetails.option_age_user) >= 21 && (
                         <div className='flex items-center justify-center mt-5'>
-                            <Link to={'/job-listings/new'} className='w-fit h-fit text-center hover:underline bg-[#e8562ddd] hover:bg-[#d26547] font-bold px-5 py-4 text-white rounded-lg'>Post a help enquiry</Link>
+                            <Link to={'/job-listings/new'} className='w-fit h-fit text-center hover:underline bg-mainColor hover:bg-mainColorHover font-bold px-5 py-4 text-white rounded-lg'>Post a help enquiry</Link>
                         </div>
                     )}
 
                     <div className='flex items-center justify-center w-full gap-2 mt-5'>
-                        <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'All' ? `border-[${currentColor}] border-b-4` : ''}`} value="All" onClick={handleChangeTab}>All</Button>
-                        <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'Active' ? `border-[${currentColor}] border-b-4` : ''}`} value="Active" onClick={handleChangeTab}>Active ({jobListings ? jobListings.length : 0})</Button>
+                        <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'All' ? `border-mainColor border-b-4` : ''}`} value="All" onClick={handleChangeTab}>All</Button>
+                        <Button className={`bg-inherit text-black hover:bg-inherit rounded-none h-fit py-0 pb-2 ${currentTab === 'Active' ? `border-mainColor border-b-4` : ''}`} value="Active" onClick={handleChangeTab}>Active ({jobListings ? jobListings.length : 0})</Button>
                     </div>
                 </div>
 

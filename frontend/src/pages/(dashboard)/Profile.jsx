@@ -70,7 +70,7 @@ const tabs = [
 ]
 
 const Profile = () => {
-    useDocumentTitle('Login')
+    useDocumentTitle(`Profile`)
 
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -225,7 +225,7 @@ const Profile = () => {
                                             <Button key={tab.name} onClick={(e) => {
                                                 e.preventDefault()
                                                 setUserTab(tab.name)
-                                            }} className={`bg-inherit hover:bg-inherit text-xl font-bold h-12 rounded-none ${userTab === tab.name ? 'text-blue-800 border-b-4 border-blue-800' : 'text-black'}`}>{tab.title}</Button>
+                                            }} className={`bg-inherit hover:bg-inherit text-xl font-bold h-12 rounded-none ${userTab === tab.name ? 'text-mainColor border-b-4 border-mainColor' : 'text-black'}`}>{tab.title}</Button>
                                         ))}
                                     </div>
                                 </div>
