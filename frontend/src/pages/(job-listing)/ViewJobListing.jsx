@@ -12,6 +12,7 @@ import { Post, Get, formatTags, formatDate, handleOpenInNewTab, Delete } from '@
 
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from "lucide-react";
+import Options from '@/data/ElderyOptions';
 
 const fetchUserAdditionalInfo = async (user) => {
     if (!user) {
@@ -22,6 +23,7 @@ const fetchUserAdditionalInfo = async (user) => {
     const data = await response.json();
 
     if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.error);
     }
 
@@ -36,12 +38,28 @@ const getJobListing = async (jobId) => {
     const response = await Get(`${import.meta.env.VITE_API_PREFIX}/joblisting/viewjob/${jobId}`);
 
     if (!response.ok) {
-        // throw new Error('An error occurred while trying to fetch the job');
         return null;
     }
 
     const data = await response.json();
-    return data.data;
+    const job = data.data;
+
+    job.hours = job.hours || 0;
+    job.location = job.location || 'Location not specified';
+
+    const tags = {
+        payment_type: job.payment_type,
+        payment_amount: job.payment_amount,
+        category: job.category,
+        start_date: job.start_date,
+        days: job.days,
+        hours: job.hours,
+    }
+
+    const newJobTags = formatTags(tags);
+    job.tags = newJobTags;
+
+    return job;
 }
 
 const ViewJobListing = () => {
@@ -214,7 +232,18 @@ const ViewJobListing = () => {
 
                                     <div className='w-full inline-block whitespace-normal break-words'>
                                         <h1 className='text-xl max-lg:text-2xl lg:text-3xl font-bold text-slate-900'>{jobListing?.title}</h1>
-                                        <p className='text-slate-600 text-opacity-75 mt-3'>{jobListing?.location}</p>
+
+                                        <ul className='list-disc list-inside mt-2'>
+                                            <li className='text-slate-600'>{Options.find(option => option.name === jobListing?.category)?.label}</li>
+
+                                            {Object.entries(jobListing?.tags).filter(([key, value]) => value !== '' && key.startsWith('Tag_')).map(([key, value], index) => {
+                                                return (
+                                                    <li key={index} className='text-slate-600'>{value}</li>
+                                                )
+                                            })}
+
+                                            <li className='text-slate-600'>Location: {jobListing?.location}</li>
+                                        </ul>
 
                                         <div className='lg:hidden md:block sm:block extraSm:block max-extraSm:block'>
                                             <div className='flex justify-start mt-5'>

@@ -8,6 +8,8 @@ import { useQuery, useQueryClient } from 'react-query';
 import useUserAuth from '@/hooks/useUserAuth';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 
+import Options from '@/data/ElderyOptions';
+
 import { Get, Post, Delete, formatTags, formatDate, handleOpenInNewTab, calculateAge } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
@@ -20,12 +22,12 @@ import { Search, MapPin, Trash2 } from "lucide-react"
 
 const inputFields = [
     {
-        name: 'jobTitle', placeholder: 'Job Title', icon: <Search className='mx-3 size-5' />, styleProps: `
+        name: 'keywords', placeholder: 'any keywords, category, title', icon: <Search className='mx-3 size-5' />, styleProps: `
         flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-mainColor
         focus-within:rounded-br-sm focus-within:rounded-tr-sm focus-within:rounded-bl-lg focus-within:rounded-tl-lg focus-within:border-b-4 hover:cursor-text
     `},
     {
-        name: 'location', placeholder: 'Location', icon: <MapPin className='mx-3 size-5' />, styleProps: `
+        name: 'location', placeholder: 'location', icon: <MapPin className='mx-3 size-5' />, styleProps: `
         flex items-center text-slate-600 w-full h-full focus-within:outline-none focus-within:border focus-within:border-r-2 focus-within:border-mainColor
         focus-within:rounded-br-lg focus-within:rounded-tr-lg focus-within:rounded-bl-sm focus-within:rounded-tl-sm focus-within:border-b-4 hover:cursor-text
     `}
@@ -99,7 +101,7 @@ export const JobPostsComponent = (props) => {
         currentJobIdFromSearch,
 
         locationFromSearch,
-        jobTitleFromSearch
+        jobKeywordsFromSearch
     } = props;
 
     const navigate = useNavigate();
@@ -162,7 +164,11 @@ export const JobPostsComponent = (props) => {
                             (jobListings && jobListings.length === 0 || (jobListings && jobListings
                                 .filter(job =>
                                     (job.location && locationFromSearch ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
-                                    (job.title && jobTitleFromSearch ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+                                    (job.title && job.description && jobKeywordsFromSearch
+                                        ? (job.title.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase())
+                                            || job.description.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase())
+                                            || Options.find(option => option.name === job.category)?.label.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase()))
+                                        : job)
                                 ).length === 0)) ?
                                 <div className='flex items-center justify-center w-full h-full gap-2'>
                                     <div className='flex items-center justify-center gap-2 w-full'>
@@ -179,7 +185,11 @@ export const JobPostsComponent = (props) => {
                     {(jobListings && jobListings.length !== 0) && jobListings
                         .filter(job =>
                             (job.location && locationFromSearch ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
-                            (job.title && jobTitleFromSearch ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+                            (job.title && job.description && jobKeywordsFromSearch
+                                ? (job.title.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase())
+                                    || job.description.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase())
+                                    || Options.find(option => option.name === job.category)?.label.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase()))
+                                : job)
                         ).sort((a, b) => {
                             const formattedDateA = a.posted_at?.replace(/-/g, (match, index, original) => {
                                 return (original.indexOf(match) === 4 || original.indexOf(match) === 7) ? '-' : ' ';
@@ -256,7 +266,7 @@ const ActiveJobListings = (props) => {
         isSignedIn,
 
         locationFromSearch,
-        jobTitleFromSearch
+        jobKeywordsFromSearch
     } = props;
 
     const navigate = useNavigate();
@@ -285,7 +295,7 @@ const ActiveJobListings = (props) => {
             currentJobIdFromSearch={currentJobIdFromSearch}
 
             locationFromSearch={locationFromSearch}
-            jobTitleFromSearch={jobTitleFromSearch}
+            jobKeywordsFromSearch={jobKeywordsFromSearch}
         />
     )
 }
@@ -298,7 +308,7 @@ const AllJobListings = (props) => {
         userDetails,
 
         locationFromSearch,
-        jobTitleFromSearch
+        jobKeywordsFromSearch
     } = props;
 
     const navigate = useNavigate();
@@ -499,7 +509,12 @@ const AllJobListings = (props) => {
 
         const jobListingLength = jobListings.filter(job =>
             (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
-            (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+            (job.title && job.description && jobKeywordsFromSearch !== null ?
+                (
+                    job.title.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase())
+                    || job.description.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase())
+                    || Options.find(option => option.name === job.category)?.label.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase()))
+                : job)
         )
 
         if (jobListingLength.length === 0 && currentJobId) {
@@ -511,7 +526,7 @@ const AllJobListings = (props) => {
                 return newSearchParams.toString();
             });
         }
-    }, [locationFromSearch, jobTitleFromSearch, jobListingStatus]);
+    }, [locationFromSearch, jobKeywordsFromSearch, jobListingStatus]);
 
     const [newHeight, setNewHeight] = useState(930);
     useLayoutEffect(() => {
@@ -615,7 +630,11 @@ const AllJobListings = (props) => {
                             (jobListings && jobListings.length === 0 || (jobListings && jobListings
                                 .filter(job =>
                                     (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
-                                    (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+                                    (job.title && job.description && jobKeywordsFromSearch !== null ?
+                                        (job.title.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase())
+                                            || job.description.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase())
+                                            || Options.find(option => option.name === job.category)?.label.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase()))
+                                        : job)
                                 ).length === 0)) ?
                                 <div className='flex items-center justify-center w-full h-full gap-2'>
                                     <div className='flex items-center justify-center gap-2 w-full'>
@@ -632,7 +651,11 @@ const AllJobListings = (props) => {
                     {(jobListings && jobListings.length !== 0) && jobListings
                         .filter(job =>
                             (job.location && locationFromSearch !== null ? job.location.toLowerCase().includes(locationFromSearch.toLocaleLowerCase()) : job) &&
-                            (job.title && jobTitleFromSearch !== null ? job.title.toLowerCase().includes(jobTitleFromSearch.toLocaleLowerCase()) : job)
+                            (job.title && job.description && jobKeywordsFromSearch !== null ?
+                                (job.title.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase())
+                                    || job.description.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase())
+                                    || Options.find(option => option.name === job.category)?.label.toLowerCase().includes(jobKeywordsFromSearch.toLocaleLowerCase()))
+                                : job)
                         ).sort((a, b) => {
                             const formattedDateA = a.posted_at?.replace(/-/g, (match, index, original) => {
                                 return (original.indexOf(match) === 4 || original.indexOf(match) === 7) ? '-' : ' ';
@@ -762,7 +785,15 @@ const AllJobListings = (props) => {
                                         <ScrollArea className='w-full min-w-[90%]' style={{ height: `calc(100% - ${elementCurrentJobHeaderHeight}px)` }}>
                                             <div className='w-full flex flex-col gap-5 whitespace-normal break-words p-5'>
                                                 <h1 className='text-xl font-bold text-slate-900'>Job Details</h1>
-                                                <p className='text-slate-600'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.location}</p>
+                                                <ul className='list-disc list-inside'>
+                                                    <li className='text-slate-600'>{Options.find(option => option.name === jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.category)?.label}</li>
+
+                                                    {Object.entries(jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.tags).filter(([key, value]) => value !== '' && key.startsWith('Tag_')).map(([key, value], index) => {
+                                                        return (
+                                                            <li key={index} className='text-slate-600'>{value}</li>
+                                                        )
+                                                    })}
+                                                </ul>
 
                                                 <h1 className='text-xl font-bold text-slate-900'>Job Full Description</h1>
                                                 <p className='text-slate-600 line-clamp-2'>{jobListings[jobListings.findIndex((job) => job._id === currentJobId)]?.description}</p>
@@ -808,12 +839,12 @@ const JobListing = () => {
 
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const locationFromSearch = searchParams.get('location');
-    const jobTitleFromSearch = searchParams.get('jobTitle');
+    const locationFromSearch = searchParams.get('location') ? searchParams.get('location').trimEnd() : searchParams.get('location');
+    const jobKeywordsFromSearch = searchParams.get('keywords') ? searchParams.get('keywords').trimEnd() : searchParams.get('keywords');
 
     const [searchInput, setSearchInput] = useState(
         {
-            jobTitle: jobTitleFromSearch ? jobTitleFromSearch : '',
+            keywords: jobKeywordsFromSearch ? jobKeywordsFromSearch : '',
             location: locationFromSearch ? locationFromSearch : ''
         }
     )
@@ -981,7 +1012,7 @@ const JobListing = () => {
                         isSignedIn={isSignedIn}
 
                         locationFromSearch={locationFromSearch}
-                        jobTitleFromSearch={jobTitleFromSearch}
+                        jobKeywordsFromSearch={jobKeywordsFromSearch}
                     />
                     :
                     <ActiveJobListings
@@ -990,7 +1021,7 @@ const JobListing = () => {
                         isSignedIn={isSignedIn}
 
                         locationFromSearch={locationFromSearch}
-                        jobTitleFromSearch={jobTitleFromSearch}
+                        jobKeywordsFromSearch={jobKeywordsFromSearch}
                     />
                 }
 
