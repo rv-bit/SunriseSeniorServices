@@ -111,10 +111,14 @@ const Home = () => {
 
     const handleAlertDialogClose = () => {
         setAlertDialog({ ...alertDialog, open: false });
+
+        navigate('/signup');
     }
 
     const handleAlertDialogSubmit = () => {
         setAlertDialog({ ...alertDialog, open: false });
+
+        navigate('/signup');
     }
 
     const handleCarouselClick = (option) => {
