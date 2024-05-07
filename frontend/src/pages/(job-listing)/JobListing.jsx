@@ -113,7 +113,7 @@ export const JobPostsComponent = (props) => {
             navigate('/login', { state: { info: 'You must be logged in to delete a post!' } });
         }
 
-        if (user !== jobListings.find((job) => job._id === jobId).user_id) {
+        if (user.id !== jobListings.find((job) => job._id === jobId).user_id) {
             toast.error('You cannot delete a post that is not yours');
             return;
         }
