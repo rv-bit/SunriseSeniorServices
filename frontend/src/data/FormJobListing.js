@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import Options from './ElderyOptions';
 
 const formSteps = [
     {
@@ -41,24 +42,14 @@ const formSteps = [
     {
         name: "Job Details",
         fields: [
-            {
-                name: 'option_childcare',
-                label: 'Child Care',
-                step: 1,
-                type: 'button',
-            },
-            {
-                name: 'option_seniorcare',
-                label: 'Elderly Care',
-                step: 1,
-                type: 'button',
-            },
-            {
-                name: 'option_petcare',
-                label: 'Pet Care',
-                step: 1,
-                type: 'button',
-            },
+            ...Options.map(option => {
+                return {
+                    name: option.name,
+                    label: option.label,
+                    type: 'button',
+                    step: 1,
+                }
+            }),
         ],
 
         validationSchema: z.object({

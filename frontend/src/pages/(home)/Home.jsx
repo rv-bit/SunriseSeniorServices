@@ -13,6 +13,8 @@ import ChildrenCareSvg from '@/assets/Vertical_Childcare.svg'
 import ElderlyCareSvg from '@/assets/Vertical_Senior_Care.svg'
 import PetCareSvg from '@/assets/Vertical_Pet_Care.svg'
 
+import Options from '@/data/ElderyOptions';
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -31,9 +33,17 @@ import { Search } from "lucide-react";
 const Alertbox = lazy(() => import('@/components/custom/Alertbox'));
 
 const buttons = [
-    { name: "Child Care", icon: ChildrenCareSvg, option: "option_childcare" },
-    { name: "Elderly Care", icon: ElderlyCareSvg, option: "option_seniorcare" },
-    { name: "Pet Care", icon: PetCareSvg, option: "option_petcare" }
+    ...Options.map(option => {
+        return {
+            name: option.label,
+            description: option.desc,
+            option: option.name,
+        }
+    }),
+
+    // { name: "Child Care", icon: ChildrenCareSvg, option: "option_childcare" },
+    // { name: "Elderly Care", icon: ElderlyCareSvg, option: "option_seniorcare" },
+    // { name: "Pet Care", icon: PetCareSvg, option: "option_petcare" }
 ]
 
 import PagesData from "@/data/PagesData";
@@ -95,21 +105,16 @@ const Home = () => {
         open: false,
     });
 
-    const [formData, setFormData] = useState({});
     const handleAlertDialog = (message) => {
         setAlertDialog({ ...alertDialog, open: true, message: message });
     }
 
     const handleAlertDialogClose = () => {
         setAlertDialog({ ...alertDialog, open: false });
-
-        setFormData({ ...formData, option: 'option_requester' });
     }
 
     const handleAlertDialogSubmit = () => {
         setAlertDialog({ ...alertDialog, open: false });
-
-        setFormData({ ...formData, option: 'option_helper' });
     }
 
     const handleCarouselClick = (option) => {
@@ -119,15 +124,6 @@ const Home = () => {
         }
 
         handleAlertDialog('Are you a carer or a person seeking care?');
-
-        const options = {}
-        if (searchPostCode && searchPostCode.length > 0) {
-            options.postCode = searchPostCode;
-        }
-
-        options.preferences = option;
-
-        setFormData(options);
     }
 
     const handleJoinAsCarer = () => {
@@ -136,14 +132,6 @@ const Home = () => {
             return
         }
 
-        const options = {}
-        if (searchPostCode && searchPostCode.length > 0) {
-            options.postCode = searchPostCode;
-        }
-
-        options.preferences = 'option_helper';
-
-        setFormData(options);
         navigate('/signup')
     }
 
@@ -170,18 +158,6 @@ const Home = () => {
         handleSearchAddresses();
         return () => { }
     }, [searchPostCode]);
-
-    useEffect(() => {
-        if (!alertDialog.open) {
-            if (formData === undefined || formData === null || Object.keys(formData).length === 0) return;
-
-            navigate('/signup')
-        }
-
-        return () => {
-            setFormData({});
-        }
-    }, [isLoaded, isSignedIn, alertDialog.open]);
 
     if (!isLoaded) {
         return (
@@ -371,36 +347,33 @@ const Home = () => {
                             align: "start",
                             loop: true,
                         }}
-                        className="flex items-center justify-center mt-20 z-10"
+                        className="flex items-center justify-center my-5 w-full"
                     >
-                        <CarouselContent className="">
+                        <CarouselContent>
                             {buttons.map((button, index) => {
-                                const { name, icon, option } = button;
+                                const { name, description, option } = button;
 
                                 return (
-                                    <CarouselItem key={index} className="basis-1/3 max-md:basis-1/2 max-sm:basis-11/12">
+                                    <CarouselItem key={index} className="basis-1/3 max-md:basis-1/2 max-sm:basis-11/12 w-[200px]">
                                         <Card>
                                             <CardContent
                                                 onClick={() => handleCarouselClick(option)}
-                                                className="flex aspect-square items-center justify-center size-30 lg:p-10 p-16 max-sm:p-3 max-md:p-10 max-extraSm:p-1 hover:cursor-pointer hover:bg-slate-200 hover:bg-opacity-25">
+                                                className="flex aspect-square items-center justify-center max-sm:items-start max-sm:justify-start w-full max-md:h-[12rem] hover:cursor-grab">
 
-                                                <div className="flex flex-col justify-center items-center gap-2 h-full max-lg:w-full w-[150px]">
-                                                    <img src={icon} alt={name} className="size-20" />
-                                                    <h1 className="text-xl font-semibold">{name}</h1>
+                                                <div className="flex flex-col justify-center items-center gap-2 h-full w-full text-center">
+                                                    <h1 className="text-2xl font-semibold max-md:text-xl">{name}</h1>
+                                                    <h1 className="w-[70%] max-md:w-full text-md max-md:text-sm">{description}</h1>
                                                 </div>
                                             </CardContent>
                                         </Card>
                                     </CarouselItem>
                                 );
                             })}
-
                         </CarouselContent>
 
-                        <CarouselPrevious className="max-md:hidden lg:flex" />
-                        <CarouselNext className="max-md:hidden lg:flex" />
                     </Carousel>
 
-                    <h1 className="my-5 text-center">Move with finger or mouse <span className="underline">Left</span> and <span className="underline">Right</span> on top of buttons</h1>
+                    <h1 className="my-5 text-center">Move with finger on top of <span className="underline">cards</span></h1>
                     <h1 className="mt-5 text-2xl max-sm:text-lg font-semibold">MEET THE TEAM</h1>
 
                     <Carousel
@@ -419,7 +392,7 @@ const Home = () => {
                                     <CarouselItem key={index} className="basis-1/3 max-md:basis-1/2 max-sm:basis-11/12">
                                         <Card>
                                             <CardContent className="flex aspect-square items-center justify-center max-sm:items-start max-sm:justify-start max-md:size-27 max-sm:w-full  max-sm:h-[12rem] max-extraSm:h-[10rem] lg:px-1 lg:pt-12 lg:pb-16 max-lg:p-2 max-md:-m-7 max-sm:m-3 max-extraSm:p-0 hover:cursor-grab">
-                                                <div className="flex flex-col justify-center items-center max-sm:items-start max-sm:justify-start gap-2 h-full w-[90%] max-sm:w-[300px]">
+                                                <div className="flex flex-col justify-center items-center max-sm:items-start max-sm:justify-start gap-2 h-full w-full break-words overflow-hidden">
 
                                                     <div className="max-sm:hidden contents">
                                                         <div className="flex items-start justify-start mb-2">
