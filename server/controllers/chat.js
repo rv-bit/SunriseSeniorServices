@@ -330,8 +330,19 @@ exports.createChat = asyncHandler(async (req, res) => {
         });
     }
 
-    const _id = crypto.randomBytes(16).toString('hex');
+    const privateChatExistsBasedOn = await db.collection('chats').findOne({
+        members: { $all: chat.members },
+        fromJobListing: false
+    });
 
+    if (privateChatExistsBasedOn) {
+        return res.status(200).json({
+            data: privateChatExistsBasedOn,
+            message: 'Chat already exists'
+        });
+    }
+
+    const _id = crypto.randomBytes(16).toString('hex');
     const userNotLeaderOfChat = chat.members.find(member => member !== chat.created_by);
     if (userNotLeaderOfChat) {
         let userInformation;
@@ -351,16 +362,14 @@ exports.createChat = asyncHandler(async (req, res) => {
         _id: _id,
         members: chat.members,
         name: chat.name || null,
-        avatar: chat.avatar || null,
+        avatar: chat.fromJobListing ? chat.avatar : null,
         fromJobListing: chat.fromJobListing || false,
         created_by: chat.created_by,
         created_at: new Date().toDateString()
     }
 
     const chatDocument = prepareDocument(NewChatSchema, newChat);
-
     const chatExists = await db.collection('chats').findOne({ name: chat.name, members: chat.members });
-
     if (chatExists) {
         return res.status(200).json({
             data: chatExists,
