@@ -350,7 +350,7 @@ const EditChat = (props) => {
                                                                 </Button>
 
                                                                 <Link to={`/profile/${value.id.replace('user_', '')}`} className='bg-inherit hover:bg-gray-200 text-black p-0'>Profile</Link>
-                                                                {chatInfo.created_by && (chatInfo.created_by === userInfo.id && value.id !== userInfo.id) && (
+                                                                {chatInfo.created_by && (chatInfo.created_by === userInfo.id && value.id !== userInfo.id) && chatInfo.fromJobListing && chatInfo.fromJobListing !== false && (
                                                                     <Button className='bg-inherit hover:bg-gray-200 text-black p-0' onClick={(e) => handleRemoveMembers(e, value.id)}>Remove</Button>
                                                                 )}
                                                             </div>
@@ -896,7 +896,7 @@ const Chat = () => {
                                                 className='w-[70%] flex justify-center items-center hover:cursor-pointer'>
 
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6" /></svg>
-                                                <h1 className='text-lg w-full truncate'>Chat with {
+                                                <h1 className='text-lg w-full truncate'>Chat - {
                                                     chats.find((chat) => chat._id === selectedChatId)?.fromJobListing ? chats.find((chat) => chat._id === selectedChatId)?.name : chats.find((chat) => chat._id === selectedChatId)?.members.find((member) => member.id !== user.id).fullName
                                                 }</h1>
                                             </div>
