@@ -244,7 +244,7 @@ export const JobPostsComponent = (props) => {
                                             <div className='flex items-center justify-end mx-5'>
                                                 <Button
                                                     onClick={(e) => handleDeletePost(e, jobId)}
-                                                    className='w-auto h-auto p-0 bg-inherit hover:bg-inherit text-black'>
+                                                    className='w-auto h-auto p-0 bg-inherit hover:bg-inherit text-red-500'>
                                                     <Trash2 />
                                                 </Button>
                                             </div>
