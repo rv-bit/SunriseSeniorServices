@@ -468,6 +468,7 @@ exports.deleteChat = asyncHandler(async (req, res) => {
     }
 
     const chat = await db.collection('chats').findOneAndDelete({ _id: chatId, created_by: userId });
+    const messages = await db.collection('messages').deleteMany({ chat_id: chatId });
 
     if (!chat) {
         return res.status(500).json({
