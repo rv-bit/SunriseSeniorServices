@@ -11,7 +11,8 @@ import useDocumentTitle from '@/hooks/useDocumentTitle';
 import { Post, Get, formatTags, formatDate, handleOpenInNewTab, Delete } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, AlertTriangle } from "lucide-react";
+
 import Options from '@/data/ElderyOptions';
 
 const fetchUserAdditionalInfo = async (user) => {
@@ -251,8 +252,12 @@ const ViewJobListing = () => {
                                                     <Button
                                                         onClick={(e) => handleDeletePost(e, currentJobIdFromSearch)}
                                                         onAuxClick={(e) => handleDeletePost(e, currentJobIdFromSearch)}
+                                                        className='w-[300px] bg-red-700 hover:bg-red-500'
                                                     >
-                                                        Delete Post
+                                                        <span className='flex items-center gap-2'>
+                                                            <AlertTriangle />
+                                                            <h1>Delete Post</h1>
+                                                        </span>
                                                     </Button>
                                                     :
                                                     <Button
@@ -313,8 +318,12 @@ const ViewJobListing = () => {
                                             <Button
                                                 onClick={(e) => handleDeletePost(e, currentJobIdFromSearch)}
                                                 onAuxClick={(e) => handleDeletePost(e, currentJobIdFromSearch)}
+                                                className='w-[300px] bg-red-700 hover:bg-red-500'
                                             >
-                                                Delete Post
+                                                <span className='flex items-center gap-2'>
+                                                    <AlertTriangle />
+                                                    <h1>Delete Post</h1>
+                                                </span>
                                             </Button>
                                             :
                                             <Button
