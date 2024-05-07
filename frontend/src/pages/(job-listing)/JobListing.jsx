@@ -40,6 +40,7 @@ const fetchUserAdditionalInfo = async (user) => {
     const data = await response.json();
 
     if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.error);
     }
 
@@ -50,6 +51,7 @@ const getJobListings = async (user, options) => {
     const response = await Get(`${import.meta.env.VITE_API_PREFIX}/joblisting`);
 
     if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.error);
     }
 
