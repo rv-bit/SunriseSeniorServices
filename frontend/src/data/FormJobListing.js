@@ -53,9 +53,9 @@ const formSteps = [
         ],
 
         validationSchema: z.object({
-            option_childcare: z.string(),
-            option_seniorcare: z.string(),
-            option_petcare: z.string(),
+            ...Object.fromEntries(Options.map(option => {
+                return [option.name, z.string()]
+            }))
         }),
 
         stepsNames: {

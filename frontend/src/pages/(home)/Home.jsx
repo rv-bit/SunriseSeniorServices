@@ -119,7 +119,7 @@ const Home = () => {
 
     const handleCarouselClick = (option) => {
         if (user && isSignedIn) {
-            navigate('/job-listings');
+            navigate('/job-listings/new', { state: { from: 'home', formData: { options: { category: [option] } } } });
             return
         }
 
