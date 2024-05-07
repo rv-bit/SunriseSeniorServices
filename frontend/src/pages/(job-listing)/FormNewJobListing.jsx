@@ -2,7 +2,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
 import { Suspense, useContext, useState, useEffect, lazy } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import useUserAuth from '@/hooks/useUserAuth'
 
 import { Post, Get } from '@/lib/utils' // Common functions 
@@ -37,6 +37,7 @@ async function createJobListing(formData) {
 
 const FormNewJobListing = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const { isLoaded, isSignedIn, user } = useUserAuth();
     const [userDetails, setUserDetails] = useState(null);
@@ -81,6 +82,10 @@ const FormNewJobListing = () => {
         if (!user || (userDetails && userDetails.account_type !== 'option_requester')) {
             navigate('/');
             return;
+        }
+
+        if (location.state && location.state.from === 'home' && location.state.formData) {
+            setFormDataOptions({ ...location.state.formData.options });
         }
 
         return () => { };
@@ -242,6 +247,19 @@ const FormNewJobListing = () => {
 
     useEffect(() => {
         setPreviousValuesOnBack();
+
+        const oneStepAheadName = formSteps[currentStep]?.name;
+        if (oneStepAheadName === 'Job Details' && formDataOptions && formDataOptions.category !== undefined) {
+            setFormData(prevData => {
+                const updatedData = { ...prevData, options: formDataOptions };
+                return updatedData;
+            });
+
+            setCurrentStep(currentStep + 1); // Skip the 'Job Details' step
+            setCurrentSubStep(1);
+            return;
+        }
+
     }, [currentStep, currentSubStep]);
 
     const setPreviousValuesOnBack = () => {

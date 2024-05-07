@@ -262,8 +262,6 @@ const EditChat = (props) => {
             onClose();
         }
 
-        console.log(chatInfo);
-
         return () => { };
     }, [chatInfo]);
 

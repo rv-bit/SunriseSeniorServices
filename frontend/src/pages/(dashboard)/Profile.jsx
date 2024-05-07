@@ -70,7 +70,7 @@ const tabs = [
 ]
 
 const Profile = () => {
-    useDocumentTitle('Login')
+    useDocumentTitle(`Profile`)
 
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -88,7 +88,6 @@ const Profile = () => {
     const [userTab, setUserTab] = useState('posts');
 
     const createChats = useCallback(async (props) => {
-        console.log('Creating chat with', props.members);
         const response = await Post(`${import.meta.env.VITE_API_PREFIX}/chats/createChat`, { data: props });
 
         if (!response.ok) {
@@ -201,11 +200,14 @@ const Profile = () => {
                                     </div>
 
                                     <div className='max-md:w-full flex justify-end items-end max-md:items-center max-md:justify-center gap-2'>
-                                        <Button
-                                            onAuxClick={(e) => handleCreateChat(e)}
-                                            onClick={(e) => handleCreateChat(e)}
-                                            className='max-md:w-full bg-primary text-white'>Message
-                                        </Button>
+                                        {user && user.id.replace('user_', '') !== profileId && (
+                                            <Button
+                                                disabled={waitForChatToCreate}
+                                                onAuxClick={(e) => handleCreateChat(e)}
+                                                onClick={(e) => handleCreateChat(e)}
+                                                className='max-md:w-full bg-primary text-white'>Message
+                                            </Button>
+                                        )}
 
                                         {user && user.id.replace('user_', '') === profileId && (
                                             <Link to={`/account#/edit-profile`} className='max-md:w-full h-fit'>
@@ -222,10 +224,14 @@ const Profile = () => {
                                 <div className='w-full flex justify-between max-md:items-center max-md:justify-center max-md:flex-col max-md:gap-5 z-20 relative'>
                                     <div className='w-full flex justify-start items-center gap-2'>
                                         {tabs.map(tab => (
-                                            <Button key={tab.name} onClick={(e) => {
-                                                e.preventDefault()
-                                                setUserTab(tab.name)
-                                            }} className={`bg-inherit hover:bg-inherit text-xl font-bold h-12 rounded-none ${userTab === tab.name ? 'text-blue-800 border-b-4 border-blue-800' : 'text-black'}`}>{tab.title}</Button>
+                                            <Button
+                                                key={tab.name}
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    setUserTab(tab.name)
+                                                }}
+                                                className={`bg-inherit hover:bg-inherit text-xl font-bold h-12 rounded-none ${userTab === tab.name ? 'text-mainColor border-b-4 border-mainColor' : 'text-black'}`}>{tab.title}
+                                            </Button>
                                         ))}
                                     </div>
                                 </div>

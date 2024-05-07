@@ -2,7 +2,7 @@ const PagesData = []
 
 PagesData['Team'] = [
     { name: "Andrei Ciocan", role: "PM", message: `I'm the master mind behind the business.`, from: "Wolverhampton", mail: "A.Ciocan@wlv.ac.uk" },
-    { name: "Robert Vilcu", role: "Software Dev", message: `I'm the mastermind behind the app.`, from: "Wolverhampton", mail: "R.Vilcu@wlv.ac.uk" },
+    { name: "Robert Vilcu", role: "Senior Dev", message: `I'm the mastermind behind the app.`, from: "Wolverhampton", mail: "R.Vilcu@wlv.ac.uk" },
     { name: "Dan Spartan", role: "Junior Dev", message: `I'm the helper to the mind.`, from: "Wolverhampton", mail: "D.Sparatanu@wlv.ac.uk" },
     { name: "Sean Painter", role: "Business Analyst", message: `I'm the person to make sure we fit in budget.`, from: "Wolverhampton", mail: "S.Painter@wlv.ac.uk" },
     { name: "James Powell", role: "Security", message: `I'm the person making sure data is safe.`, from: "Wolverhampton", mail: "J.Powell6@wlv.ac.uk" },
