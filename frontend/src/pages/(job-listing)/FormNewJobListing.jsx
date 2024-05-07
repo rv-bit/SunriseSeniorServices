@@ -42,6 +42,23 @@ const FormNewJobListing = () => {
     const { isLoaded, isSignedIn, user } = useUserAuth();
     const [userDetails, setUserDetails] = useState(null);
 
+    const [currentStep, setCurrentStep] = useState(0);
+    const [currentSubStep, setCurrentSubStep] = useState(1);
+
+    const [someOptionalData, setSomeOptionalData] = useState(false);
+
+    const [formData, setFormData] = useState({});
+
+    const [formDataOptions, setFormDataOptions] = useState([]);
+    const [daysWeek, setDaysWeek] = useState([]);
+
+    const [hasUserNavigatedBack, setHasUserNavigatedBack] = useState(false);
+    const [errors, setErrors] = useState(null);
+
+    const [userIsLoading, setUserLoad] = useState(false);
+
+    const form = useForm({ defaultValues });
+
     useEffect(() => {
         if (isLoaded && !isSignedIn) {
             navigate('/');
@@ -65,19 +82,6 @@ const FormNewJobListing = () => {
         return () => { };
     }, [isSignedIn, isLoaded]);
 
-    const [currentStep, setCurrentStep] = useState(0);
-    const [currentSubStep, setCurrentSubStep] = useState(1);
-
-    const [formData, setFormData] = useState({});
-
-    const [formDataOptions, setFormDataOptions] = useState([]);
-    const [daysWeek, setDaysWeek] = useState([]);
-
-    const [hasUserNavigatedBack, setHasUserNavigatedBack] = useState(false);
-    const [errors, setErrors] = useState(null);
-
-    const form = useForm({ defaultValues });
-
     useEffect(() => {
         if (!user || (userDetails && userDetails.account_type !== 'option_requester')) {
             navigate('/');
@@ -90,8 +94,6 @@ const FormNewJobListing = () => {
 
         return () => { };
     }, []);
-
-    const [userIsLoading, setUserLoad] = useState(false);
 
     useEffect(() => {
         const createJobListingAndNavigate = async () => {
@@ -249,7 +251,7 @@ const FormNewJobListing = () => {
         setPreviousValuesOnBack();
 
         const oneStepAheadName = formSteps[currentStep]?.name;
-        if (oneStepAheadName === 'Job Details' && formDataOptions && formDataOptions.category !== undefined) {
+        if (oneStepAheadName === 'Job Details' && formDataOptions && formDataOptions.category !== undefined && !someOptionalData) {
             setFormData(prevData => {
                 const updatedData = { ...prevData, options: formDataOptions };
                 return updatedData;
@@ -257,6 +259,7 @@ const FormNewJobListing = () => {
 
             setCurrentStep(currentStep + 1); // Skip the 'Job Details' step
             setCurrentSubStep(1);
+            setSomeOptionalData(true);
             return;
         }
 
