@@ -15,7 +15,7 @@ import { JobPostsComponent } from '@/pages/(job-listing)/JobListing';
 import { Button } from '@/components/ui/button';
 
 const fetchProfile = async (profileId) => {
-    const response = await Get(`${import.meta.env.VITE_API_PREFIX}/profile/${profileId}`);
+    const response = await Get(`${import.meta.env.VITE_API_PREFIX}/profiles/${profileId}`);
 
     if (!response.ok) {
         return null;
