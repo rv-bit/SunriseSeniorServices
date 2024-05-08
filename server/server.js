@@ -26,7 +26,7 @@ if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") 
 app.use('/joblisting', jobListingRouter);
 app.use('/user', userRouter);
 app.use('/chats', chatRouter);
-app.use('/profile', profileRouter);
+app.use('/profiles', profileRouter);
 
 if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "docker") {
     app.get('*', (req, res) => {
