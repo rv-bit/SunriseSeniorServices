@@ -74,8 +74,15 @@ const FormNewJobListing = () => {
                 }
 
                 const data = await response.json();
+
+                if (data.data && data.data.account_type !== 'option_requester') {
+                    navigate('/');
+                    return;
+                }
+
                 setUserDetails(data.data);
             }
+
             fetchData();
         }
 

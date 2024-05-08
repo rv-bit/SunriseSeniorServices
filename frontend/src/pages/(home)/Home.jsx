@@ -40,10 +40,6 @@ const buttons = [
             option: option.name,
         }
     }),
-
-    // { name: "Child Care", icon: ChildrenCareSvg, option: "option_childcare" },
-    // { name: "Elderly Care", icon: ElderlyCareSvg, option: "option_seniorcare" },
-    // { name: "Pet Care", icon: PetCareSvg, option: "option_petcare" }
 ]
 
 import PagesData from "@/data/PagesData";
