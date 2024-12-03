@@ -1,18 +1,18 @@
 # Sunrise Senior Services - A web app for University Project
 
 ### Information
-> This Application was strictly made with the purpose to finish an assignment, any issues with any copyright's im sorry in advance.
+> Group work project, to allow connections between different people, mostly elderly people
 
 # Tech Stack
 ### Frontend
-* **Language:** Java Script
-* **Framework:** React
-* **Build Tools:** Vite
+* **Language:** JavaScript
+* **Framework:** ReactJS
+* **Tools:** TailwindCSS, ShadCN, ClerkAuth
  
 ### Backend
-* **Language:** Java Script
-* **Framework:** Express
-* **Build Tools:** Node
+* **Language:** JavaScript
+* **Framework:** ExpressJS
+* **Tools:** ClerkAuth
 
 <ins>https://sunriseseniorservices.fun</ins>
 
