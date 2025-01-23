@@ -6,13 +6,13 @@
 # Tech Stack
 ### Frontend
 * **Language:** JavaScript
-* **Framework:** ReactJS
-* **Tools:** TailwindCSS, ShadCN, ClerkAuth
+* **Framework:** ReactJS, TailwindCSS, ShadCN
+* **Authentication:** ClerkAuth
  
 ### Backend
 * **Language:** JavaScript
 * **Framework:** ExpressJS
-* **Tools:** ClerkAuth
+* **Authentication:** ClerkAuth
 
 <ins>https://sunriseseniorservices.fun</ins>
 
