@@ -36,6 +36,3 @@ npm install
 # Start the development server
 npm run dev dev
 ```
-
-## License
-This project is licensed under the MIT License.
